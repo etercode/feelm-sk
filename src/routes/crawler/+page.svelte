@@ -23,6 +23,21 @@
 	let polled = $state(null);
 	let status = $derived(polled ?? data.status);
 	let recent = $derived(data.recent);
+	/*
+	 * Progress is counted from titles actually in the catalog, not from the
+	 * queue's crawled_at column: the crawler only stamps that when a whole run
+	 * finishes, so across a run of three quarters of a million it never moves.
+	 *
+	 * max() of the two so this stays right either way — if the API is later
+	 * changed to stamp the queue as it goes, whichever is further ahead wins.
+	 */
+	let crawled = $derived(status ? Math.max(status.inCatalog ?? 0, status.crawled ?? 0) : 0);
+	let percent = $derived(status?.total ? Math.round((crawled / status.total) * 10000) / 100 : 0);
+	let remaining = $derived(status ? Math.max(status.total - crawled, 0) : 0);
+	let etaHours = $derived(
+		status?.perMinute > 0 ? Math.round((remaining / status.perMinute / 60) * 10) / 10 : null
+	);
+
 	let pageNumber = $derived(Number(page.url.searchParams.get('page') ?? 1));
 	let refreshing = $derived(navigating.to?.route.id === page.route.id);
 
@@ -48,6 +63,14 @@
 
 	function number(value) {
 		return typeof value === 'number' ? value.toLocaleString() : '—';
+	}
+
+	/** Clock time the crawl should end — easier to read than "33.2h" on a phone. */
+	function finish() {
+		if (etaHours === null) return '—';
+		const at = new Date(Date.now() + etaHours * 3600 * 1000);
+		const day = at.toDateString() === new Date().toDateString() ? '' : `${at.toLocaleDateString(undefined, { weekday: 'short' })} `;
+		return day + at.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
 	}
 
 	function ago(iso) {
@@ -79,19 +102,19 @@
 	{#if data.unreachable || !status}
 		<p class="notice">The catalog API is unreachable.</p>
 	{:else}
-		<div class="progress" role="img" aria-label="{status.percent}% crawled">
-			<div class="fill" style="width: {Math.max(status.percent, 0.3)}%"></div>
+		<div class="progress" role="img" aria-label="{percent}% crawled">
+			<div class="fill" style="width: {Math.max(percent, 0.3)}%"></div>
 		</div>
 		<p class="pct">
-			<strong>{status.percent}%</strong>
-			<span class="faint">{number(status.crawled)} of {number(status.total)}</span>
+			<strong>{percent}%</strong>
+			<span class="faint">{number(crawled)} of {number(status.total)}</span>
 		</p>
 
 		<dl class="stats">
-			<div><dt>Remaining</dt><dd>{number(status.remaining)}</dd></div>
-			<div><dt>In catalog</dt><dd>{number(status.inCatalog)}</dd></div>
+			<div><dt>Remaining</dt><dd>{number(remaining)}</dd></div>
+			<div><dt>Finishes</dt><dd>{finish()}</dd></div>
 			<div><dt>Rate</dt><dd>{status.perSecond ? `${status.perSecond}/s` : '—'}</dd></div>
-			<div><dt>Time left</dt><dd>{status.etaHours !== null ? `${status.etaHours}h` : '—'}</dd></div>
+			<div><dt>Time left</dt><dd>{etaHours !== null ? `${etaHours}h` : '—'}</dd></div>
 			<div><dt>Last title</dt><dd>{ago(status.lastAddedAt)}</dd></div>
 			<div><dt>Refreshes</dt><dd>every {REFRESH}s</dd></div>
 		</dl>
