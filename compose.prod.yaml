@@ -1,0 +1,18 @@
+# Production. There is no development compose file for the frontend — locally
+# this runs with `npm run dev`.
+#
+#   docker compose -f compose.prod.yaml up -d --build
+services:
+  web:
+    build:
+      context: .
+      target: prod
+      args:
+        # Baked into the client bundle. Same origin as the site itself, so the
+        # browser makes no cross-origin request and CORS never comes into it.
+        VITE_API_URL: ${VITE_API_URL:-https://feelm.org}
+    container_name: feelm_web
+    ports:
+      # Localhost only; the host's nginx terminates TLS and proxies here.
+      - '127.0.0.1:3001:3000'
+    restart: unless-stopped

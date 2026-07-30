@@ -1,0 +1,427 @@
+/*
+ * You Know Me
+ *
+ * Paper by default, the dark room on request. Posters carry the colour, so the
+ * page around them stays quiet: one warm brass accent, a hue per activity type,
+ * and surfaces that separate by tone rather than by heavy borders.
+ *
+ * Every colour a component needs is a token here. Nothing should hardcode
+ * white or black — both themes go through the same names, which is what makes
+ * the toggle a one-line change instead of a rewrite.
+ */
+
+:root {
+	/* Paper */
+	--page: #f7f8fa;
+	--surface: #ffffff;
+	--surface-2: #f0f2f6;
+	--surface-3: #e7eaf0;
+
+	/* Ink */
+	--ink: #14171f;
+	--ink-strong: #05070c;
+	--muted: #5b6474;
+	--faint: #8a92a2;
+
+	/* Lines and washes — used instead of ad-hoc black/white alphas */
+	--line: rgb(20 23 31 / 0.11);
+	--line-strong: rgb(20 23 31 / 0.2);
+	--tint: rgb(20 23 31 / 0.04);
+	--tint-strong: rgb(20 23 31 / 0.08);
+	--glass: rgb(247 248 250 / 0.82);
+
+	/* Brass — the brand accent and the colour of a star */
+	--brass: #b8860b;
+	--brass-soft: rgb(184 134 11 / 0.13);
+
+	/* One hue per activity type */
+	--movie: #c2760a;
+	--series: #7c4dd6;
+	--game: #0d8f76;
+	--book: #d94e6b;
+
+	/* `--accent` is re-pointed per section by [data-type] below */
+	--accent: var(--brass);
+	--accent-soft: var(--brass-soft);
+
+	/* Text that sits on top of an accent fill or a photograph */
+	--on-accent: #ffffff;
+	--on-image: #ffffff;
+
+	/*
+	 * Anything laid over artwork keeps its own dark scale in both themes —
+	 * a poster is a poster whether the page around it is paper or night.
+	 */
+	--veil: rgb(10 12 18 / 0.66);
+	--veil-strong: rgb(10 12 18 / 0.85);
+	--veil-gradient: linear-gradient(to top, rgb(8 10 15 / 0.92), rgb(8 10 15 / 0.15) 60%, transparent);
+
+	--danger: #c2392f;
+	--ok: #1c7a4f;
+	--new: #d1421f;
+
+	--radius-sm: 6px;
+	--radius: 12px;
+	--radius-lg: 18px;
+	--radius-xl: 26px;
+
+	--shadow-card: 0 10px 26px -14px rgb(16 20 30 / 0.35);
+	--shadow-lift: 0 18px 38px -18px rgb(16 20 30 / 0.45);
+	--shadow-pop: 0 24px 60px -20px rgb(16 20 30 / 0.35), 0 0 0 1px var(--line);
+
+	--font-display: 'Instrument Serif', 'Iowan Old Style', Georgia, serif;
+	--font-ui: 'Inter Tight', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+	--frame: 84rem;
+	--pad: clamp(1rem, 4vw, 2.5rem);
+	--bar-height: 4rem;
+
+	color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+	--page: #12151c;
+	--surface: #1c2029;
+	--surface-2: #232833;
+	--surface-3: #2c3240;
+
+	--ink: #eceff6;
+	--ink-strong: #ffffff;
+	--muted: #a3abbc;
+	--faint: #7a8294;
+
+	--line: rgb(255 255 255 / 0.11);
+	--line-strong: rgb(255 255 255 / 0.22);
+	--tint: rgb(255 255 255 / 0.05);
+	--tint-strong: rgb(255 255 255 / 0.1);
+	--glass: rgb(18 21 28 / 0.82);
+
+	--brass: #f0c04a;
+	--brass-soft: rgb(240 192 74 / 0.16);
+
+	--movie: #fbbf5c;
+	--series: #b98cf7;
+	--game: #5ee0c0;
+	--book: #f9829a;
+
+	--on-accent: #10131a;
+
+	--danger: #f87171;
+	--ok: #4ade80;
+	--new: #ff6a45;
+
+	--shadow-card: 0 12px 30px -16px rgb(0 0 0 / 0.8);
+	--shadow-lift: 0 22px 44px -20px rgb(0 0 0 / 0.85);
+	--shadow-pop: 0 24px 60px -20px rgb(0 0 0 / 0.8), 0 0 0 1px var(--line);
+
+	color-scheme: dark;
+}
+
+[data-type='movie'] {
+	--accent: var(--movie);
+	--accent-soft: color-mix(in srgb, var(--movie) 14%, transparent);
+}
+[data-type='series'] {
+	--accent: var(--series);
+	--accent-soft: color-mix(in srgb, var(--series) 14%, transparent);
+}
+[data-type='game'] {
+	--accent: var(--game);
+	--accent-soft: color-mix(in srgb, var(--game) 14%, transparent);
+}
+[data-type='book'] {
+	--accent: var(--book);
+	--accent-soft: color-mix(in srgb, var(--book) 14%, transparent);
+}
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+html {
+	-webkit-text-size-adjust: 100%;
+}
+
+body {
+	margin: 0;
+	background: var(--page);
+	color: var(--ink);
+	font-family: var(--font-ui);
+	font-size: 16px;
+	line-height: 1.6;
+	font-variant-numeric: tabular-nums;
+	-webkit-font-smoothing: antialiased;
+	overflow-x: hidden;
+	transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+h1,
+h2,
+h3,
+h4 {
+	margin: 0;
+	font-weight: 600;
+	line-height: 1.15;
+	letter-spacing: -0.01em;
+}
+
+p {
+	margin: 0 0 1em;
+}
+
+a {
+	color: inherit;
+	text-decoration: none;
+}
+
+img {
+	max-width: 100%;
+	display: block;
+}
+
+button,
+input,
+textarea,
+select {
+	font: inherit;
+	color: inherit;
+}
+
+:focus-visible {
+	outline: 2px solid var(--brass);
+	outline-offset: 3px;
+	border-radius: 4px;
+}
+
+::selection {
+	background: var(--brass);
+	color: var(--on-accent);
+}
+
+.scroller {
+	overflow-x: auto;
+	scrollbar-width: thin;
+	scrollbar-color: var(--line-strong) transparent;
+	scroll-snap-type: x proximity;
+	-webkit-overflow-scrolling: touch;
+}
+
+.scroller::-webkit-scrollbar {
+	height: 6px;
+}
+
+.scroller::-webkit-scrollbar-thumb {
+	background: var(--line-strong);
+	border-radius: 99px;
+}
+
+/* ------------------------------------------------------------- primitives */
+
+.frame {
+	width: 100%;
+	max-width: var(--frame);
+	margin-inline: auto;
+	padding-inline: var(--pad);
+}
+
+.display {
+	font-family: var(--font-display);
+	font-weight: 400;
+	letter-spacing: -0.015em;
+	line-height: 1.05;
+}
+
+.eyebrow {
+	font-size: 0.72rem;
+	font-weight: 600;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--faint);
+}
+
+.muted {
+	color: var(--muted);
+}
+
+.faint {
+	color: var(--faint);
+}
+
+.dot-list {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem;
+	color: var(--muted);
+	font-size: 0.9rem;
+}
+
+.dot-list > * + *::before {
+	content: '·';
+	margin-right: 0.5rem;
+	color: var(--faint);
+}
+
+/* Buttons ------------------------------------------------------------- */
+
+.btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	padding: 0.55rem 1.05rem;
+	border: 1px solid var(--line-strong);
+	border-radius: 99px;
+	background: var(--surface);
+	color: var(--ink);
+	font-size: 0.9rem;
+	font-weight: 500;
+	cursor: pointer;
+	transition:
+		background 0.18s ease,
+		border-color 0.18s ease,
+		transform 0.18s ease,
+		color 0.18s ease;
+}
+
+.btn:hover {
+	background: var(--tint);
+	border-color: var(--line-strong);
+}
+
+.btn:active {
+	transform: translateY(1px);
+}
+
+.btn-primary,
+.btn-accent {
+	background: var(--accent);
+	border-color: var(--accent);
+	color: var(--on-accent);
+	font-weight: 600;
+}
+
+.btn-primary:hover,
+.btn-accent:hover {
+	background: color-mix(in srgb, var(--accent) 85%, var(--ink));
+	border-color: transparent;
+}
+
+.btn-primary {
+	--accent: var(--brass);
+}
+
+.btn-ghost {
+	background: transparent;
+	border-color: transparent;
+	color: var(--muted);
+}
+
+.btn-ghost:hover {
+	background: var(--tint);
+	color: var(--ink);
+}
+
+.btn-sm {
+	padding: 0.35rem 0.75rem;
+	font-size: 0.82rem;
+}
+
+.btn[disabled] {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+/* Chips and tags ------------------------------------------------------ */
+
+.chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+	padding: 0.2rem 0.6rem;
+	border: 1px solid var(--line);
+	border-radius: 99px;
+	background: var(--surface);
+	color: var(--muted);
+	font-size: 0.78rem;
+	white-space: nowrap;
+}
+
+.chip-accent {
+	border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+	background: var(--accent-soft);
+	color: color-mix(in srgb, var(--accent) 80%, var(--ink));
+}
+
+/* Surfaces ------------------------------------------------------------ */
+
+.card {
+	background: var(--surface);
+	border: 1px solid var(--line);
+	border-radius: var(--radius-lg);
+}
+
+.field {
+	width: 100%;
+	padding: 0.7rem 0.9rem;
+	background: var(--surface);
+	border: 1px solid var(--line-strong);
+	border-radius: var(--radius);
+	color: var(--ink);
+	transition:
+		border-color 0.18s ease,
+		background 0.18s ease;
+}
+
+.field::placeholder {
+	color: var(--faint);
+}
+
+.field:focus {
+	outline: none;
+	border-color: color-mix(in srgb, var(--brass) 60%, transparent);
+}
+
+/* Layout helpers ------------------------------------------------------ */
+
+.stack {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+.row {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+}
+
+.grid-posters {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+	gap: clamp(0.85rem, 2vw, 1.5rem);
+}
+
+.sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.001ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.001ms !important;
+		scroll-behavior: auto !important;
+	}
+}

@@ -1,0 +1,9 @@
+node_modules/
+/build
+/.svelte-kit
+/package
+
+# Local overrides. .env.example is the committed template.
+.env
+.env.*
+!.env.example
