@@ -1,8 +1,8 @@
 import { browser } from '$app/environment';
 
-const ACCESS_KEY = 'youknowme_access_token';
-const REFRESH_KEY = 'youknowme_refresh_token';
-const EXPIRES_KEY = 'youknowme_expires_at';
+const ACCESS_KEY = 'feelm_access_token';
+const REFRESH_KEY = 'feelm_refresh_token';
+const EXPIRES_KEY = 'feelm_expires_at';
 
 /** @param {{ access_token: string, refresh_token: string, expires_at: string }} tokens */
 export function saveTokens(tokens) {

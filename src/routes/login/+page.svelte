@@ -34,7 +34,7 @@
 	}
 </script>
 
-<svelte:head><title>Sign in — You Know Me</title></svelte:head>
+<svelte:head><title>Sign in — Feelm</title></svelte:head>
 
 <AuthShell
 	title="Welcome back"

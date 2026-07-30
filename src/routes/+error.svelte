@@ -11,7 +11,7 @@
 	]);
 </script>
 
-<svelte:head><title>{page.status} — You Know Me</title></svelte:head>
+<svelte:head><title>{page.status} — Feelm</title></svelte:head>
 
 <div class="frame lost">
 	<span class="code display">{page.status}</span>

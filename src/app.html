@@ -6,7 +6,7 @@
 		<meta name="theme-color" content="#f7f8fa" />
 		<meta
 			name="description"
-			content="You Know Me — a shared log of the films, series, games and books people actually finished."
+			content="Feelm — a shared log of the films, series, games and books people actually finished."
 		/>
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -22,7 +22,7 @@
 			// Set the theme before the first paint so it never flashes.
 			(function () {
 				try {
-					var choice = localStorage.getItem('youknowme:theme') || 'light';
+					var choice = localStorage.getItem('feelm:theme') || 'light';
 					var dark =
 						choice === 'dark' ||
 						(choice === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);

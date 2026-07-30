@@ -33,7 +33,7 @@
 	</div>
 
 	<div class="frame base muted">
-		<span>© {year} You Know Me</span>
+		<span>© {year} Feelm</span>
 		<span class="faint">Frontend preview — the API comes next.</span>
 	</div>
 </footer>

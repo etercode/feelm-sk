@@ -76,7 +76,7 @@
 </script>
 
 <svelte:head>
-	<title>{user ? `${user.name} (@${user.username})` : 'Profile'} — You Know Me</title>
+	<title>{user ? `${user.name} (@${user.username})` : 'Profile'} — Feelm</title>
 </svelte:head>
 
 {#if loading}

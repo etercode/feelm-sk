@@ -24,7 +24,7 @@
 	}
 </script>
 
-<svelte:head><title>Create an account — You Know Me</title></svelte:head>
+<svelte:head><title>Create an account — Feelm</title></svelte:head>
 
 <AuthShell
 	title="Start a log"

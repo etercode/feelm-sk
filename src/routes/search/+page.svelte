@@ -118,7 +118,7 @@
 </script>
 
 <svelte:head>
-	<title>{queryText ? `${queryText} — search` : 'Search'} — You Know Me</title>
+	<title>{queryText ? `${queryText} — search` : 'Search'} — Feelm</title>
 </svelte:head>
 
 <div class="frame page">

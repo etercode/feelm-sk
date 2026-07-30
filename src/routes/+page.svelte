@@ -32,7 +32,7 @@
 </script>
 
 <svelte:head>
-	<title>You Know Me — films, series, games and books people finished</title>
+	<title>Feelm — films, series, games and books people finished</title>
 </svelte:head>
 
 {#if !catalog.ready}

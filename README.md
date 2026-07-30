@@ -1,19 +1,19 @@
-# You Know Me — frontend
+# Feelm — frontend
 
-SvelteKit (JavaScript, no TypeScript) frontend for **You Know Me**, a shared log of
+SvelteKit (JavaScript, no TypeScript) frontend for **Feelm**, a shared log of
 the films, series, games and books people actually finished.
 
 Catalog, auth, shelves, reviews, follows, feed and seen/NEW all talk to the
-Symfony API in `../youknowme` via `VITE_API_URL` (default `http://localhost:8092`).
+Symfony API in `../feelm` via `VITE_API_URL` (default `http://localhost:8092`).
 
 ```bash
 # API first
-cd ../youknowme && docker compose up -d
+cd ../feelm && docker compose up -d
 docker compose exec php bin/console doctrine:migrations:migrate
 docker compose exec php bin/console app:catalog:seed
 
 # then the front
-cd ../youknowme-front
+cd ../feelm-sk
 cp .env.example .env   # VITE_API_URL=http://localhost:8092
 npm install
 npm run dev            # http://localhost:5173
@@ -142,6 +142,6 @@ src/
 One review per person per item — writing again edits it and pushes the previous
 text into history. Ratings are halves from 0.5 to 5.
 
-Catalog data is owned by the Symfony API (`../youknowme`); this app only reads it
+Catalog data is owned by the Symfony API (`../feelm`); this app only reads it
 over HTTP.
 

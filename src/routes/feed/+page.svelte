@@ -30,7 +30,7 @@
 	});
 </script>
 
-<svelte:head><title>Feed — You Know Me</title></svelte:head>
+<svelte:head><title>Feed — Feelm</title></svelte:head>
 
 <div class="frame page">
 	<header>

@@ -49,7 +49,7 @@
 </script>
 
 <svelte:head>
-	<title>{item.title} — You Know Me</title>
+	<title>{item.title} — Feelm</title>
 	<meta name="description" content={item.overview ?? item.title} />
 </svelte:head>
 

@@ -7,7 +7,7 @@
 
 import { browser } from '$app/environment';
 
-const STORAGE_KEY = 'youknowme:theme';
+const STORAGE_KEY = 'feelm:theme';
 
 export const choices = ['light', 'dark', 'system'];
 

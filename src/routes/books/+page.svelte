@@ -4,7 +4,7 @@
 	let { data } = $props();
 </script>
 
-<svelte:head><title>Books — You Know Me</title></svelte:head>
+<svelte:head><title>Books — Feelm</title></svelte:head>
 
 <Browse
 	{data}

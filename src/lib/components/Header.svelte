@@ -46,9 +46,9 @@
 
 <header class="bar">
 	<div class="inner frame">
-		<a class="brand" href="/" aria-label="You Know Me — home">
+		<a class="brand" href="/" aria-label="Feelm — home">
 			<span class="mark" aria-hidden="true"></span>
-			<span class="wordmark">you<em>know</em>me</span>
+			<span class="wordmark"><em>feel</em>m</span>
 		</a>
 
 		<nav class="links" class:open={navOpen}>
