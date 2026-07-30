@@ -15,9 +15,25 @@ export function browseLoad(type) {
 		if (!params.has('limit')) params.set('limit', '30');
 		if (!params.has('sort')) params.set('sort', 'popularity');
 
-		const results = await fetch(`${API_URL}/api/search?${params}`)
-			.then((response) => (response.ok ? response.json() : null))
-			.catch(() => null);
+		const endpoint = `${API_URL}/api/search?${params}`;
+		let results = null;
+
+		/*
+		 * The page degrades to "the catalog is unreachable" whatever went wrong,
+		 * but the reason is logged rather than swallowed. A silent catch here
+		 * once turned a specific, findable failure into a blank page with no
+		 * explanation anywhere — on the server or in the browser console.
+		 */
+		try {
+			const response = await fetch(endpoint);
+			if (!response.ok) {
+				console.error(`browse ${type}: ${endpoint} returned ${response.status}`);
+			} else {
+				results = await response.json();
+			}
+		} catch (error) {
+			console.error(`browse ${type}: ${endpoint} failed —`, error);
+		}
 
 		return { type, results, unreachable: results === null };
 	};
