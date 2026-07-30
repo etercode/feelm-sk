@@ -12,6 +12,23 @@ services:
         # browser makes no cross-origin request and CORS never comes into it.
         VITE_API_URL: ${VITE_API_URL:-https://feelm.org}
     container_name: feelm_web
+    environment:
+      # What the app believes it is serving. Behind nginx the request arrives
+      # over plain HTTP, so without this adapter-node concludes it is
+      # http://feelm.org — and then treats https://feelm.org/api as a different
+      # origin. During server-side rendering that is fatal: SvelteKit simulates
+      # browser CORS on cross-origin fetches, the API sends no
+      # Access-Control-Allow-Origin because same-origin callers need none, and
+      # every browse page renders "the catalog is unreachable" while the API
+      # sits there answering 200.
+      ORIGIN: ${ORIGIN:-https://feelm.org}
+    extra_hosts:
+      # Rendering fetches the API by its public name. Left to public DNS that
+      # means container -> Cloudflare -> back to this same machine, paying an
+      # internet round trip to reach a container alongside it. Pointing the name
+      # at the host sends it straight to the same nginx, which holds a
+      # certificate valid for it, so the URL and the origin stay unchanged.
+      - 'feelm.org:host-gateway'
     ports:
       # Localhost only; the host's nginx terminates TLS and proxies here.
       - '127.0.0.1:3001:3000'
