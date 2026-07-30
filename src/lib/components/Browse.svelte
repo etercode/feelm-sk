@@ -8,15 +8,23 @@
 -->
 <script>
 	import { goto } from '$app/navigation';
-	import { page } from '$app/state';
+	import { navigating, page } from '$app/state';
 	import Icon from '$lib/components/Icon.svelte';
 	import PosterCard from '$lib/components/PosterCard.svelte';
+	import Spinner from '$lib/components/Spinner.svelte';
 	import { types } from '$lib/data/types.js';
 	import { plural } from '$lib/util/format.js';
 
 	let { type, title, intro, data } = $props();
 
 	let spec = $derived(types[type]);
+	/*
+	 * Changing a filter, a sort or a page is a navigation to this same route, so
+	 * the results are replaced while everything around them stays put. The bar
+	 * at the top of the window is easy to miss when the thing that changes is
+	 * halfway down the page, so the grid says so itself.
+	 */
+	let refreshing = $derived(navigating.to?.route.id === page.route.id);
 	let results = $derived(data.results);
 	let facets = $derived(data.results?.facets ?? null);
 	let params = $derived(page.url.searchParams);
@@ -112,12 +120,26 @@
 			{#if results.pages > 1}· page {pageNumber} of {results.pages.toLocaleString()}{/if}
 		</p>
 
-		<div class="grid-posters">
-			{#each results.items as item (item.id)}
-				<PosterCard {item} showType={false} />
-			{:else}
-				<p class="muted">Nothing here with those filters.</p>
-			{/each}
+		<!--
+			The old results stay on screen while the new ones load, dimmed and
+			inert. Emptying the grid first would collapse the page height and
+			throw the scroll position around on every filter change.
+		-->
+		<div class="results" class:refreshing aria-busy={refreshing}>
+			<div class="grid-posters">
+				{#each results.items as item (item.id)}
+					<PosterCard {item} showType={false} />
+				{:else}
+					<p class="muted">Nothing here with those filters.</p>
+				{/each}
+			</div>
+
+			{#if refreshing}
+				<div class="working">
+					<Spinner size={22} />
+					<span class="faint">Loading…</span>
+				</div>
+			{/if}
 		</div>
 
 		{#if results.pages > 1}
@@ -147,6 +169,28 @@
 <style>
 	.page {
 		padding-top: clamp(2rem, 5vw, 3.5rem);
+	}
+
+	.results {
+		position: relative;
+	}
+
+	.results.refreshing .grid-posters {
+		opacity: 0.45;
+		/* Stops a click landing on a poster that is about to be replaced. */
+		pointer-events: none;
+		transition: opacity 0.15s ease;
+	}
+
+	.working {
+		position: absolute;
+		inset: 0 0 auto;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.6rem;
+		/* Sits over the first row, which is where the eye already is. */
+		padding: clamp(2rem, 8vh, 5rem) 0;
 	}
 
 	.masthead {

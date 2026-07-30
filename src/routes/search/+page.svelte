@@ -7,8 +7,9 @@
 -->
 <script>
 	import { goto } from '$app/navigation';
-	import { page } from '$app/state';
+	import { navigating, page } from '$app/state';
 	import Icon from '$lib/components/Icon.svelte';
+	import Spinner from '$lib/components/Spinner.svelte';
 	import PosterCard from '$lib/components/PosterCard.svelte';
 	import { types, typeKeys } from '$lib/data/types.js';
 	import { plural } from '$lib/util/format.js';
@@ -17,6 +18,9 @@
 
 	let params = $derived(page.url.searchParams);
 	let results = $derived(data.results);
+	// Filters and paging navigate to /search itself, so the results are what
+	// changes while the form around them stays put.
+	let refreshing = $derived(navigating.to?.route.id === page.route.id);
 	let facets = $derived(data.results?.facets ?? null);
 
 	let queryText = $state('');
@@ -357,7 +361,13 @@
 				{/if}
 			</aside>
 
-			<div class="results">
+			<div class="results" class:refreshing aria-busy={refreshing}>
+				{#if refreshing}
+					<div class="working">
+						<Spinner size={22} />
+						<span class="faint">Loading…</span>
+					</div>
+				{/if}
 				{#if results.items.length}
 					<div class="grid-posters">
 						{#each results.items as item (item.id)}
@@ -604,6 +614,32 @@
 	}
 
 	/* Results ------------------------------------------------------------ */
+
+
+	.results {
+		position: relative;
+	}
+
+	.results .grid-posters {
+		transition: opacity 0.15s ease;
+	}
+
+	.results.refreshing .grid-posters {
+		opacity: 0.45;
+		/* Stops a click landing on a poster that is about to be replaced. */
+		pointer-events: none;
+	}
+
+	.working {
+		position: absolute;
+		inset: 0 0 auto;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.6rem;
+		padding: clamp(2rem, 8vh, 5rem) 0;
+		z-index: 1;
+	}
 
 	.results {
 		min-width: 0;
