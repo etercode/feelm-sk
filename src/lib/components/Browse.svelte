@@ -3,8 +3,12 @@
 
 	Filtering, sorting and paging all happen in the database — the page renders
 	whatever the load function fetched and writes any change back into the query
-	string, so a browse view is a shareable link and the counts are the real
-	catalog counts rather than counts of the first page.
+	string, so a browse view is a shareable link.
+
+	The filters name things without counting them. A row of genre chips each
+	carrying a number was two of the three seconds this page took to answer:
+	every request recounted every genre across the whole catalogue, to decorate
+	a control that works just as well without.
 -->
 <script>
 	import { goto } from '$app/navigation';
@@ -27,7 +31,7 @@
 	 */
 	let refreshing = $derived(navigating.to?.route.id === page.route.id);
 	let results = $derived(data.results);
-	let facets = $derived(data.results?.facets ?? null);
+	let options = $derived(data.filters);
 	let params = $derived(page.url.searchParams);
 	let pageNumber = $derived(Number(params.get('page') ?? 1));
 
@@ -39,6 +43,33 @@
 		title: 'A–Z',
 		added: 'Recently crawled'
 	};
+
+	const scoreSteps = [
+		{ value: '', label: 'Any score' },
+		{ value: '60', label: '60 and up' },
+		{ value: '70', label: '70 and up' },
+		{ value: '80', label: '80 and up' },
+		{ value: '90', label: '90 and up' }
+	];
+
+	/*
+	 * The decades the API says hold something, newest first. Derived from the
+	 * reported year span it offered the sixties, seventies and eighties — one
+	 * title, one title and none at all.
+	 */
+	let decades = $derived(options?.decades ?? []);
+
+	// One genre at a time here; /search is where several can be combined.
+	let genre = $derived(params.get('genre') ?? '');
+	let decade = $derived(params.get('yearFrom') ?? '');
+	let scoreMin = $derived(params.get('scoreMin') ?? '');
+
+	function setDecade(value) {
+		if (!value) return apply({ yearFrom: null, yearTo: null });
+		apply({ yearFrom: value, yearTo: Number(value) + 9 });
+	}
+
+	let activeCount = $derived([genre, decade, scoreMin].filter(Boolean).length);
 
 	function apply(changes, { resetPage = true } = {}) {
 		const next = new URLSearchParams(params);
@@ -54,10 +85,6 @@
 		goto(`${spec.browse}?${next}`, { keepFocus: true, noScroll: true });
 	}
 
-	function toggleGenre(slug) {
-		const current = params.getAll('genre');
-		apply({ genre: current.includes(slug) ? current.filter((g) => g !== slug) : [...current, slug] });
-	}
 </script>
 
 <div class="frame page" data-type={type}>
@@ -76,25 +103,61 @@
 		<p class="notice">The catalog API is unreachable.</p>
 	{:else}
 		<div class="filters">
-			<div class="genres scroller">
-				<button
-					type="button"
-					class="chip"
-					class:on={!params.getAll('genre').length}
-					onclick={() => apply({ genre: null })}
-				>
-					All
-				</button>
-				{#each facets?.genres ?? [] as genre (genre.slug)}
+			<div class="picks">
+				<label>
+					<span class="sr-only">Genre</span>
+					<select
+						class="field"
+						value={genre}
+						onchange={(event) => apply({ genre: event.currentTarget.value || null })}
+					>
+						<option value="">Any genre</option>
+						{#each options?.genres ?? [] as g (g.slug)}
+							<option value={g.slug}>{g.name}</option>
+						{/each}
+					</select>
+				</label>
+
+				{#if decades.length}
+					<label>
+						<span class="sr-only">Decade</span>
+						<select
+							class="field"
+							value={decade}
+							onchange={(event) => setDecade(event.currentTarget.value)}
+						>
+							<option value="">Any decade</option>
+							{#each decades as d (d)}
+								<!-- A string, because the value it is compared against came
+								     from the query string and 1990 is not '1990'. -->
+								<option value={String(d)}>{d}s</option>
+							{/each}
+						</select>
+					</label>
+				{/if}
+
+				<label>
+					<span class="sr-only">Minimum score</span>
+					<select
+						class="field"
+						value={scoreMin}
+						onchange={(event) => apply({ scoreMin: event.currentTarget.value || null })}
+					>
+						{#each scoreSteps as step (step.value)}
+							<option value={step.value}>{step.label}</option>
+						{/each}
+					</select>
+				</label>
+
+				{#if activeCount}
 					<button
 						type="button"
-						class="chip"
-						class:on={params.getAll('genre').includes(genre.slug)}
-						onclick={() => toggleGenre(genre.slug)}
+						class="btn btn-sm btn-ghost"
+						onclick={() => apply({ genre: null, yearFrom: null, yearTo: null, scoreMin: null })}
 					>
-						{genre.name} <span class="faint">{genre.count.toLocaleString()}</span>
+						<Icon name="close" size={12} />Clear
 					</button>
-				{/each}
+				{/if}
 			</div>
 
 			<div class="tools">
@@ -224,10 +287,16 @@
 		border-bottom: 1px solid var(--line);
 	}
 
-	.genres {
+	.picks {
 		display: flex;
+		align-items: center;
 		gap: 0.4rem;
+		flex-wrap: wrap;
 		min-width: 0;
+	}
+
+	.picks select {
+		width: auto;
 	}
 
 	.tools {
@@ -235,32 +304,6 @@
 		align-items: center;
 		gap: 0.5rem;
 		flex: none;
-	}
-
-	.chip {
-		cursor: pointer;
-		flex: none;
-		transition:
-			background 0.18s ease,
-			color 0.18s ease,
-			border-color 0.18s ease;
-	}
-
-	.chip:hover {
-		color: var(--ink);
-		border-color: var(--line-strong);
-	}
-
-	.chip.on {
-		background: var(--accent);
-		border-color: var(--accent);
-		color: var(--on-accent);
-		font-weight: 600;
-	}
-
-	.chip.on .faint {
-		color: inherit;
-		opacity: 0.75;
 	}
 
 	select {
