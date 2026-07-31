@@ -142,8 +142,32 @@ export async function logout() {
 	}
 }
 
+/**
+ * Trades a Google ID token for our own token pair. The response is the same
+ * shape /api/login returns, plus the user.
+ *
+ * @param {string} credential the ID token Google handed the browser
+ */
+export async function loginWithGoogle(credential) {
+	const tokens = await request('/api/auth/google', {
+		method: 'POST',
+		body: JSON.stringify({ credential })
+	});
+	saveTokens(tokens);
+	return tokens;
+}
+
 export function getMe() {
 	return request('/api/me', {}, true);
+}
+
+/**
+ * Changes the handle a Google-created account was given. Allowed once.
+ *
+ * @param {string} username
+ */
+export function chooseUsername(username) {
+	return request('/api/me/username', { method: 'POST', body: JSON.stringify({ username }) }, true);
 }
 
 // ---- Own account ---------------------------------------------------------

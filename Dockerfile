@@ -15,6 +15,12 @@ COPY . .
 ARG VITE_API_URL=https://feelm.org
 ENV VITE_API_URL=$VITE_API_URL
 
+# Baked in at build time like the API URL. The client id is public — it is
+# embedded in the sign-in button every visitor renders — and this flow has
+# no client secret at all.
+ARG VITE_GOOGLE_CLIENT_ID=201284597204-6uj1er6jbgdhqv6kvabo7l5d75l5mc78.apps.googleusercontent.com
+ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
+
 RUN npm run build
 
 # The adapter bundles everything the server needs into build/, so the runtime

@@ -1,6 +1,13 @@
 export const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8092';
 
 /**
+ * The Google OAuth client id. Public by design — it is baked into the sign-in
+ * button every visitor's browser renders, and there is no client secret in this
+ * flow. Empty means the Google button simply does not appear.
+ */
+export const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? '';
+
+/**
  * Resolves an uploaded file's stored path against the host that serves it.
  *
  * Uploads live on the API host under /media — the volume nginx already serves.

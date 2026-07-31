@@ -1,6 +1,7 @@
 <script>
 	import { goto } from '$app/navigation';
 	import AuthShell from '$lib/components/AuthShell.svelte';
+	import GoogleButton from '$lib/components/GoogleButton.svelte';
 	import { session } from '$lib/state/session.svelte.js';
 
 	let login = $state('');
@@ -66,6 +67,8 @@
 			Try demo (kaan)
 		</button>
 	</form>
+
+	<GoogleButton label="signin_with" onerror={(message) => (error = message)} />
 
 	<p class="alt muted">
 		No account? <a href="/register">Create one</a>

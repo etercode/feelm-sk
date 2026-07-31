@@ -11,6 +11,7 @@ services:
         # Baked into the client bundle. Same origin as the site itself, so the
         # browser makes no cross-origin request and CORS never comes into it.
         VITE_API_URL: ${VITE_API_URL:-https://feelm.org}
+        VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID:-201284597204-6uj1er6jbgdhqv6kvabo7l5d75l5mc78.apps.googleusercontent.com}
     container_name: feelm_web
     environment:
       # What the app believes it is serving. Behind nginx the request arrives

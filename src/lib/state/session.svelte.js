@@ -69,11 +69,58 @@ class Session {
 	}
 
 	/**
-	 * @param {{ username: string, name: string, tagline?: string, password: string }} data
+	 * Signs in with the ID token Google gave the browser.
+	 *
+	 * From the token pair onwards this is identical to a password sign-in —
+	 * which is the point of doing the exchange server-side.
+	 *
+	 * @param {string} credential
 	 */
-	async register({ username, name, tagline, password }) {
+	async signInWithGoogle(credential) {
+		try {
+			const { user } = await api.loginWithGoogle(credential);
+			this.user = user ?? (await api.getMe());
+			library.rememberUser(this.user);
+			await library.hydrateForUser(this.user);
+			return { ok: true };
+		} catch (e) {
+			if (e instanceof ApiError && e.status === 503) {
+				return { ok: false, error: 'Google sign-in is not set up on this server.' };
+			}
+			return { ok: false, error: this.#errorMessage(e, 'Could not sign in with Google.') };
+		}
+	}
+
+	/**
+	 * The one chance a Google-created account has to change its handle.
+	 *
+	 * @param {string} username
+	 */
+	async chooseUsername(username) {
+		const handle = username.trim();
+		if (handle.length < 3) return { ok: false, error: 'Pick at least 3 characters.' };
+		if (!/^[a-zA-Z0-9_]+$/.test(handle)) {
+			return { ok: false, error: 'Letters, numbers and underscores only.' };
+		}
+
+		try {
+			this.applyUser(await api.chooseUsername(handle));
+			return { ok: true };
+		} catch (e) {
+			if (e instanceof ApiError && e.status === 409) {
+				return { ok: false, error: 'That one is taken. Try another.' };
+			}
+			return { ok: false, error: this.#errorMessage(e, 'Could not save that handle.') };
+		}
+	}
+
+	/**
+	 * @param {{ username: string, name: string, email: string, tagline?: string, password: string }} data
+	 */
+	async register({ username, name, email, tagline, password }) {
 		const handle = username.trim().toLowerCase();
 		if (!handle) return { ok: false, error: 'Pick a username.' };
+		if (!email?.trim()) return { ok: false, error: 'An email address is required.' };
 		if (!password || password.length < 8) {
 			return { ok: false, error: 'Password must be at least 8 characters.' };
 		}
@@ -81,6 +128,7 @@ class Session {
 		try {
 			await api.register({
 				username: handle,
+				email: email.trim(),
 				password,
 				name: name.trim() || handle,
 				tagline: tagline?.trim() || undefined
@@ -88,7 +136,13 @@ class Session {
 			return this.signIn(handle, password);
 		} catch (e) {
 			if (e instanceof ApiError && e.status === 409) {
-				return { ok: false, error: 'That username is taken.' };
+				return {
+					ok: false,
+					error:
+						e.body?.error === 'email_already_used'
+							? 'That email already has an account.'
+							: 'That username is taken.'
+				};
 			}
 			return { ok: false, error: this.#errorMessage(e, 'Could not create account.') };
 		}
