@@ -48,8 +48,21 @@ class Catalog {
 					byId.set(item.id, { ...item, isUpcoming: Boolean(item.isUpcoming) });
 				}
 			}
+			/*
+			 * Folded in rather than written over. The release queue asks for a
+			 * short payload — artwork, name, genres, date, director — and a
+			 * title can be in a rail as well, where it arrived complete.
+			 * Replacing the entry would throw the rest of it away, so this
+			 * keeps whichever fields each source had, `details` included.
+			 */
 			for (const item of upcomingPayload?.items ?? []) {
-				byId.set(item.id, { ...item, isUpcoming: true });
+				const seen = byId.get(item.id);
+				byId.set(item.id, {
+					...seen,
+					...item,
+					details: { ...seen?.details, ...item.details },
+					isUpcoming: true
+				});
 			}
 
 			this.items = [...byId.values()];
