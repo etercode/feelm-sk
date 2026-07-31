@@ -12,12 +12,14 @@
 -->
 <script>
 	import { page } from '$app/state';
+	import * as api from '$lib/api/client.js';
 	import Avatar from '$lib/components/Avatar.svelte';
 	import FollowButton from '$lib/components/FollowButton.svelte';
 	import Icon from '$lib/components/Icon.svelte';
 	import PosterCard from '$lib/components/PosterCard.svelte';
 	import ReviewCard from '$lib/components/ReviewCard.svelte';
 	import ShelfManager from '$lib/components/ShelfManager.svelte';
+	import Spinner from '$lib/components/Spinner.svelte';
 	import { itemPath } from '$lib/data/items.js';
 	import { statusLabel, statusOrder, types, typeKeys } from '$lib/data/types.js';
 	import { catalog } from '$lib/state/catalog.svelte.js';
@@ -33,46 +35,20 @@
 	let typeFilter = $state(null);
 	let statusFilter = $state(null);
 	let search = $state('');
+	let sort = $state('recent');
 	let view = $state('grid');
 
-	let entries = $derived(user ? library.entriesOf(user.id) : []);
 	let stats = $derived(user ? library.statsOf(user.id) : null);
 	let reviews = $derived(user ? library.reviewsBy(user.id) : []);
 	let followers = $derived(user ? library.followersOf(user.id) : []);
 	let following = $derived(user ? library.followingOf(user.id) : []);
 
-	/** Their best-rated finished thing supplies the banner art. */
-	let banner = $derived(
-		entries
-			.filter((entry) => entry.rating)
-			.sort((a, b) => b.rating - a.rating)
-			.map((entry) => catalog.itemById(entry.itemId))
-			.find((item) => item?.backdrop) ?? null
-	);
-
-	let rows = $derived(
-		entries
-			.map((entry) => ({ entry, item: catalog.itemById(entry.itemId) }))
-			.filter((row) => row.item)
-	);
-
-	/** What they are in the middle of — the most "them" thing on the page. */
-	let current = $derived(rows.filter((row) => row.entry.status === 'active').slice(0, 12));
-
-	let shelf = $derived(
-		rows
-			.filter((row) => !typeFilter || row.item.type === typeFilter)
-			.filter((row) => !statusFilter || row.entry.status === statusFilter)
-			.filter((row) => matches(row.item, search))
-	);
-
-	let filtered = $derived(Boolean(typeFilter || statusFilter || search.trim()));
-
-	let shared = $derived(
-		session.user && user && session.user.id !== user.id
-			? library.sharedWith(session.user.id, user.id)
-			: []
-	);
+	/** The head of the page, from the profile payload rather than the shelf. */
+	let profile = $state(null);
+	let banner = $derived(profile?.banner ?? null);
+	let current = $derived(profile?.current ?? []);
+	let sharedCount = $derived(profile?.sharedCount ?? 0);
+	let loggedTotal = $derived(stats?.logged ?? 0);
 
 	let loading = $state(true);
 	let loadError = $state(null);
@@ -84,6 +60,7 @@
 		library
 			.loadProfile(handle)
 			.then((data) => {
+				profile = data;
 				if (session.user && data?.user && data.isFollowing != null) {
 					library.setFollowing(session.user.id, data.user.id, data.isFollowing);
 				}
@@ -96,18 +73,107 @@
 			});
 	});
 
-	/** @param {any} item @param {string} term */
-	function matches(item, term) {
-		const needle = term.trim().toLowerCase();
-		if (!needle) return true;
+	/* ---- the shelf, one page at a time -------------------------------- */
 
-		return item.title.toLowerCase().includes(needle);
+	/**
+	 * Filtering and paging happen on the server. Somebody with four thousand
+	 * titles used to have all four thousand sent over so the browser could hide
+	 * most of them; now a page is twenty-four rows whatever the shelf holds.
+	 */
+	const PER_PAGE = 24;
+
+	/** Typing is debounced into this — one request per pause, not per keystroke. */
+	let term = $state('');
+	let pageNumber = $state(1);
+	let shelf = $state({ items: [], total: 0, pages: 0 });
+	let shelfLoading = $state(false);
+	let shelfError = $state(null);
+
+	$effect(() => {
+		const typed = search;
+		const timer = setTimeout(() => {
+			if (typed.trim() !== term) {
+				term = typed.trim();
+				pageNumber = 1;
+			}
+		}, 250);
+
+		return () => clearTimeout(timer);
+	});
+
+	// Any change of filter is a new first page.
+	function refilter(change) {
+		change();
+		pageNumber = 1;
 	}
+
+	$effect(() => {
+		if (!user) return;
+
+		const request = {
+			handle: username,
+			type: typeFilter,
+			status: statusFilter,
+			q: term,
+			sort,
+			page: pageNumber
+		};
+
+		let live = true;
+		shelfLoading = true;
+		shelfError = null;
+
+		api
+			.getUserEntries(request.handle, {
+				type: request.type,
+				status: request.status,
+				q: request.q,
+				sort: request.sort,
+				page: request.page,
+				limit: PER_PAGE
+			})
+			.then((data) => {
+				// A slower earlier request must not overwrite a newer answer.
+				if (!live) return;
+				library.ingestEntries(data.items);
+				shelf = { items: data.items, total: data.total, pages: data.pages };
+			})
+			.catch(() => {
+				if (live) shelfError = 'Could not load this shelf.';
+			})
+			.finally(() => {
+				if (live) shelfLoading = false;
+			});
+
+		return () => {
+			live = false;
+		};
+	});
+
+	/*
+	 * Rows are read back out of the store rather than used as fetched, so an
+	 * inline shelf change shows immediately instead of waiting for a refetch —
+	 * and something removed disappears, because the store no longer has it.
+	 */
+	let rows = $derived(
+		user
+			? shelf.items
+					.map((row) => ({
+						entry: library.entryFor(user.id, row.entry.itemId),
+						item: catalog.itemById(row.entry.itemId)
+					}))
+					.filter((row) => row.entry && row.item)
+			: []
+	);
+
+	let filtered = $derived(Boolean(typeFilter || statusFilter || term));
 
 	function clearFilters() {
 		typeFilter = null;
 		statusFilter = null;
 		search = '';
+		term = '';
+		pageNumber = 1;
 	}
 </script>
 
@@ -155,8 +221,8 @@
 						</a>
 					{:else}
 						<FollowButton {user} />
-						{#if shared.length}
-							<span class="small in-common">{plural(shared.length, 'title')} in common</span>
+						{#if sharedCount}
+							<span class="small in-common">{plural(sharedCount, 'title')} in common</span>
 						{/if}
 					{/if}
 				</div>
@@ -174,9 +240,10 @@
 				<h2 class="eyebrow">{isMe ? 'You are in the middle of' : 'In the middle of'}</h2>
 				<div class="current-rail scroller">
 					{#each current as row (row.entry.id)}
-						<a class="current-card" href={itemPath(row.item)} data-type={row.item.type}>
-							<img src={row.item.poster} alt="" loading="lazy" />
-							<span class="current-title">{row.item.title}</span>
+						{@const item = catalog.itemById(row.entry.itemId) ?? row.item}
+						<a class="current-card" href={itemPath(item)} data-type={item.type}>
+							<img src={item.poster} alt="" loading="lazy" />
+							<span class="current-title">{item.title}</span>
 						</a>
 					{/each}
 				</div>
@@ -209,7 +276,7 @@
 
 		<nav class="tabs">
 			<button type="button" class:on={tab === 'shelf'} onclick={() => (tab = 'shelf')}>
-				Shelf <span class="faint">{entries.length}</span>
+				Shelf <span class="faint">{loggedTotal.toLocaleString()}</span>
 			</button>
 			<button type="button" class:on={tab === 'reviews'} onclick={() => (tab = 'reviews')}>
 				Reviews <span class="faint">{reviews.length}</span>
@@ -231,28 +298,45 @@
 					/>
 				</label>
 
-				<div class="views" role="group" aria-label="Layout">
-					<button
-						type="button"
-						class:on={view === 'grid'}
-						aria-pressed={view === 'grid'}
-						onclick={() => (view = 'grid')}
-					>
-						<Icon name="flex" size={14} />Posters
-					</button>
-					<button
-						type="button"
-						class:on={view === 'list'}
-						aria-pressed={view === 'list'}
-						onclick={() => (view = 'list')}
-					>
-						<Icon name="menu" size={14} />{isMe ? 'Manage' : 'List'}
-					</button>
+				<div class="tools">
+					<label class="sort">
+						<span class="sr-only">Sort by</span>
+						<select class="field" bind:value={sort} onchange={() => (pageNumber = 1)}>
+							<option value="recent">Recently updated</option>
+							<option value="rating">Highest scored</option>
+							<option value="title">Title A–Z</option>
+							<option value="year">Newest first</option>
+						</select>
+					</label>
+
+					<div class="views" role="group" aria-label="Layout">
+						<button
+							type="button"
+							class:on={view === 'grid'}
+							aria-pressed={view === 'grid'}
+							onclick={() => (view = 'grid')}
+						>
+							<Icon name="flex" size={14} />Posters
+						</button>
+						<button
+							type="button"
+							class:on={view === 'list'}
+							aria-pressed={view === 'list'}
+							onclick={() => (view = 'list')}
+						>
+							<Icon name="menu" size={14} />{isMe ? 'Manage' : 'List'}
+						</button>
+					</div>
 				</div>
 			</div>
 
 			<div class="filters">
-				<button type="button" class="chip" class:on={!typeFilter} onclick={() => (typeFilter = null)}>
+				<button
+					type="button"
+					class="chip"
+					class:on={!typeFilter}
+					onclick={() => refilter(() => (typeFilter = null))}
+				>
 					Everything
 				</button>
 				{#each typeKeys as key (key)}
@@ -261,7 +345,7 @@
 						class="chip"
 						data-type={key}
 						class:on={typeFilter === key}
-						onclick={() => (typeFilter = typeFilter === key ? null : key)}
+						onclick={() => refilter(() => (typeFilter = typeFilter === key ? null : key))}
 					>
 						<Icon name={key} size={12} />{types[key].plural}
 					</button>
@@ -274,7 +358,7 @@
 						type="button"
 						class="chip"
 						class:on={statusFilter === status}
-						onclick={() => (statusFilter = statusFilter === status ? null : status)}
+						onclick={() => refilter(() => (statusFilter = statusFilter === status ? null : status))}
 					>
 						{statusLabel(typeFilter ?? 'movie', status)}
 					</button>
@@ -287,22 +371,54 @@
 				{/if}
 			</div>
 
-			{#if filtered}
-				<p class="count faint">{plural(shelf.length, 'title')}</p>
+			<p class="count faint" aria-live="polite">
+				{plural(shelf.total, 'title')}{filtered ? ' match' : ''}
+				{#if shelf.pages > 1}· page {pageNumber} of {shelf.pages.toLocaleString()}{/if}
+				{#if shelfLoading}<Spinner size={12} />{/if}
+			</p>
+
+			{#if shelfError}
+				<p class="error">{shelfError}</p>
 			{/if}
 
-			{#if view === 'list'}
-				<ShelfManager rows={shelf} userId={user.id} owner={isMe} />
-			{:else}
-				<div class="grid-posters shelf-grid">
-					{#each shelf as row (row.entry.id)}
-						<PosterCard item={row.item} ownerId={user.id} />
-					{:else}
-						<p class="muted">
-							{filtered ? 'Nothing matches those filters.' : 'Nothing on this shelf yet.'}
-						</p>
-					{/each}
-				</div>
+			<div class="results" class:busy={shelfLoading}>
+				{#if view === 'list'}
+					<ShelfManager {rows} userId={user.id} owner={isMe} />
+				{:else}
+					<div class="grid-posters shelf-grid">
+						{#each rows as row (row.entry.id)}
+							<PosterCard item={row.item} ownerId={user.id} />
+						{:else}
+							{#if !shelfLoading}
+								<p class="muted">
+									{filtered ? 'Nothing matches those filters.' : 'Nothing on this shelf yet.'}
+								</p>
+							{/if}
+						{/each}
+					</div>
+				{/if}
+			</div>
+
+			{#if shelf.pages > 1}
+				<nav class="pager">
+					<button
+						type="button"
+						class="btn btn-sm"
+						disabled={pageNumber <= 1 || shelfLoading}
+						onclick={() => (pageNumber -= 1)}
+					>
+						<Icon name="left" size={14} />Previous
+					</button>
+					<span class="faint">{pageNumber} / {shelf.pages.toLocaleString()}</span>
+					<button
+						type="button"
+						class="btn btn-sm"
+						disabled={pageNumber >= shelf.pages || shelfLoading}
+						onclick={() => (pageNumber += 1)}
+					>
+						Next<Icon name="right" size={14} />
+					</button>
+				</nav>
 			{/if}
 		{:else if tab === 'reviews'}
 			<div class="reviews">
@@ -696,12 +812,52 @@
 	}
 
 	.count {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
 		margin: -0.5rem 0 0.9rem;
 		font-size: 0.85rem;
 	}
 
+	/* Dimmed rather than emptied, so the page does not jump between pages. */
+	.results {
+		transition: opacity 0.15s ease;
+	}
+
+	.results.busy {
+		opacity: 0.5;
+		pointer-events: none;
+	}
+
 	.shelf-grid {
 		padding-bottom: 2rem;
+	}
+
+	.pager {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 1rem;
+		padding: 0.5rem 0 2.5rem;
+	}
+
+	.error {
+		color: var(--danger);
+		font-size: 0.9rem;
+	}
+
+	.tools {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.sort .field {
+		width: auto;
+		padding: 0.35rem 0.6rem;
+		border-radius: 99px;
+		font-size: 0.84rem;
+		cursor: pointer;
 	}
 
 	/* Reviews tab -------------------------------------------------------- */

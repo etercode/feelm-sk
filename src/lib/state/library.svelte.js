@@ -164,9 +164,11 @@ class Library {
 		this.rememberUser(data.user);
 		this.statsByUser = { ...this.statsByUser, [data.user.id]: data.stats };
 
-		for (const row of data.entries ?? []) {
-			this.#ingestEntryRow(row.entry, row.item);
-		}
+		// The shelf no longer arrives with the profile — it is paged separately,
+		// because a profile response cannot grow with how much somebody logs.
+		// What does arrive is what the head of the page shows.
+		this.ingestEntries(data.current);
+		if (data.banner) catalog.remember(data.banner);
 
 		for (const review of data.reviews ?? []) {
 			const item = catalog.itemById(review.itemId);
@@ -192,6 +194,21 @@ class Library {
 		}
 
 		return data;
+	}
+
+	/**
+	 * Takes a page of shelf rows into the store, so the rest of the app can
+	 * answer questions about the entries it has actually seen. The store holds
+	 * what has been loaded, not everything that exists — entryFor() returning
+	 * null means "not loaded here", which is the same answer it has always
+	 * given for somebody else's shelf.
+	 *
+	 * @param {Array<{ entry: any, item: any }> | undefined | null} rows
+	 */
+	ingestEntries(rows) {
+		for (const row of rows ?? []) {
+			this.#ingestEntryRow(row.entry, row.item);
+		}
 	}
 
 	/** @param {number} followerId @param {number} followedId @param {boolean} following */
@@ -548,13 +565,6 @@ class Library {
 		};
 	}
 
-	sharedWith(userId, otherId) {
-		const mine = new Set(this.entriesOf(userId).map((entry) => entry.itemId));
-		return this.entriesOf(otherId)
-			.filter((entry) => mine.has(entry.itemId))
-			.map((entry) => catalog.itemById(entry.itemId))
-			.filter(Boolean);
-	}
 }
 
 export const library = new Library();

@@ -269,6 +269,17 @@ export function getProfile(username) {
 	return request(`/api/users/${username}`);
 }
 
+/**
+ * One page of somebody's shelf. Filtering and paging are the server's job —
+ * a shelf can run to thousands, so the browser never sees the whole thing.
+ *
+ * @param {string} username
+ * @param {{ type?: string|null, status?: string|null, q?: string, sort?: string, page?: number, limit?: number }} [params]
+ */
+export function getUserEntries(username, params = {}) {
+	return request(`/api/users/${username}/entries${query(params)}`);
+}
+
 /** @param {string} username */
 export function getFollowers(username) {
 	return request(`/api/users/${username}/followers`);
