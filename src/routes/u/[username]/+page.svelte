@@ -1,6 +1,14 @@
 <!--
-	Someone's profile. Everything is read from the library store rather than a
-	load function, because accounts created in the browser only exist there.
+	Someone's profile.
+
+	Two audiences share this page. A visitor is here to find out who this person
+	is — so their picture, their words and what they are in the middle of come
+	before any counting. The owner is here to run their shelves, and gets a
+	search box, a list view and a status control on every row, so moving
+	something between shelves never means opening the title and coming back.
+
+	Everything is read from the library store rather than a load function,
+	because accounts created in the browser only exist there.
 -->
 <script>
 	import { page } from '$app/state';
@@ -9,6 +17,7 @@
 	import Icon from '$lib/components/Icon.svelte';
 	import PosterCard from '$lib/components/PosterCard.svelte';
 	import ReviewCard from '$lib/components/ReviewCard.svelte';
+	import ShelfManager from '$lib/components/ShelfManager.svelte';
 	import { itemPath } from '$lib/data/items.js';
 	import { statusLabel, statusOrder, types, typeKeys } from '$lib/data/types.js';
 	import { catalog } from '$lib/state/catalog.svelte.js';
@@ -18,10 +27,13 @@
 
 	let username = $derived(page.params.username);
 	let user = $derived(library.userByUsername(username));
+	let isMe = $derived(Boolean(session.user && user && session.user.id === user.id));
 
 	let tab = $state('shelf');
 	let typeFilter = $state(null);
 	let statusFilter = $state(null);
+	let search = $state('');
+	let view = $state('grid');
 
 	let entries = $derived(user ? library.entriesOf(user.id) : []);
 	let stats = $derived(user ? library.statsOf(user.id) : null);
@@ -38,13 +50,23 @@
 			.find((item) => item?.backdrop) ?? null
 	);
 
-	let shelf = $derived(
+	let rows = $derived(
 		entries
 			.map((entry) => ({ entry, item: catalog.itemById(entry.itemId) }))
 			.filter((row) => row.item)
+	);
+
+	/** What they are in the middle of — the most "them" thing on the page. */
+	let current = $derived(rows.filter((row) => row.entry.status === 'active').slice(0, 12));
+
+	let shelf = $derived(
+		rows
 			.filter((row) => !typeFilter || row.item.type === typeFilter)
 			.filter((row) => !statusFilter || row.entry.status === statusFilter)
+			.filter((row) => matches(row.item, search))
 	);
+
+	let filtered = $derived(Boolean(typeFilter || statusFilter || search.trim()));
 
 	let shared = $derived(
 		session.user && user && session.user.id !== user.id
@@ -73,6 +95,20 @@
 				loading = false;
 			});
 	});
+
+	/** @param {any} item @param {string} term */
+	function matches(item, term) {
+		const needle = term.trim().toLowerCase();
+		if (!needle) return true;
+
+		return item.title.toLowerCase().includes(needle);
+	}
+
+	function clearFilters() {
+		typeFilter = null;
+		statusFilter = null;
+		search = '';
+	}
 </script>
 
 <svelte:head>
@@ -98,29 +134,55 @@
 			{/if}
 
 			<div class="who">
-			<Avatar {user} size={104} ring />
+				<Avatar {user} size={112} ring />
 
-			<div class="identity">
-				<h1 class="display">{user.name}</h1>
-				<p class="handle faint">@{user.username}</p>
-				{#if user.tagline}<p class="tagline">{user.tagline}</p>{/if}
-				<p class="dot-list small">
-					{#if user.location}<span><Icon name="user" size={12} />{user.location}</span>{/if}
-					<span>Joined {longDate(user.joinedAt)}</span>
-					<span>{plural(followers.length, 'follower')}</span>
-					<span>{following.length} following</span>
-				</p>
-			</div>
+				<div class="identity">
+					<h1 class="display">{user.name}</h1>
+					<p class="handle faint">@{user.username}</p>
+					{#if user.tagline}<p class="tagline">{user.tagline}</p>{/if}
+					<p class="dot-list small">
+						{#if user.location}<span><Icon name="user" size={12} />{user.location}</span>{/if}
+						<span>Joined {longDate(user.joinedAt)}</span>
+						<span>{plural(followers.length, 'follower')}</span>
+						<span>{following.length} following</span>
+					</p>
+				</div>
 
 				<div class="cta">
-					<FollowButton {user} />
-					{#if shared.length}
-						<span class="small in-common">{plural(shared.length, 'title')} in common</span>
+					{#if isMe}
+						<a class="btn btn-sm" href="/settings">
+							<Icon name="edit" size={14} />Edit profile
+						</a>
+					{:else}
+						<FollowButton {user} />
+						{#if shared.length}
+							<span class="small in-common">{plural(shared.length, 'title')} in common</span>
+						{/if}
 					{/if}
 				</div>
 			</div>
 		</header>
+
+		{#if user.bio}
+			<p class="bio">{user.bio}</p>
+		{/if}
 	</div>
+
+	{#if current.length}
+		<div class="frame">
+			<section class="current">
+				<h2 class="eyebrow">{isMe ? 'You are in the middle of' : 'In the middle of'}</h2>
+				<div class="current-rail scroller">
+					{#each current as row (row.entry.id)}
+						<a class="current-card" href={itemPath(row.item)} data-type={row.item.type}>
+							<img src={row.item.poster} alt="" loading="lazy" />
+							<span class="current-title">{row.item.title}</span>
+						</a>
+					{/each}
+				</div>
+			</section>
+		</div>
+	{/if}
 
 	<div class="frame">
 		<section class="stats">
@@ -158,6 +220,37 @@
 		</nav>
 
 		{#if tab === 'shelf'}
+			<div class="toolbar">
+				<label class="search">
+					<Icon name="search" size={15} />
+					<span class="sr-only">Search this shelf</span>
+					<input
+						type="search"
+						bind:value={search}
+						placeholder={isMe ? 'Search your shelf' : 'Search this shelf'}
+					/>
+				</label>
+
+				<div class="views" role="group" aria-label="Layout">
+					<button
+						type="button"
+						class:on={view === 'grid'}
+						aria-pressed={view === 'grid'}
+						onclick={() => (view = 'grid')}
+					>
+						<Icon name="flex" size={14} />Posters
+					</button>
+					<button
+						type="button"
+						class:on={view === 'list'}
+						aria-pressed={view === 'list'}
+						onclick={() => (view = 'list')}
+					>
+						<Icon name="menu" size={14} />{isMe ? 'Manage' : 'List'}
+					</button>
+				</div>
+			</div>
+
 			<div class="filters">
 				<button type="button" class="chip" class:on={!typeFilter} onclick={() => (typeFilter = null)}>
 					Everything
@@ -186,15 +279,31 @@
 						{statusLabel(typeFilter ?? 'movie', status)}
 					</button>
 				{/each}
+
+				{#if filtered}
+					<button type="button" class="chip clear" onclick={clearFilters}>
+						<Icon name="close" size={12} />Clear
+					</button>
+				{/if}
 			</div>
 
-			<div class="grid-posters shelf-grid">
-				{#each shelf as row (row.entry.id)}
-					<PosterCard item={row.item} ownerId={user.id} />
-				{:else}
-					<p class="muted">Nothing on this shelf yet.</p>
-				{/each}
-			</div>
+			{#if filtered}
+				<p class="count faint">{plural(shelf.length, 'title')}</p>
+			{/if}
+
+			{#if view === 'list'}
+				<ShelfManager rows={shelf} userId={user.id} owner={isMe} />
+			{:else}
+				<div class="grid-posters shelf-grid">
+					{#each shelf as row (row.entry.id)}
+						<PosterCard item={row.item} ownerId={user.id} />
+					{:else}
+						<p class="muted">
+							{filtered ? 'Nothing matches those filters.' : 'Nothing on this shelf yet.'}
+						</p>
+					{/each}
+				</div>
+			{/if}
 		{:else if tab === 'reviews'}
 			<div class="reviews">
 				{#each reviews as review (review.id)}
@@ -372,13 +481,74 @@
 		flex: none;
 	}
 
+	/* What they wrote about themselves, kept to a readable measure. */
+	.bio {
+		max-width: 62ch;
+		margin: 1.4rem 0 0;
+		font-size: 1.02rem;
+		color: var(--muted);
+		white-space: pre-line;
+	}
+
+	/* In the middle of ---------------------------------------------------- */
+
+	.current {
+		margin-top: 2rem;
+	}
+
+	.current h2 {
+		margin-bottom: 0.7rem;
+	}
+
+	.current-rail {
+		display: flex;
+		gap: 0.7rem;
+		padding-bottom: 0.6rem;
+	}
+
+	.current-card {
+		flex: none;
+		width: 7.5rem;
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+	}
+
+	.current-card img {
+		width: 100%;
+		aspect-ratio: 2 / 3;
+		object-fit: cover;
+		border-radius: var(--radius-sm);
+		background: var(--surface-2);
+		box-shadow: var(--shadow-card);
+		transition: transform 0.18s ease;
+	}
+
+	.current-card:hover img {
+		transform: translateY(-3px);
+	}
+
+	.current-title {
+		font-size: 0.82rem;
+		line-height: 1.3;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.current-card:hover .current-title {
+		color: var(--accent);
+	}
+
 	/* Stats -------------------------------------------------------------- */
 
 	.stats {
 		display: flex;
 		flex-wrap: wrap;
 		gap: clamp(1rem, 4vw, 3rem);
+		margin-top: 2rem;
 		padding: 1.4rem 0;
+		border-top: 1px solid var(--line);
 		border-bottom: 1px solid var(--line);
 	}
 
@@ -428,6 +598,72 @@
 		color: var(--ink);
 	}
 
+	/* Shelf toolbar ------------------------------------------------------- */
+
+	.toolbar {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.75rem;
+		flex-wrap: wrap;
+		padding-bottom: 0.9rem;
+	}
+
+	.search {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		flex: 1;
+		min-width: 12rem;
+		max-width: 24rem;
+		padding: 0.4rem 0.8rem;
+		border: 1px solid var(--line-strong);
+		border-radius: 99px;
+		background: var(--surface);
+		color: var(--faint);
+	}
+
+	.search:focus-within {
+		border-color: color-mix(in srgb, var(--brand) 60%, transparent);
+	}
+
+	.search input {
+		flex: 1;
+		min-width: 0;
+		border: 0;
+		background: none;
+		outline: none;
+		font-size: 0.9rem;
+		color: var(--ink);
+	}
+
+	.views {
+		display: flex;
+		gap: 0.2rem;
+		padding: 0.2rem;
+		border: 1px solid var(--line);
+		border-radius: 99px;
+	}
+
+	.views button {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35rem;
+		padding: 0.3rem 0.75rem;
+		border: 0;
+		border-radius: 99px;
+		background: none;
+		color: var(--muted);
+		font-size: 0.84rem;
+		cursor: pointer;
+		transition: background 0.18s ease, color 0.18s ease;
+	}
+
+	.views button.on {
+		background: var(--tint-strong);
+		color: var(--ink);
+	}
+
 	.filters {
 		display: flex;
 		align-items: center;
@@ -447,11 +683,21 @@
 		font-weight: 600;
 	}
 
+	.filters .clear {
+		color: var(--danger);
+		border-color: color-mix(in srgb, var(--danger) 40%, transparent);
+	}
+
 	.divider {
 		width: 1px;
 		height: 1.2rem;
 		background: var(--line);
 		margin-inline: 0.35rem;
+	}
+
+	.count {
+		margin: -0.5rem 0 0.9rem;
+		font-size: 0.85rem;
 	}
 
 	.shelf-grid {

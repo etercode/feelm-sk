@@ -146,6 +146,35 @@ export function getMe() {
 	return request('/api/me', {}, true);
 }
 
+// ---- Own account ---------------------------------------------------------
+
+/**
+ * The whole editable profile every time — a missing field means "cleared",
+ * so partial saves are not a thing here.
+ *
+ * @param {{ name: string, tagline?: string|null, bio?: string|null, location?: string|null }} data
+ */
+export function updateProfile(data) {
+	return request('/api/me', { method: 'PATCH', body: JSON.stringify(data) }, true);
+}
+
+/** @param {{ currentPassword: string, newPassword: string }} data */
+export function changePassword(data) {
+	return request('/api/me/password', { method: 'POST', body: JSON.stringify(data) }, true);
+}
+
+/** @param {Blob} blob a square image, already cropped by the browser */
+export function uploadAvatar(blob) {
+	const form = new FormData();
+	form.append('avatar', blob, 'avatar.jpg');
+
+	return request('/api/me/avatar', { method: 'POST', body: form }, true);
+}
+
+export function deleteAvatar() {
+	return request('/api/me/avatar', { method: 'DELETE' }, true);
+}
+
 // ---- Catalog -------------------------------------------------------------
 
 /** @param {{ type?: string, q?: string, page?: number, limit?: number }} [params] */

@@ -10,7 +10,7 @@ import { clearTokens, hasTokens } from '$lib/auth/tokens.js';
 import { library } from '$lib/state/library.svelte.js';
 
 class Session {
-	/** @type {{ id: number, username: string, name: string, tagline?: string|null, bio?: string|null, location?: string|null, joinedAt?: string|null } | null} */
+	/** @type {{ id: number, username: string, name: string, tagline?: string|null, bio?: string|null, location?: string|null, avatar?: string|null, joinedAt?: string|null } | null} */
 	user = $state(null);
 
 	#hydrated = false;
@@ -92,6 +92,22 @@ class Session {
 			}
 			return { ok: false, error: this.#errorMessage(e, 'Could not create account.') };
 		}
+	}
+
+	/**
+	 * Takes the user the API just returned after a profile save.
+	 *
+	 * The library keeps its own copy of everyone it has seen — that is what
+	 * profile pages, feeds and review bylines read from — so a rename has to
+	 * land in both or the new name shows in the header and the old one
+	 * everywhere else.
+	 *
+	 * @param {any} me
+	 */
+	applyUser(me) {
+		if (!me) return;
+		this.user = me;
+		library.rememberUser(me);
 	}
 
 	async signOut() {

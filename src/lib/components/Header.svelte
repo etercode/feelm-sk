@@ -108,6 +108,7 @@
 								><Icon name="user" size={16} />Your profile</a
 							>
 							<a href="/feed" role="menuitem"><Icon name="activity" size={16} />Your feed</a>
+							<a href="/settings" role="menuitem"><Icon name="edit" size={16} />Settings</a>
 							<button type="button" role="menuitem" onclick={signOut}>
 								<Icon name="logout" size={16} />Sign out
 							</button>
