@@ -41,8 +41,6 @@
 	let catalogTiles = $derived(
 		data
 			? [
-					// People is still a count — that table has not been built, so the
-					// tile does not pretend to lead anywhere.
 					{
 						key: 'works',
 						label: 'Works',
@@ -59,6 +57,7 @@
 						label: 'People',
 						value: data.totals.people,
 						icon: 'user',
+						href: '/admin/people',
 						hint: `${data.totals.credits.toLocaleString()} credits`
 					},
 					{

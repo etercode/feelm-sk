@@ -30,17 +30,12 @@
 		});
 	});
 
-	/*
-	 * `soon` is the sections that are planned but not built. They are listed
-	 * rather than hidden so the shape of the thing is visible, and rendered as
-	 * text rather than links so nothing here leads to a 404.
-	 */
 	const links = [
 		{ href: '/admin', label: 'Overview', icon: 'chart', exact: true },
 		{ href: '/admin/users', label: 'Users', icon: 'users' },
 		{ href: '/admin/reviews', label: 'Reviews', icon: 'quote' },
 		{ href: '/admin/works', label: 'Works', icon: 'film' },
-		{ href: '/admin/people', label: 'People', icon: 'user', soon: true },
+		{ href: '/admin/people', label: 'People', icon: 'user' },
 		{ href: '/crawler', label: 'Crawler', icon: 'refresh' }
 	];
 
@@ -67,18 +62,10 @@
 
 			<nav>
 				{#each links as link (link.href)}
-					{#if link.soon}
-						<span class="soon">
-							<Icon name={link.icon} size={16} />
-							{link.label}
-							<em>soon</em>
-						</span>
-					{:else}
-						<a href={link.href} class:active={active(link)}>
-							<Icon name={link.icon} size={16} />
-							{link.label}
-						</a>
-					{/if}
+					<a href={link.href} class:active={active(link)}>
+						<Icon name={link.icon} size={16} />
+						{link.label}
+					</a>
 				{/each}
 			</nav>
 
@@ -149,8 +136,7 @@
 		gap: 0.15rem;
 	}
 
-	nav a,
-	nav .soon {
+	nav a {
 		display: flex;
 		align-items: center;
 		gap: 0.6rem;
@@ -162,20 +148,6 @@
 		transition:
 			color 0.18s ease,
 			background 0.18s ease;
-	}
-
-	nav .soon {
-		color: var(--faint);
-		cursor: default;
-	}
-
-	nav .soon em {
-		margin-left: auto;
-		font-size: 0.68rem;
-		font-style: normal;
-		letter-spacing: 0.08em;
-		text-transform: uppercase;
-		opacity: 0.7;
 	}
 
 	nav a:hover {

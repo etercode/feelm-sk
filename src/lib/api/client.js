@@ -453,3 +453,68 @@ export function adminHideWork(id) {
 export function adminRestoreWork(id) {
 	return request(`/api/admin/works/${id}/restore`, { method: 'POST' }, true);
 }
+
+/** @param {{ q?: string, photo?: string, credits?: string, sort?: string, page?: number, limit?: number }} [params] */
+export function adminPeople(params = {}) {
+	return request(`/api/admin/people${query(params)}`, {}, true);
+}
+
+/** Type-ahead for the merge picker and the credit editor. Needs 2+ characters. */
+export function adminPeopleSearch(q, limit = 8) {
+	return request(`/api/admin/people/search${query({ q, limit })}`, {}, true);
+}
+
+/** @param {number} id @param {{ page?: number, limit?: number }} [params] */
+export function adminPerson(id, params = {}) {
+	return request(`/api/admin/people/${id}${query(params)}`, {}, true);
+}
+
+/** @param {number} id @param {{ name?: string, photo?: string, externalId?: string }} data */
+export function adminUpdatePerson(id, data) {
+	return request(`/api/admin/people/${id}`, { method: 'PATCH', body: JSON.stringify(data) }, true);
+}
+
+/**
+ * Folds `id` into `into`: credits move, the duplicate row goes. Not reversible.
+ *
+ * @param {number} id the one that disappears
+ * @param {number} into the one that survives
+ */
+export function adminMergePeople(id, into) {
+	return request(`/api/admin/people/${id}/merge/${into}`, { method: 'POST' }, true);
+}
+
+/** @param {number} id @param {boolean} [force] delete even if credits point at them */
+export function adminDeletePerson(id, force = false) {
+	return request(`/api/admin/people/${id}${force ? '?force=1' : ''}`, { method: 'DELETE' }, true);
+}
+
+/** @param {number} workId */
+export function adminCredits(workId) {
+	return request(`/api/admin/works/${workId}/credits`, {}, true);
+}
+
+/**
+ * The person is named, not chosen by id — an unfamiliar name creates them,
+ * which is what the crawler does too.
+ *
+ * @param {number} workId
+ * @param {{ person: string, role: string, character?: string }} data
+ */
+export function adminAddCredit(workId, data) {
+	return request(
+		`/api/admin/works/${workId}/credits`,
+		{ method: 'POST', body: JSON.stringify(data) },
+		true
+	);
+}
+
+/** @param {number} id @param {{ role?: string, character?: string, position?: number }} data */
+export function adminUpdateCredit(id, data) {
+	return request(`/api/admin/credits/${id}`, { method: 'PATCH', body: JSON.stringify(data) }, true);
+}
+
+/** @param {number} id */
+export function adminDeleteCredit(id) {
+	return request(`/api/admin/credits/${id}`, { method: 'DELETE' }, true);
+}

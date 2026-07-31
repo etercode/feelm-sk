@@ -18,6 +18,7 @@
 	import Icon from '$lib/components/Icon.svelte';
 	import Spinner from '$lib/components/Spinner.svelte';
 	import ConfirmAction from '$lib/components/admin/ConfirmAction.svelte';
+	import CreditsEditor from '$lib/components/admin/CreditsEditor.svelte';
 	import { session } from '$lib/state/session.svelte.js';
 
 	let id = $derived(Number(page.params.id));
@@ -367,6 +368,8 @@
 			</div>
 		</form>
 	</section>
+
+	<CreditsEditor workId={id} />
 
 	<section class="card panel">
 		<h2 class="section">Not editable here</h2>
