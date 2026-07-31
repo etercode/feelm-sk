@@ -2,8 +2,13 @@
  * Feelm
  *
  * Paper by default, the dark room on request. Posters carry the colour, so the
- * page around them stays quiet: one warm brass accent, a hue per activity type,
- * and surfaces that separate by tone rather than by heavy borders.
+ * page around them stays quiet: one rose accent, a hue per activity type, and
+ * surfaces that separate by tone rather than by heavy borders.
+ *
+ * Neither page is a flat fill. Both lay two wide, low-opacity washes over the
+ * base colour and a film grain over everything, so a long scroll past a wall of
+ * posters has somewhere to breathe. The dark theme is indigo rather than grey
+ * for the same reason — a single neutral black is a tiring room to sit in.
  *
  * Every colour a component needs is a token here. Nothing should hardcode
  * white or black — both themes go through the same names, which is what makes
@@ -12,37 +17,47 @@
 
 :root {
 	/* Paper */
-	--page: #f7f8fa;
+	--page: #f6f7fb;
 	--surface: #ffffff;
-	--surface-2: #f0f2f6;
-	--surface-3: #e7eaf0;
+	--surface-2: #eef0f7;
+	--surface-3: #e3e7f1;
 
 	/* Ink */
-	--ink: #14171f;
+	--ink: #14161f;
 	--ink-strong: #05070c;
-	--muted: #5b6474;
-	--faint: #8a92a2;
+	--muted: #59607a;
+	--faint: #878ea6;
 
 	/* Lines and washes — used instead of ad-hoc black/white alphas */
-	--line: rgb(20 23 31 / 0.11);
-	--line-strong: rgb(20 23 31 / 0.2);
-	--tint: rgb(20 23 31 / 0.04);
-	--tint-strong: rgb(20 23 31 / 0.08);
-	--glass: rgb(247 248 250 / 0.82);
+	--line: rgb(22 24 40 / 0.11);
+	--line-strong: rgb(22 24 40 / 0.2);
+	--tint: rgb(22 24 40 / 0.04);
+	--tint-strong: rgb(22 24 40 / 0.08);
+	--glass: rgb(246 247 251 / 0.82);
 
-	/* Brass — the brand accent and the colour of a star */
-	--brass: #b8860b;
-	--brass-soft: rgb(184 134 11 / 0.13);
+	/* The brand accent, and the colour of a star */
+	--brand: #d23f5c;
+	--brand-soft: rgb(210 63 92 / 0.12);
 
-	/* One hue per activity type */
-	--movie: #c2760a;
-	--series: #7c4dd6;
-	--game: #0d8f76;
-	--book: #d94e6b;
+	/*
+	 * One hue per activity type. Films take the brand rose — they are the
+	 * centre of the app — and the others are spaced far enough around the
+	 * wheel that two chips side by side never read as the same tag.
+	 */
+	--movie: #d23f5c;
+	--series: #6b46d6;
+	--game: #0b7d67;
+	--book: #9a6a0c;
 
 	/* `--accent` is re-pointed per section by [data-type] below */
-	--accent: var(--brass);
-	--accent-soft: var(--brass-soft);
+	--accent: var(--brand);
+	--accent-soft: var(--brand-soft);
+
+	/* The two washes under the page, and how much grain sits over it */
+	--wash:
+		radial-gradient(70rem 40rem at 8% -10%, rgb(107 70 214 / 0.09), transparent 62%),
+		radial-gradient(60rem 34rem at 100% 2%, rgb(210 63 92 / 0.07), transparent 58%);
+	--grain: 0.022;
 
 	/* Text that sits on top of an accent fill or a photograph */
 	--on-accent: #ffffff;
@@ -80,31 +95,37 @@
 }
 
 :root[data-theme='dark'] {
-	--page: #12151c;
-	--surface: #1c2029;
-	--surface-2: #232833;
-	--surface-3: #2c3240;
+	/* Indigo, and lifted well clear of black — see the note at the top. */
+	--page: #141826;
+	--surface: #1c2133;
+	--surface-2: #242a3f;
+	--surface-3: #2f3650;
 
-	--ink: #eceff6;
+	--ink: #eceff8;
 	--ink-strong: #ffffff;
-	--muted: #a3abbc;
-	--faint: #7a8294;
+	--muted: #a8b0c8;
+	--faint: #7d86a2;
 
-	--line: rgb(255 255 255 / 0.11);
-	--line-strong: rgb(255 255 255 / 0.22);
+	--line: rgb(255 255 255 / 0.1);
+	--line-strong: rgb(255 255 255 / 0.2);
 	--tint: rgb(255 255 255 / 0.05);
 	--tint-strong: rgb(255 255 255 / 0.1);
-	--glass: rgb(18 21 28 / 0.82);
+	--glass: rgb(20 24 38 / 0.82);
 
-	--brass: #f0c04a;
-	--brass-soft: rgb(240 192 74 / 0.16);
+	--brand: #ff6b86;
+	--brand-soft: rgb(255 107 134 / 0.16);
 
-	--movie: #fbbf5c;
-	--series: #b98cf7;
-	--game: #5ee0c0;
-	--book: #f9829a;
+	--movie: #ff7d92;
+	--series: #ab8cff;
+	--game: #4fdcbe;
+	--book: #f2c46a;
 
-	--on-accent: #10131a;
+	--on-accent: #14101a;
+
+	--wash:
+		radial-gradient(70rem 40rem at 8% -10%, rgb(124 92 255 / 0.18), transparent 62%),
+		radial-gradient(60rem 34rem at 100% 2%, rgb(255 107 134 / 0.11), transparent 58%);
+	--grain: 0.038;
 
 	--danger: #f87171;
 	--ok: #4ade80;
@@ -146,7 +167,14 @@ html {
 
 body {
 	margin: 0;
-	background: var(--page);
+	/*
+	 * Fixed, so the washes stay put while the page scrolls past them rather
+	 * than sliding away after the first screen.
+	 */
+	background-color: var(--page);
+	background-image: var(--wash);
+	background-attachment: fixed;
+	background-repeat: no-repeat;
 	color: var(--ink);
 	font-family: var(--font-ui);
 	font-size: 16px;
@@ -155,6 +183,22 @@ body {
 	-webkit-font-smoothing: antialiased;
 	overflow-x: hidden;
 	transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+/*
+ * Film grain. Sits over the page at z-index 0, which puts it above the flat
+ * content and below anything that positions itself — headers, overlays and
+ * dialogs stay crisp. Kept faint enough that posters keep their punch; it is
+ * there to stop large empty areas reading as dead pixels.
+ */
+body::before {
+	content: '';
+	position: fixed;
+	inset: 0;
+	z-index: 0;
+	pointer-events: none;
+	opacity: var(--grain);
+	background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNjAiIGhlaWdodD0iMTYwIj48ZmlsdGVyIGlkPSJnIj48ZmVUdXJidWxlbmNlIHR5cGU9ImZyYWN0YWxOb2lzZSIgYmFzZUZyZXF1ZW5jeT0iMC44IiBudW1PY3RhdmVzPSIzIiBzdGl0Y2hUaWxlcz0ic3RpdGNoIi8+PC9maWx0ZXI+PHJlY3Qgd2lkdGg9IjE2MCIgaGVpZ2h0PSIxNjAiIGZpbHRlcj0idXJsKCNnKSIvPjwvc3ZnPg==');
 }
 
 h1,
@@ -190,13 +234,13 @@ select {
 }
 
 :focus-visible {
-	outline: 2px solid var(--brass);
+	outline: 2px solid var(--brand);
 	outline-offset: 3px;
 	border-radius: 4px;
 }
 
 ::selection {
-	background: var(--brass);
+	background: var(--brand);
 	color: var(--on-accent);
 }
 
@@ -310,7 +354,7 @@ select {
 }
 
 .btn-primary {
-	--accent: var(--brass);
+	--accent: var(--brand);
 }
 
 .btn-ghost {
@@ -381,7 +425,7 @@ select {
 
 .field:focus {
 	outline: none;
-	border-color: color-mix(in srgb, var(--brass) 60%, transparent);
+	border-color: color-mix(in srgb, var(--brand) 60%, transparent);
 }
 
 /* Layout helpers ------------------------------------------------------ */

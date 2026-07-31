@@ -67,7 +67,7 @@
 	.stars {
 		display: inline-flex;
 		gap: 0.12em;
-		color: var(--brass);
+		color: var(--brand);
 		line-height: 0;
 	}
 
@@ -112,6 +112,6 @@
 	}
 
 	.interactive .star:hover .empty {
-		color: color-mix(in srgb, var(--brass) 40%, var(--line-strong));
+		color: color-mix(in srgb, var(--brand) 40%, var(--line-strong));
 	}
 </style>

@@ -12,11 +12,22 @@
 
 	let releases = $derived(catalog.upcomingItems());
 
+	/*
+	 * 28 is four rows at the widest breakpoint the wall uses; narrower ones
+	 * show fewer and drop the rest with CSS, so this is an upper bound rather
+	 * than the number anybody sees.
+	 */
+	const PER_SECTION = 28;
+
 	let sections = $derived(
 		[
-			{ type: 'movie', kicker: 'Out now', items: catalog.topOfType('movie', 16) },
-			{ type: 'series', kicker: 'Season by season', items: catalog.topOfType('series', 16) },
-			{ type: 'game', kicker: 'On the backlog', items: catalog.topOfType('game', 16) },
+			{ type: 'movie', kicker: 'Out now', items: catalog.topOfType('movie', PER_SECTION) },
+			{
+				type: 'series',
+				kicker: 'Season by season',
+				items: catalog.topOfType('series', PER_SECTION)
+			},
+			{ type: 'game', kicker: 'On the backlog', items: catalog.topOfType('game', PER_SECTION) },
 			{ type: 'book', kicker: 'On the nightstand', items: catalog.itemsOfType('book') }
 		].map((section) => ({
 			...section,
@@ -64,7 +75,8 @@
 				title={types[section.type].plural}
 				href={types[section.type].browse}
 				type={section.type}
-				rows={2}
+				rows={4}
+				grid
 			>
 				{#each section.items as item (item.id)}
 					<PosterCard {item} showType={false} />
@@ -129,7 +141,7 @@
 		border: 0;
 		background: none;
 		padding: 0;
-		color: var(--brass);
+		color: var(--brand);
 		font-size: inherit;
 		cursor: pointer;
 		text-decoration: underline;

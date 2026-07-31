@@ -367,7 +367,7 @@
 		gap: 0.4rem;
 		padding: 0.7rem;
 		border-top: 1px solid var(--line);
-		color: var(--brass);
+		color: var(--brand);
 		font-size: 0.88rem;
 		font-weight: 600;
 	}
@@ -377,7 +377,7 @@
 	}
 
 	.hint a {
-		color: var(--brass);
+		color: var(--brand);
 		text-decoration: underline;
 		text-underline-offset: 2px;
 	}

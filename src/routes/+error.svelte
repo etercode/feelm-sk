@@ -35,7 +35,7 @@
 
 	.code {
 		font-size: clamp(4rem, 14vw, 9rem);
-		color: var(--brass);
+		color: var(--brand);
 		opacity: 0.25;
 		line-height: 1;
 	}

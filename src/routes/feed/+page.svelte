@@ -107,7 +107,7 @@
 	}
 
 	header a {
-		color: var(--brass);
+		color: var(--brand);
 		text-decoration: underline;
 		text-underline-offset: 2px;
 	}
@@ -134,7 +134,7 @@
 	}
 
 	.scope button.on {
-		background: var(--brass);
+		background: var(--brand);
 		color: var(--on-accent);
 		font-weight: 600;
 	}
@@ -192,7 +192,7 @@
 	}
 
 	aside li a:hover strong {
-		color: var(--brass);
+		color: var(--brand);
 	}
 
 	@media (max-width: 900px) {

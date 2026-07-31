@@ -164,7 +164,7 @@
 	.value {
 		font-family: var(--font-display);
 		font-size: 1.35rem;
-		color: var(--brass);
+		color: var(--brand);
 	}
 
 	.fields {

@@ -56,32 +56,40 @@
 		</div>
 
 		<aside class="queue">
-			<header>
-				<span class="eyebrow">Coming up</span>
-				<span class="faint">{releases.length} announced</span>
-			</header>
+			<!--
+				Absolutely positioned so the queue takes its height from the plate
+				beside it instead of setting the row height itself. Thirteen
+				announcements are twice as tall as the plate, and the difference
+				was showing up as dead space under it.
+			-->
+			<div class="queue-inner">
+				<header>
+					<span class="eyebrow">Coming up</span>
+					<span class="faint">{releases.length} announced</span>
+				</header>
 
-			<ul>
-				{#each releases as release, position (release.id)}
-					<li>
-						<button
-							type="button"
-							class:on={position === index}
-							onclick={() => (index = position)}
-							aria-current={position === index ? 'true' : undefined}
-						>
-							<img src={release.poster} alt="" loading="lazy" />
-							<span class="text">
-								<span class="name">{release.title}</span>
-								<span class="date faint">{longDate(release.details.releaseDate)}</span>
-							</span>
-							{#if library.isNewFor(session.user?.id, release)}
-								<span class="dot" aria-label="New"></span>
-							{/if}
-						</button>
-					</li>
-				{/each}
-			</ul>
+				<ul>
+					{#each releases as release, position (release.id)}
+						<li>
+							<button
+								type="button"
+								class:on={position === index}
+								onclick={() => (index = position)}
+								aria-current={position === index ? 'true' : undefined}
+							>
+								<img src={release.poster} alt="" loading="lazy" />
+								<span class="text">
+									<span class="name">{release.title}</span>
+									<span class="date faint">{longDate(release.details.releaseDate)}</span>
+								</span>
+								{#if library.isNewFor(session.user?.id, release)}
+									<span class="dot" aria-label="New"></span>
+								{/if}
+							</button>
+						</li>
+					{/each}
+				</ul>
+			</div>
 		</aside>
 	</section>
 {/if}
@@ -186,6 +194,13 @@
 	/* The queue ---------------------------------------------------------- */
 
 	.queue {
+		position: relative;
+		min-width: 0;
+	}
+
+	.queue-inner {
+		position: absolute;
+		inset: 0;
 		display: flex;
 		flex-direction: column;
 		min-width: 0;
@@ -203,11 +218,26 @@
 	.queue ul {
 		list-style: none;
 		margin: 0;
-		padding: 0;
+		padding: 0 0.35rem 0 0;
 		display: flex;
 		flex-direction: column;
 		gap: 0.15rem;
+		flex: 1;
+		min-height: 0;
 		overflow-y: auto;
+		scrollbar-width: thin;
+		scrollbar-color: var(--line-strong) transparent;
+		/* Fades the last row out, so a cut-off row reads as "keep scrolling". */
+		mask-image: linear-gradient(to bottom, #000 calc(100% - 2.5rem), transparent);
+	}
+
+	.queue ul::-webkit-scrollbar {
+		width: 5px;
+	}
+
+	.queue ul::-webkit-scrollbar-thumb {
+		background: var(--line-strong);
+		border-radius: 99px;
 	}
 
 	.queue button {
@@ -233,7 +263,7 @@
 
 	.queue button.on {
 		background: var(--tint);
-		border-left-color: var(--brass);
+		border-left-color: var(--brand);
 	}
 
 	.queue img {
@@ -281,10 +311,18 @@
 			aspect-ratio: 3 / 2;
 		}
 
+		/* Back in flow below the plate, running sideways instead. */
+		.queue-inner {
+			position: static;
+		}
+
 		.queue ul {
 			flex-direction: row;
 			overflow-x: auto;
+			overflow-y: hidden;
 			gap: 0.4rem;
+			padding-right: 0;
+			mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent);
 		}
 
 		.queue button {
@@ -294,7 +332,7 @@
 		}
 
 		.queue button.on {
-			border-bottom-color: var(--brass);
+			border-bottom-color: var(--brand);
 		}
 
 		.name {

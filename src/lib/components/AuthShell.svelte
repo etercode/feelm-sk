@@ -26,16 +26,29 @@
 </div>
 
 <style>
+	/*
+	 * One screen, and no more. The wall used to size this row: twenty-four
+	 * posters six across is well over a thousand pixels tall, which pushed the
+	 * form below the fold and left the page scrolling to reach it. Fixing the
+	 * height and clipping the wall puts the form back in the middle of the
+	 * first screen, where a sign-in form belongs.
+	 *
+	 * dvh rather than vh so the mobile browser's collapsing toolbar does not
+	 * leave a strip of footer showing.
+	 */
 	.auth {
 		display: grid;
 		grid-template-columns: 1fr minmax(22rem, 32rem);
-		min-height: calc(100vh - var(--bar-height));
+		height: calc(100dvh - var(--bar-height));
+		min-height: 33rem;
+		overflow: hidden;
 	}
 
 	.wall {
 		position: relative;
 		display: grid;
 		grid-template-columns: repeat(6, 1fr);
+		align-content: start;
 		gap: 0.5rem;
 		padding: 0.5rem;
 		overflow: hidden;
@@ -63,6 +76,8 @@
 		padding: clamp(1.5rem, 4vw, 3rem);
 		border-left: 1px solid var(--line);
 		background: var(--page);
+		/* If the window is shorter than the form, scroll the form, not the page. */
+		overflow-y: auto;
 	}
 
 	.inner {
@@ -81,6 +96,8 @@
 	@media (max-width: 900px) {
 		.auth {
 			grid-template-columns: 1fr;
+			height: auto;
+			min-height: calc(100dvh - var(--bar-height));
 		}
 
 		.wall {

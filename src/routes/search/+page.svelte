@@ -480,15 +480,15 @@
 	.did-you-mean {
 		margin: 0.75rem 0 0;
 		padding: 0.6rem 0.9rem;
-		border-left: 3px solid var(--brass);
-		background: var(--brass-soft);
+		border-left: 3px solid var(--brand);
+		background: var(--brand-soft);
 		border-radius: 0 var(--radius) var(--radius) 0;
 		font-size: 0.95rem;
 	}
 
 	.did-you-mean a {
 		font-weight: 600;
-		color: var(--brass);
+		color: var(--brand);
 		text-decoration: underline;
 		text-underline-offset: 2px;
 	}
@@ -523,7 +523,7 @@
 
 	.clear {
 		font-size: 0.78rem;
-		color: var(--brass);
+		color: var(--brand);
 		text-decoration: underline;
 		text-underline-offset: 2px;
 	}
@@ -552,7 +552,7 @@
 	}
 
 	.check input {
-		accent-color: var(--accent, var(--brass));
+		accent-color: var(--accent, var(--brand));
 		margin: 0;
 	}
 
@@ -593,8 +593,8 @@
 	}
 
 	.chips .chip.on {
-		background: var(--brass);
-		border-color: var(--brass);
+		background: var(--brand);
+		border-color: var(--brand);
 		color: var(--on-accent);
 		font-weight: 600;
 	}

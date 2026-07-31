@@ -8,7 +8,7 @@
 <footer>
 	<div class="frame inner">
 		<div class="about">
-			<span class="wordmark">you<em>know</em>me</span>
+			<span class="wordmark"><em>feel</em>m</span>
 			<p class="muted">
 				A shared log of what people actually finished — films, series, games and books, with the
 				score and the one review they stand behind.
@@ -26,15 +26,14 @@
 		<div class="colophon">
 			<span class="eyebrow">Catalog</span>
 			<p class="muted">
-				{catalog.items.length || '…'} titles from the API
-				(<code>VITE_API_URL</code>).
+				{catalog.items.length || '…'} titles loaded. <a href="/crawler">Crawler status</a>
 			</p>
 		</div>
 	</div>
 
 	<div class="frame base muted">
 		<span>© {year} Feelm</span>
-		<span class="faint">Frontend preview — the API comes next.</span>
+		<span class="faint">Film and series data from TMDB.</span>
 	</div>
 </footer>
 
@@ -59,7 +58,7 @@
 
 	.wordmark em {
 		font-style: italic;
-		color: var(--brass);
+		color: var(--brand);
 	}
 
 	p {
@@ -81,7 +80,7 @@
 	}
 
 	nav a:hover {
-		color: var(--brass);
+		color: var(--brand);
 	}
 
 	.eyebrow {

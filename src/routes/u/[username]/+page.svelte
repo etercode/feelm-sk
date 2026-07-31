@@ -441,8 +441,8 @@
 	}
 
 	.filters .chip.on {
-		background: var(--accent, var(--brass));
-		border-color: var(--accent, var(--brass));
+		background: var(--accent, var(--brand));
+		border-color: var(--accent, var(--brand));
 		color: var(--on-accent);
 		font-weight: 600;
 	}

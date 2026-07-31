@@ -82,7 +82,7 @@
 	}
 
 	.author:hover strong {
-		color: var(--brass);
+		color: var(--brand);
 	}
 
 	.head {

@@ -169,7 +169,7 @@
 		width: 1.1rem;
 		height: 1.1rem;
 		border-radius: 50%;
-		border: 2px solid var(--brass);
+		border: 2px solid var(--brand);
 		position: relative;
 	}
 
@@ -178,7 +178,7 @@
 		position: absolute;
 		inset: 3px;
 		border-radius: 50%;
-		background: var(--brass);
+		background: var(--brand);
 		transition: transform 0.3s cubic-bezier(0.2, 0.7, 0.3, 1);
 	}
 
@@ -194,7 +194,7 @@
 
 	.wordmark em {
 		font-style: italic;
-		color: var(--brass);
+		color: var(--brand);
 	}
 
 	/* Navigation -------------------------------------------------------- */
@@ -226,13 +226,13 @@
 	}
 
 	.links a.active {
-		color: var(--accent, var(--brass));
+		color: var(--accent, var(--brand));
 		background: var(--accent-soft);
 	}
 
 	.links .feed {
-		--accent: var(--brass);
-		--accent-soft: var(--brass-soft);
+		--accent: var(--brand);
+		--accent-soft: var(--brand-soft);
 	}
 
 	/* Actions ----------------------------------------------------------- */

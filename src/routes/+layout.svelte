@@ -1,5 +1,6 @@
 <script>
 	import '../app.css';
+	import { page } from '$app/state';
 	import Footer from '$lib/components/Footer.svelte';
 	import Header from '$lib/components/Header.svelte';
 	import NavProgress from '$lib/components/NavProgress.svelte';
@@ -9,6 +10,14 @@
 	import { theme } from '$lib/state/theme.svelte.js';
 
 	let { children } = $props();
+
+	/*
+	 * Sign in and sign up are sized to exactly one screen. A footer under them
+	 * is the whole reason those pages scrolled, and there is nothing on it
+	 * somebody signing in wants.
+	 */
+	const BARE = ['/login', '/register'];
+	let bare = $derived(BARE.includes(page.route.id ?? ''));
 
 	// After first paint: load the live catalog, restore the session if tokens exist,
 	// and apply the saved theme. Shelf / feed / follows come from the API once signed in.
@@ -24,14 +33,20 @@
 
 <Header />
 
-<main>
+<main class:bare>
 	{@render children()}
 </main>
 
-<Footer />
+{#if !bare}
+	<Footer />
+{/if}
 
 <style>
 	main {
 		min-height: 60vh;
+	}
+
+	main.bare {
+		min-height: 0;
 	}
 </style>

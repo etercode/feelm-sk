@@ -114,7 +114,7 @@
 	}
 
 	.prompt a {
-		color: var(--brass);
+		color: var(--brand);
 		text-decoration: underline;
 		text-underline-offset: 2px;
 	}

@@ -115,7 +115,7 @@
 	}
 
 	.person:hover strong {
-		color: var(--brass);
+		color: var(--brand);
 	}
 
 	.what {
