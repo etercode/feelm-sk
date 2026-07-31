@@ -412,3 +412,44 @@ export function adminUpdateReview(id, data) {
 export function adminDeleteReview(id) {
 	return request(`/api/admin/reviews/${id}`, { method: 'DELETE' }, true);
 }
+
+/** @param {{ q?: string, type?: string, status?: string, missing?: string, genre?: string, yearFrom?: number, yearTo?: number, sort?: string, page?: number, limit?: number }} [params] */
+export function adminWorks(params = {}) {
+	return request(`/api/admin/works${query(params)}`, {}, true);
+}
+
+/** Every genre there is, for the filter and the editor. */
+export function adminGenres() {
+	return request('/api/admin/works/genres', {}, true);
+}
+
+/** @param {number} id */
+export function adminWork(id) {
+	return request(`/api/admin/works/${id}`, {}, true);
+}
+
+/**
+ * Only the fields being corrected. Type and slug are identity and cannot be
+ * sent; external score and popularity belong to TMDB.
+ *
+ * @param {number} id
+ * @param {Record<string, any>} data
+ */
+export function adminUpdateWork(id, data) {
+	return request(`/api/admin/works/${id}`, { method: 'PATCH', body: JSON.stringify(data) }, true);
+}
+
+/**
+ * Hides a work from the catalog. Not a delete — shelves, reviews and seen
+ * marks all survive and come back with it.
+ *
+ * @param {number} id
+ */
+export function adminHideWork(id) {
+	return request(`/api/admin/works/${id}`, { method: 'DELETE' }, true);
+}
+
+/** @param {number} id */
+export function adminRestoreWork(id) {
+	return request(`/api/admin/works/${id}/restore`, { method: 'POST' }, true);
+}

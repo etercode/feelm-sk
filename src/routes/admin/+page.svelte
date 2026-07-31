@@ -41,13 +41,14 @@
 	let catalogTiles = $derived(
 		data
 			? [
-					// Works and People are still counts — their tables have not been
-					// built, so those tiles do not pretend to lead anywhere.
+					// People is still a count — that table has not been built, so the
+					// tile does not pretend to lead anywhere.
 					{
 						key: 'works',
 						label: 'Works',
 						value: data.totals.works,
 						icon: 'film',
+						href: '/admin/works',
 						accent: 'movie',
 						hint: data.recent.worksToday
 							? `+${data.recent.worksToday.toLocaleString()} today`
