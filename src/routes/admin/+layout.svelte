@@ -38,7 +38,7 @@
 	const links = [
 		{ href: '/admin', label: 'Overview', icon: 'chart', exact: true },
 		{ href: '/admin/users', label: 'Users', icon: 'users' },
-		{ href: '/admin/reviews', label: 'Reviews', icon: 'quote', soon: true },
+		{ href: '/admin/reviews', label: 'Reviews', icon: 'quote' },
 		{ href: '/admin/works', label: 'Works', icon: 'film', soon: true },
 		{ href: '/admin/people', label: 'People', icon: 'user', soon: true },
 		{ href: '/crawler', label: 'Crawler', icon: 'refresh' }

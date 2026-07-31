@@ -386,3 +386,29 @@ export function adminDeleteUser(id) {
 export function adminRestoreUser(id) {
 	return request(`/api/admin/users/${id}/restore`, { method: 'POST' }, true);
 }
+
+/** @param {{ q?: string, user?: string, type?: string, rating?: string, edited?: string, sort?: string, page?: number, limit?: number }} [params] */
+export function adminReviews(params = {}) {
+	return request(`/api/admin/reviews${query(params)}`, {}, true);
+}
+
+/** The one with the wording history; list rows leave it out. @param {number} id */
+export function adminReview(id) {
+	return request(`/api/admin/reviews/${id}`, {}, true);
+}
+
+/**
+ * Send only what is changing — the other field keeps whatever it said, and an
+ * edit that changes nothing does not write a history entry.
+ *
+ * @param {number} id
+ * @param {{ rating?: number, body?: string }} data
+ */
+export function adminUpdateReview(id, data) {
+	return request(`/api/admin/reviews/${id}`, { method: 'PATCH', body: JSON.stringify(data) }, true);
+}
+
+/** Hard delete: the review and its history go together. @param {number} id */
+export function adminDeleteReview(id) {
+	return request(`/api/admin/reviews/${id}`, { method: 'DELETE' }, true);
+}

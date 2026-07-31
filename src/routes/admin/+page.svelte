@@ -41,8 +41,8 @@
 	let catalogTiles = $derived(
 		data
 			? [
-					// Only Users has a table behind it so far; the rest are counts
-					// until their phase lands, so they are not links yet.
+					// Works and People are still counts — their tables have not been
+					// built, so those tiles do not pretend to lead anywhere.
 					{
 						key: 'works',
 						label: 'Works',
@@ -73,6 +73,7 @@
 						label: 'Reviews',
 						value: data.totals.reviews,
 						icon: 'quote',
+						href: '/admin/reviews',
 						hint: data.recent.reviewsThisWeek
 							? `+${data.recent.reviewsThisWeek.toLocaleString()} this week`
 							: 'none this week'
@@ -189,7 +190,10 @@
 	</div>
 
 	<section class="card panel">
-		<h2 class="section">Latest reviews</h2>
+		<h2 class="section">
+			Latest reviews
+			<a class="more" href="/admin/reviews">Moderate<Icon name="right" size={12} /></a>
+		</h2>
 		{#if data.newestReviews.length === 0}
 			<p class="faint">Nobody has written a review yet.</p>
 		{:else}
@@ -262,8 +266,26 @@
 	}
 
 	.section {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 1rem;
 		margin: 0 0 1rem;
 		font-size: 1rem;
+	}
+
+	.more {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.2rem;
+		color: var(--brand);
+		font-size: 0.8rem;
+		font-weight: 500;
+	}
+
+	.more:hover {
+		text-decoration: underline;
+		text-underline-offset: 2px;
 	}
 
 	.note {

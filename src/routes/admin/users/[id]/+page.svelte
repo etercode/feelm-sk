@@ -190,7 +190,13 @@
 		user
 			? [
 					{ key: 'entries', label: 'Shelf', value: user.stats.entries, icon: 'bookmark' },
-					{ key: 'reviews', label: 'Reviews', value: user.stats.reviews, icon: 'quote' },
+					{
+						key: 'reviews',
+						label: 'Reviews',
+						value: user.stats.reviews,
+						icon: 'quote',
+						href: `/admin/reviews?user=${user.username}`
+					},
 					{ key: 'followers', label: 'Followers', value: user.stats.followers, icon: 'users' },
 					{ key: 'following', label: 'Following', value: user.stats.following, icon: 'user' }
 				]
