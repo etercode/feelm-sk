@@ -10,6 +10,7 @@
 	import { goto } from '$app/navigation';
 	import { navigating, page } from '$app/state';
 	import Icon from '$lib/components/Icon.svelte';
+	import Pager from '$lib/components/Pager.svelte';
 	import PosterCard from '$lib/components/PosterCard.svelte';
 	import Spinner from '$lib/components/Spinner.svelte';
 	import { types } from '$lib/data/types.js';
@@ -142,27 +143,11 @@
 			{/if}
 		</div>
 
-		{#if results.pages > 1}
-			<nav class="pager">
-				<button
-					type="button"
-					class="btn btn-sm"
-					disabled={pageNumber <= 1}
-					onclick={() => apply({ page: pageNumber - 1 }, { resetPage: false })}
-				>
-					<Icon name="left" size={14} />Previous
-				</button>
-				<span class="faint">{pageNumber} / {results.pages.toLocaleString()}</span>
-				<button
-					type="button"
-					class="btn btn-sm"
-					disabled={pageNumber >= results.pages}
-					onclick={() => apply({ page: pageNumber + 1 }, { resetPage: false })}
-				>
-					Next<Icon name="right" size={14} />
-				</button>
-			</nav>
-		{/if}
+		<Pager
+			page={pageNumber}
+			pages={results.pages}
+			onpage={(n) => apply({ page: n }, { resetPage: false })}
+		/>
 	{/if}
 </div>
 
@@ -291,14 +276,6 @@
 
 	.grid-posters {
 		padding-bottom: 1rem;
-	}
-
-	.pager {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: 1rem;
-		padding-block: 1.5rem 2.5rem;
 	}
 
 	@media (max-width: 700px) {

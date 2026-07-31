@@ -326,3 +326,63 @@ export function catchUpSeen() {
 export function listSeen() {
 	return request('/api/me/seen', {}, true);
 }
+
+// ---- Admin ---------------------------------------------------------------
+//
+// Everything here needs at least ROLE_MODERATOR, and the ones that change a
+// role or remove an account need ROLE_ADMIN. The server decides; the front end
+// only hides what it knows will be refused.
+
+export function adminOverview() {
+	return request('/api/admin/overview', {}, true);
+}
+
+/** @param {{ q?: string, role?: string, status?: string, sort?: string, page?: number, limit?: number }} [params] */
+export function adminUsers(params = {}) {
+	return request(`/api/admin/users${query(params)}`, {}, true);
+}
+
+/** @param {number} id */
+export function adminUser(id) {
+	return request(`/api/admin/users/${id}`, {}, true);
+}
+
+/** @param {Record<string, any>} data */
+export function adminCreateUser(data) {
+	return request('/api/admin/users', { method: 'POST', body: JSON.stringify(data) }, true);
+}
+
+/**
+ * Only the fields being changed — anything left out is untouched, which is why
+ * this is a PATCH and the profile endpoint is not.
+ *
+ * @param {number} id
+ * @param {Record<string, any>} data
+ */
+export function adminUpdateUser(id, data) {
+	return request(`/api/admin/users/${id}`, { method: 'PATCH', body: JSON.stringify(data) }, true);
+}
+
+/** @param {number} id @param {string} password */
+export function adminSetPassword(id, password) {
+	return request(
+		`/api/admin/users/${id}/password`,
+		{ method: 'POST', body: JSON.stringify({ password }) },
+		true
+	);
+}
+
+/** @param {number} id */
+export function adminDeleteAvatar(id) {
+	return request(`/api/admin/users/${id}/avatar`, { method: 'DELETE' }, true);
+}
+
+/** Soft delete: the row stays, and restore brings it back. @param {number} id */
+export function adminDeleteUser(id) {
+	return request(`/api/admin/users/${id}`, { method: 'DELETE' }, true);
+}
+
+/** @param {number} id */
+export function adminRestoreUser(id) {
+	return request(`/api/admin/users/${id}/restore`, { method: 'POST' }, true);
+}

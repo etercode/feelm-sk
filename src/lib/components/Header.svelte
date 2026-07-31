@@ -109,6 +109,11 @@
 							>
 							<a href="/feed" role="menuitem"><Icon name="activity" size={16} />Your feed</a>
 							<a href="/settings" role="menuitem"><Icon name="edit" size={16} />Settings</a>
+							{#if session.isModerator}
+								<a href="/admin" role="menuitem" class="admin">
+									<Icon name="shield" size={16} />Admin
+								</a>
+							{/if}
 							<button type="button" role="menuitem" onclick={signOut}>
 								<Icon name="logout" size={16} />Sign out
 							</button>
@@ -322,6 +327,11 @@
 	.menu button:hover {
 		background: var(--tint-strong);
 		color: var(--ink);
+	}
+
+	/* The one item in the menu most people will never see. */
+	.menu a.admin {
+		color: var(--brand);
 	}
 
 	@keyframes drop {

@@ -9,6 +9,7 @@
 	import { goto } from '$app/navigation';
 	import { navigating, page } from '$app/state';
 	import Icon from '$lib/components/Icon.svelte';
+	import Pager from '$lib/components/Pager.svelte';
 	import Spinner from '$lib/components/Spinner.svelte';
 	import PosterCard from '$lib/components/PosterCard.svelte';
 	import { types, typeKeys } from '$lib/data/types.js';
@@ -375,27 +376,11 @@
 						{/each}
 					</div>
 
-					{#if results.pages > 1}
-						<nav class="pager">
-							<button
-								type="button"
-								class="btn btn-sm"
-								disabled={pageNumber <= 1}
-								onclick={() => apply({ page: pageNumber - 1 }, { resetPage: false })}
-							>
-								<Icon name="left" size={14} />Previous
-							</button>
-							<span class="faint">Page {pageNumber} of {results.pages.toLocaleString()}</span>
-							<button
-								type="button"
-								class="btn btn-sm"
-								disabled={pageNumber >= results.pages}
-								onclick={() => apply({ page: pageNumber + 1 }, { resetPage: false })}
-							>
-								Next<Icon name="right" size={14} />
-							</button>
-						</nav>
-					{/if}
+					<Pager
+						page={pageNumber}
+						pages={results.pages}
+						onpage={(n) => apply({ page: n }, { resetPage: false })}
+					/>
 				{:else}
 					<div class="empty">
 						<p class="muted">
@@ -645,13 +630,6 @@
 		min-width: 0;
 	}
 
-	.pager {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: 1rem;
-		margin-top: 2rem;
-	}
 
 	.empty {
 		padding: 3rem 0;

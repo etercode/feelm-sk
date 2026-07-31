@@ -10,7 +10,7 @@ import { clearTokens, hasTokens } from '$lib/auth/tokens.js';
 import { library } from '$lib/state/library.svelte.js';
 
 class Session {
-	/** @type {{ id: number, username: string, name: string, tagline?: string|null, bio?: string|null, location?: string|null, avatar?: string|null, joinedAt?: string|null } | null} */
+	/** @type {{ id: number, username: string, name: string, tagline?: string|null, bio?: string|null, location?: string|null, avatar?: string|null, joinedAt?: string|null, roles?: string[], handlePending?: boolean } | null} */
 	user = $state(null);
 
 	#hydrated = false;
@@ -19,6 +19,22 @@ class Session {
 
 	get isSignedIn() {
 		return this.user !== null;
+	}
+
+	/**
+	 * Whether to offer the admin section at all.
+	 *
+	 * Both of these only decide what to render. The server checks again on
+	 * every /api/admin call, so a doctored localStorage buys an empty table
+	 * and a row of 403s.
+	 */
+	get isModerator() {
+		const roles = this.user?.roles ?? [];
+		return roles.includes('ROLE_MODERATOR') || roles.includes('ROLE_ADMIN');
+	}
+
+	get isAdmin() {
+		return this.user?.roles?.includes('ROLE_ADMIN') ?? false;
 	}
 
 	/** Restores tokens and loads /api/me once the browser has taken over. */

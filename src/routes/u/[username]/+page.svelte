@@ -16,6 +16,7 @@
 	import Avatar from '$lib/components/Avatar.svelte';
 	import FollowButton from '$lib/components/FollowButton.svelte';
 	import Icon from '$lib/components/Icon.svelte';
+	import Pager from '$lib/components/Pager.svelte';
 	import PosterCard from '$lib/components/PosterCard.svelte';
 	import ReviewCard from '$lib/components/ReviewCard.svelte';
 	import ShelfManager from '$lib/components/ShelfManager.svelte';
@@ -399,27 +400,12 @@
 				{/if}
 			</div>
 
-			{#if shelf.pages > 1}
-				<nav class="pager">
-					<button
-						type="button"
-						class="btn btn-sm"
-						disabled={pageNumber <= 1 || shelfLoading}
-						onclick={() => (pageNumber -= 1)}
-					>
-						<Icon name="left" size={14} />Previous
-					</button>
-					<span class="faint">{pageNumber} / {shelf.pages.toLocaleString()}</span>
-					<button
-						type="button"
-						class="btn btn-sm"
-						disabled={pageNumber >= shelf.pages || shelfLoading}
-						onclick={() => (pageNumber += 1)}
-					>
-						Next<Icon name="right" size={14} />
-					</button>
-				</nav>
-			{/if}
+			<Pager
+				page={pageNumber}
+				pages={shelf.pages}
+				busy={shelfLoading}
+				onpage={(n) => (pageNumber = n)}
+			/>
 		{:else if tab === 'reviews'}
 			<div class="reviews">
 				{#each reviews as review (review.id)}
@@ -833,13 +819,6 @@
 		padding-bottom: 2rem;
 	}
 
-	.pager {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: 1rem;
-		padding: 0.5rem 0 2.5rem;
-	}
 
 	.error {
 		color: var(--danger);

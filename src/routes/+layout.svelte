@@ -17,7 +17,12 @@
 	 * somebody signing in wants.
 	 */
 	const BARE = ['/login', '/register'];
-	let bare = $derived(BARE.includes(page.route.id ?? ''));
+	/*
+	 * The admin has its own sidebar and its own sense of a page bottom, so it
+	 * drops the footer too — but it keeps the bar at the top, which is why it
+	 * is a prefix test here rather than another entry in BARE.
+	 */
+	let bare = $derived(BARE.includes(page.route.id ?? '') || page.url.pathname.startsWith('/admin'));
 
 	// After first paint: load the live catalog, restore the session if tokens exist,
 	// and apply the saved theme. Shelf / feed / follows come from the API once signed in.

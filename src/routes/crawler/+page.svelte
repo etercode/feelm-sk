@@ -10,6 +10,7 @@
 	import { navigating, page } from '$app/state';
 	import { API_URL } from '$lib/config.js';
 	import Icon from '$lib/components/Icon.svelte';
+	import Pager from '$lib/components/Pager.svelte';
 	import PosterCard from '$lib/components/PosterCard.svelte';
 	import Spinner from '$lib/components/Spinner.svelte';
 
@@ -132,27 +133,7 @@
 				</div>
 			</div>
 
-			{#if recent.pages > 1}
-				<nav class="pager">
-					<button
-						type="button"
-						class="btn btn-sm"
-						disabled={pageNumber <= 1}
-						onclick={() => toPage(pageNumber - 1)}
-					>
-						<Icon name="left" size={14} />Previous
-					</button>
-					<span class="faint">{pageNumber} / {recent.pages.toLocaleString()}</span>
-					<button
-						type="button"
-						class="btn btn-sm"
-						disabled={pageNumber >= recent.pages}
-						onclick={() => toPage(pageNumber + 1)}
-					>
-						Next<Icon name="right" size={14} />
-					</button>
-				</nav>
-			{/if}
+			<Pager page={pageNumber} pages={recent.pages} onpage={toPage} />
 		{/if}
 	{/if}
 </div>
@@ -270,11 +251,4 @@
 		pointer-events: none;
 	}
 
-	.pager {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: 1rem;
-		padding: 2rem 0 0;
-	}
 </style>
