@@ -5,10 +5,11 @@
 	whatever the load function fetched and writes any change back into the query
 	string, so a browse view is a shareable link.
 
-	The filters name things without counting them. A row of genre chips each
-	carrying a number was two of the three seconds this page took to answer:
-	every request recounted every genre across the whole catalogue, to decorate
-	a control that works just as well without.
+	Nothing here is counted. A row of genre chips each carrying a number, and a
+	total above them, were most of what this page cost: every request recounted
+	every genre across the whole catalogue, and counted the catalogue itself, to
+	decorate controls that read the same without either. The pager asks only
+	whether there is a page after this one.
 -->
 <script>
 	import { goto } from '$app/navigation';
@@ -18,7 +19,6 @@
 	import PosterCard from '$lib/components/PosterCard.svelte';
 	import Spinner from '$lib/components/Spinner.svelte';
 	import { types } from '$lib/data/types.js';
-	import { plural } from '$lib/util/format.js';
 
 	let { type, title, intro, data } = $props();
 
@@ -94,9 +94,6 @@
 			<h1 class="display">{title}</h1>
 			<p class="muted">{intro}</p>
 		</div>
-		{#if results}
-			<span class="count display">{results.total.toLocaleString()}</span>
-		{/if}
 	</header>
 
 	{#if data.unreachable}
@@ -179,10 +176,6 @@
 			</div>
 		</div>
 
-		<p class="result faint">
-			{plural(results.total, spec.label.toLowerCase())}
-			{#if results.pages > 1}· page {pageNumber} of {results.pages.toLocaleString()}{/if}
-		</p>
 
 		<!--
 			The old results stay on screen while the new ones load, dimmed and
@@ -209,6 +202,7 @@
 		<Pager
 			page={pageNumber}
 			pages={results.pages}
+			hasMore={results.hasMore}
 			onpage={(n) => apply({ page: n }, { resetPage: false })}
 		/>
 	{/if}
@@ -266,12 +260,6 @@
 		max-width: 52ch;
 	}
 
-	.count {
-		font-size: clamp(2.5rem, 7vw, 4.5rem);
-		color: var(--accent);
-		opacity: 0.35;
-		line-height: 1;
-	}
 
 	.notice {
 		color: var(--danger);
@@ -312,10 +300,6 @@
 		border-radius: 99px;
 	}
 
-	.result {
-		margin: 1.1rem 0;
-		font-size: 0.82rem;
-	}
 
 	.grid-posters {
 		padding-bottom: 1rem;

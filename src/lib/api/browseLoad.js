@@ -1,6 +1,42 @@
 import { API_URL } from '$lib/config.js';
 
 /**
+ * The filter lists, fetched once rather than on every navigation.
+ *
+ * Changing a genre or a sort re-runs this load, and it was asking for the
+ * lists again each time — the same nineteen genres and four decades, to
+ * rebuild dropdowns that had not changed. They only move when the crawler adds
+ * something, so an hour is a generous ceiling.
+ *
+ * Module scope, so on the server one copy is shared by everyone. That is fine
+ * for this: it is the same public answer for every visitor, and it holds no
+ * user's data.
+ *
+ * @type {{ at: number, value: any } | null}
+ */
+let cachedFilters = null;
+const FILTERS_TTL = 60 * 60 * 1000;
+
+/** @param {typeof globalThis.fetch} fetch */
+async function loadFilters(fetch) {
+	if (cachedFilters && Date.now() - cachedFilters.at < FILTERS_TTL) {
+		return cachedFilters.value;
+	}
+
+	try {
+		const response = await fetch(`${API_URL}/api/search/filters`);
+		if (!response.ok) return cachedFilters?.value ?? null;
+		const value = await response.json();
+		cachedFilters = { at: Date.now(), value };
+		return value;
+	} catch (error) {
+		console.error('browse: filters failed —', error);
+		// A stale list beats no list; the dropdowns still work.
+		return cachedFilters?.value ?? null;
+	}
+}
+
+/**
  * Load function shared by the four browse pages.
  *
  * They used to pull the first hundred titles of a type and filter them in the
@@ -23,6 +59,13 @@ export function browseLoad(type) {
 		 * which does not change with the catalogue.
 		 */
 		params.set('facets', '0');
+		/*
+		 * And no total. Counting how many of seven hundred thousand rows match
+		 * is about half the work of a listing, and this page does not print the
+		 * number. The response says whether there is a page after this one,
+		 * which is all the pager needs.
+		 */
+		params.set('total', '0');
 
 		const endpoint = `${API_URL}/api/search?${params}`;
 		let results = null;
@@ -34,12 +77,9 @@ export function browseLoad(type) {
 		 * once turned a specific, findable failure into a blank page with no
 		 * explanation anywhere — on the server or in the browser console.
 		 */
-		// Side by side: the filter lists do not depend on the results, so
-		// waiting for one before asking for the other only adds latency.
-		const [listing, options] = await Promise.allSettled([
-			fetch(endpoint),
-			fetch(`${API_URL}/api/search/filters`)
-		]);
+		// Side by side: the lists do not depend on the results, and after the
+		// first visit loadFilters answers from memory anyway.
+		const [listing, options] = await Promise.allSettled([fetch(endpoint), loadFilters(fetch)]);
 
 		try {
 			if (listing.status === 'rejected') throw listing.reason;
@@ -52,15 +92,9 @@ export function browseLoad(type) {
 			console.error(`browse ${type}: ${endpoint} failed —`, error);
 		}
 
-		// The filter bar is worth having even if this one fails; it just falls
-		// back to sorting, which needs no list from anybody.
-		try {
-			if (options.status === 'fulfilled' && options.value.ok) {
-				filters = await options.value.json();
-			}
-		} catch (error) {
-			console.error(`browse ${type}: filters failed —`, error);
-		}
+		// The filter bar is worth having even if this fails; it falls back to
+		// sorting, which needs no list from anybody.
+		if (options.status === 'fulfilled') filters = options.value;
 
 		return { type, results, filters, unreachable: results === null };
 	};

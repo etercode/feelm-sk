@@ -19,8 +19,11 @@
 
 	let {
 		page = 1,
+		/** Null when the caller did not ask the server to count. */
 		pages = 1,
 		onpage,
+		/** Only consulted when `pages` is unknown. */
+		hasMore = false,
 		busy = false,
 		/** How many numbers to show either side of the current one. */
 		siblings = 1,
@@ -30,8 +33,15 @@
 	/** Once there are more pages than this, offer the jump box. */
 	const JUMP_ABOVE = 8;
 
-	let total = $derived(Math.max(pages, 1));
-	let current = $derived(Math.min(Math.max(Math.round(page) || 1, 1), total));
+	/*
+	 * A listing that does not print a total does not pay to compute one, so
+	 * `pages` can be null. Everything that needs to know where the end is —
+	 * the last-page button, the numbers after this one, the "of N" — steps
+	 * aside, and `hasMore` carries the only question left: is there another.
+	 */
+	let known = $derived(typeof pages === 'number' && pages > 0);
+	let total = $derived(known ? Math.max(pages, 1) : Infinity);
+	let current = $derived(Math.min(Math.max(Math.round(page) || 1, 1), known ? total : Infinity));
 
 	/** @param {number} from @param {number} to */
 	function range(from, to) {
@@ -44,6 +54,13 @@
 	 * two of them in one list stay distinguishable.
 	 */
 	let slots = $derived.by(() => {
+		if (!known) {
+			const left = Math.max(current - siblings, 1);
+			const right = current + (hasMore ? siblings : 0);
+			const near = range(left, right);
+			return left > 2 ? [1, { gap: 'l' }, ...near] : range(1, right);
+		}
+
 		// Enough room for first, last, the window, and two gaps.
 		const widest = 5 + siblings * 2;
 		if (total <= widest) return range(1, total);
@@ -69,11 +86,11 @@
 		const wanted = Number(jump.trim());
 		if (!Number.isFinite(wanted) || wanted < 1) return;
 		jump = '';
-		onpage(Math.min(Math.round(wanted), total));
+		onpage(known ? Math.min(Math.round(wanted), total) : Math.round(wanted));
 	}
 </script>
 
-{#if total > 1}
+{#if known ? total > 1 : current > 1 || hasMore}
 	<nav class="pager" aria-label={label}>
 		<div class="steps">
 			<button
@@ -121,32 +138,34 @@
 			<button
 				type="button"
 				class="btn btn-sm"
-				disabled={busy || current >= total}
+				disabled={busy || (known ? current >= total : !hasMore)}
 				onclick={() => onpage(current + 1)}
 			>
 				<span class="word">Next</span><Icon name="right" size={14} />
 			</button>
 
-			<button
-				type="button"
-				class="btn btn-sm edge"
-				disabled={busy || current >= total}
-				title="Last page"
-				aria-label="Last page"
-				onclick={() => onpage(total)}
-			>
-				<Icon name="right" size={13} /><Icon name="right" size={13} />
-			</button>
+			{#if known}
+				<button
+					type="button"
+					class="btn btn-sm edge"
+					disabled={busy || current >= total}
+					title="Last page"
+					aria-label="Last page"
+					onclick={() => onpage(total)}
+				>
+					<Icon name="right" size={13} /><Icon name="right" size={13} />
+				</button>
+			{/if}
 		</div>
 
-		{#if total > JUMP_ABOVE}
+		{#if !known || total > JUMP_ABOVE}
 			<form class="jump" onsubmit={go}>
 				<label>
 					<span class="sr-only">Go to page</span>
 					<input
 						type="number"
 						min="1"
-						max={total}
+						max={known ? total : undefined}
 						bind:value={jump}
 						placeholder="Page…"
 						disabled={busy}
@@ -154,7 +173,7 @@
 					/>
 				</label>
 				<button type="submit" class="btn btn-sm" disabled={busy || jump.trim() === ''}>Go</button>
-				<span class="of faint">of {total.toLocaleString()}</span>
+				{#if known}<span class="of faint">of {total.toLocaleString()}</span>{/if}
 			</form>
 		{/if}
 	</nav>
