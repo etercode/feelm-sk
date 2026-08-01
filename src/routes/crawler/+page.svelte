@@ -22,8 +22,14 @@
 	// Whatever the last poll returned, or the server's render until one has.
 	// Held separately so a navigation's fresh data takes over on its own.
 	let polled = $state(null);
-	let status = $derived(polled ?? data.status);
+	/*
+	 * A poll answers for whichever type it was fired for, so it has to be
+	 * dropped when the page switches — otherwise the movie numbers linger over
+	 * the series page for up to ten seconds and look like real data.
+	 */
+	let status = $derived(polled?.type === data.type ? polled : data.status);
 	let recent = $derived(data.recent);
+	let filtered = $derived(Object.entries(status?.filtered ?? {}));
 	/*
 	 * Progress is counted from titles actually in the catalog, not from the
 	 * queue's crawled_at column: the crawler only stamps that when a whole run
@@ -43,9 +49,10 @@
 	let refreshing = $derived(navigating.to?.route.id === page.route.id);
 
 	$effect(() => {
+		const type = data.type;
 		const timer = setInterval(async () => {
 			try {
-				const response = await fetch(`${API_URL}/api/crawl/status`);
+				const response = await fetch(`${API_URL}/api/crawl/status?type=${type}`);
 				if (response.ok) polled = await response.json();
 			} catch {
 				// A refresh that fails changes nothing on screen; the next one
@@ -60,6 +67,16 @@
 		const next = new URLSearchParams(page.url.searchParams);
 		next.set('page', String(n));
 		goto(`/crawler?${next}`, { noScroll: true });
+	}
+
+	function show(type) {
+		// Page one: page nine of the movies means nothing in the series list.
+		goto(type === 'movie' ? '/crawler' : `/crawler?type=${type}`, { noScroll: true });
+	}
+
+	/** 'no_poster' reads as a column name; 'no poster' reads as a reason. */
+	function reason(key) {
+		return key.replaceAll('_', ' ');
 	}
 
 	function number(value) {
@@ -89,8 +106,16 @@
 <div class="frame page">
 	<header class="masthead">
 		<div>
-			<span class="eyebrow"><Icon name="movie" size={14} />Catalog</span>
+			<span class="eyebrow"><Icon name={data.type} size={14} />Catalog</span>
 			<h1 class="display">Crawler</h1>
+			<div class="types">
+				<button type="button" class="btn btn-sm" class:btn-primary={data.type === 'movie'} onclick={() => show('movie')}>
+					Movies
+				</button>
+				<button type="button" class="btn btn-sm" class:btn-primary={data.type === 'series'} onclick={() => show('series')}>
+					Series
+				</button>
+			</div>
 		</div>
 		{#if status}
 			<span class="state" class:on={status.running}>
@@ -119,6 +144,22 @@
 			<div><dt>Last title</dt><dd>{ago(status.lastAddedAt)}</dd></div>
 			<div><dt>Refreshes</dt><dd>every {REFRESH}s</dd></div>
 		</dl>
+
+		{#if filtered.length}
+			<!--
+				What the crawler refused to store, and why. Series only: anyone can
+				add a show to TMDB, so a good part of the export is a stub with no
+				poster or no episodes. Showing the tally is what stops the filter
+				being invisible — a rule quietly eating a tenth of the catalog is
+				visible here rather than as titles nobody can find.
+			-->
+			<h2 class="section">Filtered out <span class="faint">{number(status.filteredTotal)}</span></h2>
+			<ul class="reasons">
+				{#each filtered as [key, count] (key)}
+					<li><span class="chip">{reason(key)}</span><span class="faint">{number(count)}</span></li>
+				{/each}
+			</ul>
+		{/if}
 
 		<h2 class="section">Recently crawled</h2>
 
@@ -162,6 +203,27 @@
 	h1 {
 		font-size: clamp(2rem, 6vw, 3rem);
 		margin: 0.35rem 0 0;
+	}
+
+	.types {
+		display: flex;
+		gap: 0.4rem;
+		margin-top: 0.8rem;
+	}
+
+	.reasons {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem 1.25rem;
+		list-style: none;
+		margin: 0 0 1.5rem;
+		padding: 0;
+	}
+
+	.reasons li {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.45rem;
 	}
 
 	.state {
