@@ -224,8 +224,14 @@ export function searchFilters() {
 	return request('/api/search/filters');
 }
 
-export function listUpcoming() {
-	return request('/api/upcoming');
+/**
+ * Everything the front page draws, in one request: a popularity rail per type
+ * that has anything in it, plus the release queue. Replaces five calls, two of
+ * which were always empty — the server is the only side that knows a type
+ * holds nothing.
+ */
+export function getHome() {
+	return request('/api/home');
 }
 
 /** @param {string} type @param {string} slug */

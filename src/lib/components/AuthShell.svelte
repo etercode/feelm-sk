@@ -4,6 +4,12 @@
 
 	let { title, intro, children } = $props();
 
+	/*
+	 * Decoration, so it loads like decoration: whatever the cache already holds,
+	 * and it fills in if this visitor came via the home page. Sign-in is one
+	 * screen with one job, and fetching the whole front page to put posters
+	 * behind the form is not worth a round trip on a phone.
+	 */
 	let wall = $derived(catalog.items.filter((item) => item.poster).slice(0, 24));
 </script>
 

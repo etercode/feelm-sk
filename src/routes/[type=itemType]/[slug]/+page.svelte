@@ -19,7 +19,6 @@
 	import Trailer from '$lib/components/Trailer.svelte';
 	import { externalRatings, isUpcoming, itemPath } from '$lib/data/items.js';
 	import { facetsOf, lineOf, progressLabel, statusLabel, typeOf } from '$lib/data/types.js';
-	import { catalog } from '$lib/state/catalog.svelte.js';
 	import { library } from '$lib/state/library.svelte.js';
 	import { session } from '$lib/state/session.svelte.js';
 	import { compactNumber, longDate, plural, untilRelease } from '$lib/util/format.js';
@@ -30,7 +29,7 @@
 	let item = $derived(data.item);
 	let spec = $derived(typeOf(item));
 	let facets = $derived(facetsOf(item));
-	let parts = $derived(catalog.collectionOf(item));
+	let parts = $derived(data.collection ?? []);
 	let unreleased = $derived(isUpcoming(item));
 	let outside = $derived(externalRatings(item));
 
@@ -189,7 +188,7 @@
 				<section class="parts">
 					<h2 class="display">{item.details.collection.name}</h2>
 					<div class="part-row">
-						{#each parts as part (part.id)}
+						{#each parts as part, position (part.id)}
 							<a
 								class="part"
 								class:current={part.id === item.id}
@@ -197,7 +196,10 @@
 								aria-current={part.id === item.id ? 'page' : undefined}
 							>
 								<img src={part.poster} alt="" loading="lazy" />
-								<span class="no">{part.details.collection.part}</span>
+								<!-- TMDB records a part number for barely any collection, so
+								     fall back to the position in the strip, which is ordered
+								     by part then year. -->
+								<span class="no">{part.part ?? position + 1}</span>
 								<span class="name">{part.title}</span>
 							</a>
 						{/each}

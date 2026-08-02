@@ -59,8 +59,13 @@ class Library {
 		if (!browser || !me) return;
 
 		try {
-			await catalog.hydrate();
-
+			/*
+			 * No catalog.hydrate() here. Every shelf row, review and activity
+			 * event below arrives with its own work attached and is handed to
+			 * catalog.remember(), so the lookups these feed resolve without
+			 * the front page's rails — which a signed-in visitor was pulling
+			 * on whatever page they happened to open.
+			 */
 			const [entriesPayload, seenPayload, followingPayload, feedPayload] = await Promise.all([
 				api.getMyEntries(),
 				api.listSeen(),

@@ -10,6 +10,16 @@
 	import { session } from '$lib/state/session.svelte.js';
 	import { plural } from '$lib/util/format.js';
 
+	/*
+	 * The rails and the release queue are this page's data, so this page asks
+	 * for them. They used to load from the root layout, which meant every
+	 * visit to /movies or /search or /settings paid for a front page it was
+	 * never going to draw.
+	 */
+	$effect(() => {
+		void catalog.hydrate();
+	});
+
 	let releases = $derived(catalog.upcomingItems());
 
 	/*

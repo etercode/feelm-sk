@@ -9,6 +9,12 @@
 		...catalog.topOfType('series', 1),
 		...catalog.topOfType('book', 1)
 	]);
+
+	// Nothing else loads the catalog now, and this page offers a way onwards
+	// out of a dead end.
+	$effect(() => {
+		void catalog.hydrate();
+	});
 </script>
 
 <svelte:head><title>{page.status} — Feelm</title></svelte:head>

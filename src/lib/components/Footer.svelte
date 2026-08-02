@@ -1,6 +1,5 @@
 <script>
 	import { types, typeKeys } from '$lib/data/types.js';
-	import { catalog } from '$lib/state/catalog.svelte.js';
 
 	const year = new Date().getFullYear();
 </script>
@@ -25,8 +24,14 @@
 
 		<div class="colophon">
 			<span class="eyebrow">Catalog</span>
+			<!--
+				This said "N titles loaded", counting the front page's cache — so it
+				read "96" for a catalog of seven hundred thousand, and it was the
+				last reason every page in the site had to load that cache. The page
+				it links to has the real number.
+			-->
 			<p class="muted">
-				{catalog.items.length || '…'} titles loaded. <a href="/crawler">Crawler status</a>
+				Filled in by the crawler. <a href="/crawler">Crawler status</a>
 			</p>
 		</div>
 	</div>
