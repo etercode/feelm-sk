@@ -237,10 +237,36 @@ class Library {
 	 * @param {'following' | 'everyone'} scope
 	 * @param {number} [limit]
 	 */
-	async loadFeed(scope = 'following', limit = 40) {
-		const data = await api.getFeed({ scope, limit });
-		this.#ingestActivity(data?.activity ?? []);
-		return data;
+	/**
+	 * One page of the feed, in the order the server ranked it.
+	 *
+	 * The events are returned rather than read back out of `entries`, which is
+	 * the difference that makes paging work at all. That cache also holds every
+	 * row of your own shelf, from getMyEntries — so rebuilding the feed from it
+	 * mixed your whole library into a list the server had already chosen forty
+	 * of, and page two would have been forty more of the same shuffle.
+	 *
+	 * Ingested as well as returned, because the users and works attached to
+	 * each event are worth keeping for every other page that looks them up.
+	 *
+	 * @param {'following' | 'everyone' | 'me'} scope
+	 */
+	async loadFeed(scope = 'following', limit = 40, page = 1) {
+		const data = await api.getFeed({ scope, limit, page });
+		const activity = data?.activity ?? [];
+		this.#ingestActivity(activity);
+
+		return {
+			events: activity
+				.filter((event) => event.user && event.item && event.entry)
+				// `at` is a plain date on the wire and an instant next to it;
+				// the card writes "3 hours ago", so it wants the instant.
+				.map((event) => ({
+					...event,
+					entry: { ...event.entry, at: event.entry.updatedAt ?? event.entry.at }
+				})),
+			hasMore: Boolean(data?.hasMore)
+		};
 	}
 
 	/** @param {any} item */

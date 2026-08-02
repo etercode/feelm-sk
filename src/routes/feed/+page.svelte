@@ -6,13 +6,25 @@
 	import { session } from '$lib/state/session.svelte.js';
 	import { plural } from '$lib/util/format.js';
 
+	const PER_PAGE = 40;
+
 	let scope = $state('following');
 
-	let events = $derived(
-		session.user && scope === 'following'
-			? library.feedFor(session.user.id, 40)
-			: library.activity({ limit: 40 })
-	);
+	/*
+	 * The stream is what the server sent, kept as-is and appended to.
+	 *
+	 * It used to be derived from library.entries, which also holds every row of
+	 * your own shelf — so the page re-sorted your whole library together with
+	 * the forty events the server had chosen, and there was no page two to ask
+	 * for. Holding the answer means "Load more" has somewhere to put the next
+	 * one.
+	 */
+	/** @type {any[]} */
+	let events = $state([]);
+	let hasMore = $state(false);
+	let page = $state(1);
+	let loading = $state(false);
+	let failed = $state(false);
 
 	/** People the viewer does not already follow, busiest first. */
 	let suggestions = $derived(
@@ -24,10 +36,59 @@
 			.slice(0, 6)
 	);
 
+	/*
+	 * Reloads from the top whenever the scope changes, and once on arrival.
+	 * Signed out there is only one feed to show, so the scope is pinned to
+	 * everyone rather than the buttons being hidden and the fetch skipped.
+	 */
 	$effect(() => {
-		if (!session.user) return;
-		void library.loadFeed(scope, 40).catch(() => {});
+		const wanted = session.user ? scope : 'everyone';
+		let live = true;
+
+		page = 1;
+		loading = true;
+		failed = false;
+
+		library
+			.loadFeed(wanted, PER_PAGE, 1)
+			.then((data) => {
+				if (!live) return;
+				events = data.events;
+				hasMore = data.hasMore;
+			})
+			.catch((e) => {
+				if (!live) return;
+				failed = true;
+				console.warn('feed failed', e);
+			})
+			.finally(() => {
+				if (live) loading = false;
+			});
+
+		return () => {
+			live = false;
+		};
 	});
+
+	async function loadMore() {
+		if (loading || !hasMore) return;
+		loading = true;
+
+		try {
+			const next = page + 1;
+			const data = await library.loadFeed(session.user ? scope : 'everyone', PER_PAGE, next);
+			// Appended by id, because an entry edited mid-scroll can arrive on
+			// two pages — it moves to the top of the order as it is saved.
+			const seen = new Set(events.map((event) => event.entry.id));
+			events = [...events, ...data.events.filter((event) => !seen.has(event.entry.id))];
+			hasMore = data.hasMore;
+			page = next;
+		} catch (e) {
+			console.warn('feed page failed', e);
+		} finally {
+			loading = false;
+		}
+	}
 </script>
 
 <svelte:head><title>Feed — Feelm</title></svelte:head>
@@ -44,6 +105,11 @@
 				<button type="button" class:on={scope === 'everyone'} onclick={() => (scope = 'everyone')}>
 					Everyone
 				</button>
+				<!-- Your own activity is in "People you follow" too, as on any
+				     timeline. This is the way to read it on its own. -->
+				<button type="button" class:on={scope === 'me'} onclick={() => (scope = 'me')}>
+					Just me
+				</button>
 			</div>
 		{:else}
 			<p class="muted">
@@ -57,10 +123,26 @@
 			{#each events as event (event.entry.id)}
 				<ActivityCard {event} />
 			{:else}
-				<p class="muted empty">
-					Quiet in here. Follow a few people and their evenings show up on this page.
-				</p>
+				{#if loading}
+					<p class="muted empty">Loading…</p>
+				{:else if failed}
+					<p class="muted empty">Could not reach the API. Try again in a moment.</p>
+				{:else if scope === 'me'}
+					<p class="muted empty">
+						Nothing on your shelf yet. Anything you log shows up here.
+					</p>
+				{:else}
+					<p class="muted empty">
+						Quiet in here. Follow a few people and their evenings show up on this page.
+					</p>
+				{/if}
 			{/each}
+
+			{#if hasMore}
+				<button type="button" class="btn more" disabled={loading} onclick={loadMore}>
+					{loading ? 'Loading…' : 'Load more'}
+				</button>
+			{/if}
 		</div>
 
 		<aside>
@@ -153,6 +235,13 @@
 
 	.empty {
 		padding: 2rem 0;
+	}
+
+	/* Full width so it reads as the end of the stream rather than as one more
+	   thing in it. */
+	.more {
+		align-self: stretch;
+		margin-top: 0.5rem;
 	}
 
 	aside section {
