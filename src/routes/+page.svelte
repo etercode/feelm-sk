@@ -79,6 +79,19 @@
 			</p>
 		{/if}
 
+		<!--
+			Above the per-type rails on purpose: those are ranked by popularity
+			and barely move from week to week, so a visitor who came back to see
+			what is new would otherwise have to know which of them changed.
+		-->
+		{#if catalog.latest.length}
+			<Rail kicker="Just released" title="New this season" rows={2} grid>
+				{#each catalog.latest as item (item.id)}
+					<PosterCard {item} showType />
+				{/each}
+			</Rail>
+		{/if}
+
 		{#each sections as section (section.type)}
 			<Rail
 				kicker={section.kicker}

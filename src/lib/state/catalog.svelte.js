@@ -11,6 +11,9 @@ import { isUpcoming } from '$lib/data/items.js';
 class Catalog {
 	/** @type {any[]} */
 	items = $state([]);
+	/** Out in the last three months, in the order the server ranked them. */
+	/** @type {any[]} */
+	latest = $state([]);
 	ready = $state(false);
 	error = $state(/** @type {string | null} */ (null));
 
@@ -65,6 +68,18 @@ class Catalog {
 					isUpcoming: true
 				});
 			}
+
+			/*
+			 * Kept as its own list rather than filtered back out of `items`.
+			 * The server has already decided the order — out in the last three
+			 * months, most popular first — and that ordering is not derivable
+			 * from anything a title carries, so re-sorting here would only be
+			 * guessing at it.
+			 */
+			for (const item of home?.latest ?? []) {
+				if (!byId.has(item.id)) byId.set(item.id, item);
+			}
+			this.latest = (home?.latest ?? []).map((item) => byId.get(item.id) ?? item);
 
 			this.items = [...byId.values()];
 			this.ready = true;
