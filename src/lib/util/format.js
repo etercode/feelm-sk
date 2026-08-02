@@ -59,6 +59,15 @@ export function list(values, max = 3) {
 }
 
 export function plural(count, one, many = `${one}s`) {
+	/*
+	 * Nothing rather than "undefined seasons". Callers pass counts straight out
+	 * of a payload — item.details.seasonCount — and those are legitimately null
+	 * for a series whose extra never recorded them, so the string got rendered
+	 * on the card as written. Every caller filters falsy values out of its line
+	 * already, so returning null is the one answer that disappears cleanly.
+	 */
+	if (count === null || count === undefined || Number.isNaN(count)) return null;
+
 	return `${count} ${count === 1 ? one : many}`;
 }
 

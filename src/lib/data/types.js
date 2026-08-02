@@ -176,17 +176,38 @@ export function typeOf(item) {
 	return types[item.type];
 }
 
+/*
+ * Every line() and facets() below reaches straight into item.details —
+ * item.details.runtime, item.details.seasonCount. That is fine for a payload
+ * that has one and a TypeError for a payload that does not, and because it
+ * throws while rendering it does not fail quietly: it takes the component down
+ * with it. The search overlay spent a release stuck on "Searching…" and
+ * refusing to reopen because the suggest endpoint had been trimmed to drop
+ * `details`, which is a lot of damage for a missing subtitle.
+ *
+ * So the two callers below fill in an empty one rather than trusting the
+ * server. A line with a gap in it is a cosmetic problem; this used to be a
+ * broken page.
+ */
+function withDetails(item) {
+	return item?.details ? item : { ...item, details: {} };
+}
+
 /** Facets with the empty ones dropped — what the detail sheet actually renders. */
 export function facetsOf(item) {
-	return typeOf(item)
-		.facets(item)
+	const safe = withDetails(item);
+
+	return typeOf(safe)
+		.facets(safe)
 		.filter(Boolean);
 }
 
 /** "2022 · 2 seasons · 18 episodes" */
 export function lineOf(item) {
-	return typeOf(item)
-		.line(item)
+	const safe = withDetails(item);
+
+	return typeOf(safe)
+		.line(safe)
 		.filter(Boolean);
 }
 
