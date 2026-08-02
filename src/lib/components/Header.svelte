@@ -47,7 +47,12 @@
 <header class="bar">
 	<div class="inner frame">
 		<a class="brand" href="/" aria-label="Feelm — home">
-			<span class="mark" aria-hidden="true"></span>
+			<!--
+				The mark sits on its own dark tile in both themes. The F is white
+				with a blue film strip, so on paper it would be a white shape on a
+				near-white bar — the tile is what makes one asset work on both.
+			-->
+			<img class="mark" src="/logo.png" alt="" width="30" height="30" fetchpriority="high" />
 			<span class="wordmark"><em>feel</em>m</span>
 		</a>
 
@@ -172,24 +177,24 @@
 	}
 
 	.mark {
-		width: 1.1rem;
-		height: 1.1rem;
-		border-radius: 50%;
-		border: 2px solid var(--brand);
-		position: relative;
-	}
-
-	.mark::after {
-		content: '';
-		position: absolute;
-		inset: 3px;
-		border-radius: 50%;
-		background: var(--brand);
+		width: 1.85rem;
+		height: 1.85rem;
+		border-radius: 9px;
+		background: var(--brand-tile);
+		/* The artwork carries its own padding; this is the tile's. */
+		padding: 1px;
+		display: block;
 		transition: transform 0.3s cubic-bezier(0.2, 0.7, 0.3, 1);
 	}
 
-	.brand:hover .mark::after {
-		transform: scale(0.45);
+	.brand:hover .mark {
+		transform: scale(1.06);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.mark {
+			transition: none;
+		}
 	}
 
 	.wordmark {

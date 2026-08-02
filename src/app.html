@@ -3,7 +3,10 @@
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-		<meta name="theme-color" content="#f7f8fa" />
+		<!-- Matches --page in each theme, so the phone's chrome joins the page
+		     instead of drawing a line across the top of it. -->
+		<meta name="theme-color" content="#f6f7fb" media="(prefers-color-scheme: light)" />
+		<meta name="theme-color" content="#141826" media="(prefers-color-scheme: dark)" />
 		<meta
 			name="description"
 			content="Feelm — a shared log of the films, series, games and books people actually finished."
@@ -14,10 +17,15 @@
 			href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@400;500;600;700&display=swap"
 			rel="stylesheet"
 		/>
-		<link
-			rel="icon"
-			href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%2307080C'/><circle cx='16' cy='16' r='8.5' fill='none' stroke='%23F0C04A' stroke-width='2'/><circle cx='16' cy='16' r='3' fill='%23F0C04A'/></svg>"
-		/>
+		<!--
+			The mark on its own navy tile. A transparent version would be a white
+			F against light browser chrome, and iOS fills alpha with black on the
+			home screen — one tiled asset avoids both.
+		-->
+		<link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png" />
+		<link rel="icon" href="/favicon-16.png" sizes="16x16" type="image/png" />
+		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+		<link rel="manifest" href="/manifest.webmanifest" />
 		<script>
 			// Set the theme before the first paint so it never flashes.
 			(function () {

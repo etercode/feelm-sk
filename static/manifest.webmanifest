@@ -1,0 +1,14 @@
+{
+	"name": "Feelm",
+	"short_name": "Feelm",
+	"description": "A shared log of the films, series, games and books people actually finished.",
+	"start_url": "/",
+	"display": "standalone",
+	"background_color": "#081430",
+	"theme_color": "#1268e0",
+	"icons": [
+		{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+		{ "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
+		{ "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
+	]
+}
