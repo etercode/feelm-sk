@@ -48,7 +48,10 @@ export function browseLoad(type) {
 	return async ({ url, fetch }) => {
 		const params = new URLSearchParams(url.search);
 		params.set('type', type);
-		if (!params.has('limit')) params.set('limit', '30');
+		// Ten rows of seven at the widest breakpoint the poster grid uses.
+		// Narrower ones fit fewer per row, so it is more rows rather than fewer
+		// titles — the page is a wall either way.
+		if (!params.has('limit')) params.set('limit', '70');
 		if (!params.has('sort')) params.set('sort', 'popularity');
 		/*
 		 * No facets. They were two of the three seconds this page took to
