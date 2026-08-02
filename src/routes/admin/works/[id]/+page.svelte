@@ -39,6 +39,7 @@
 		publisher: ''
 	});
 	let chosenGenres = $state([]);
+	let imdb = $state({ rating: '', votes: '' });
 
 	$effect(() => {
 		api
@@ -90,6 +91,10 @@
 			publisher: data.publisher ?? ''
 		};
 		chosenGenres = [...(data.genres ?? [])];
+		imdb = {
+			rating: data.ratings?.imdb?.rating ?? '',
+			votes: data.ratings?.imdb?.votes ?? ''
+		};
 	}
 
 	let saving = $state(null);
@@ -136,6 +141,21 @@
 	function saveArt(event) {
 		event.preventDefault();
 		return save('art', { poster: art.poster, backdrop: art.backdrop });
+	}
+
+	/*
+	 * Saving a rating locks it, which the server decides — it is the only
+	 * sensible reading of somebody typing a number in by hand. Unlocking is
+	 * therefore its own button rather than a checkbox: it is not a property of
+	 * the edit, it is undoing one.
+	 */
+	function saveImdb(event) {
+		event.preventDefault();
+		return save('imdb', { imdbRating: num(imdb.rating), imdbVotes: num(imdb.votes) });
+	}
+
+	function unlockImdb() {
+		return save('imdb', { imdbLocked: false });
 	}
 
 	function saveFacts(event) {
@@ -372,6 +392,49 @@
 	<CreditsEditor workId={id} />
 
 	<section class="card panel">
+		<h2 class="section">
+			IMDb rating
+			{#if work.imdbLocked}<span class="chip lock"><Icon name="shield" size={12} />Locked</span>{/if}
+		</h2>
+		<form onsubmit={saveImdb}>
+			<div class="pair">
+				<label>
+					<span class="eyebrow">Rating (out of 10)</span>
+					<input class="field" type="number" bind:value={imdb.rating} min="0" max="10" step="0.1" />
+				</label>
+				<label>
+					<span class="eyebrow">Votes</span>
+					<input class="field" type="number" bind:value={imdb.votes} min="0" />
+				</label>
+			</div>
+			<p class="hint faint">
+				{#if work.imdbLocked}
+					Held by hand. The nightly IMDb import skips this title until you unlock it.
+				{:else}
+					Currently IMDb's own number. Saving replaces it and stops the import overwriting it —
+					the external score follows automatically.
+				{/if}
+			</p>
+			<div class="foot">
+				{#if saved === 'imdb'}<span class="ok">Saved.</span>{/if}
+				{#if work.imdbLocked}
+					<button
+						type="button"
+						class="btn btn-ghost btn-sm"
+						disabled={saving === 'imdb'}
+						onclick={unlockImdb}
+					>
+						Unlock and use IMDb
+					</button>
+				{/if}
+				<button type="submit" class="btn btn-primary btn-sm" disabled={saving === 'imdb'}>
+					{saving === 'imdb' ? 'Saving…' : 'Save'}
+				</button>
+			</div>
+		</form>
+	</section>
+
+	<section class="card panel">
 		<h2 class="section">Not editable here</h2>
 		<dl class="meta-grid">
 			<div><dt>Type</dt><dd>{work.type} <em>identity</em></dd></div>
@@ -571,6 +634,17 @@
 		gap: 0.45rem;
 		margin: 0 0 1rem;
 		font-size: 1rem;
+	}
+
+	/* Reads as a state on the heading, not as another thing to click. */
+	.lock {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
+		font-size: 0.72rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
 	}
 
 	form {
