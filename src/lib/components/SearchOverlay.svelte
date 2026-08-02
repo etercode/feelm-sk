@@ -22,6 +22,8 @@
 	/** @type {any[]} */
 	let people = $state([]);
 	let total = $state(0);
+	// False when the server stopped counting at its ceiling — see WorkSearch.
+	let exactTotal = $state(true);
 	let loading = $state(false);
 	let error = $state(/** @type {string | null} */ (null));
 	/** @type {HTMLInputElement | undefined} */
@@ -39,6 +41,7 @@
 			suggestion = null;
 			people = [];
 			total = 0;
+			exactTotal = true;
 			error = null;
 			loading = false;
 			queueMicrotask(() => input?.focus());
@@ -73,6 +76,7 @@
 				suggestion = data?.suggestion ?? null;
 				people = data?.people ?? [];
 				total = data?.total ?? 0;
+				exactTotal = data?.totalIsExact !== false;
 				error = null;
 			} catch (e) {
 				if (id !== requestId) return;
@@ -204,7 +208,7 @@
 					href="/search?q={encodeURIComponent(query.trim())}"
 					onclick={() => onclose?.()}
 				>
-					See all {total.toLocaleString()} results
+					See all {total.toLocaleString()}{exactTotal ? '' : '+'} results
 					<Icon name="right" size={14} />
 				</a>
 			{/if}

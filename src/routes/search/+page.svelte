@@ -151,7 +151,12 @@
 		<div class="summary">
 			<p class="count">
 				{#if results.total}
-					<strong>{results.total.toLocaleString()}</strong>
+					<!--
+						"1,000+" when the server stopped counting. Above a
+						thousand the exact figure costs more than it is worth to
+						anybody reading it, so it is not claimed.
+					-->
+					<strong>{results.total.toLocaleString()}{results.totalIsExact === false ? '+' : ''}</strong>
 					{plural(results.total, 'result').split(' ').slice(1).join(' ')}
 					{#if queryText}for “{queryText}”{/if}
 				{:else if activeCount}
@@ -376,9 +381,16 @@
 						{/each}
 					</div>
 
+					<!--
+						hasMore matters now that `pages` can be null: above a
+						thousand matches the server stops counting, so there is
+						no last page to draw and "is there another" is the only
+						question left.
+					-->
 					<Pager
 						page={pageNumber}
 						pages={results.pages}
+						hasMore={results.hasMore}
 						onpage={(n) => apply({ page: n }, { resetPage: false })}
 					/>
 				{:else}
