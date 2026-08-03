@@ -8,10 +8,17 @@ import { API_URL } from '$lib/config.js';
  */
 export async function load({ url, fetch }) {
 	const page = Number(url.searchParams.get('page') ?? 1);
-	// Movies and series come from separate queues and separate commands, so the
-	// page tracks one at a time. Movies is the default because it is the crawl
-	// that ran first and the link people have bookmarked.
-	const type = url.searchParams.get('type') === 'series' ? 'series' : 'movie';
+	/*
+	 * Movies, series and artwork are three separate jobs run by three separate
+	 * commands, so the page tracks one at a time. Movies is the default because
+	 * it is the crawl that ran first and the link people have bookmarked.
+	 */
+	const asked = url.searchParams.get('type');
+	const type = ['series', 'images'].includes(asked) ? asked : 'movie';
+
+	// Artwork has no queue table and no list of arrivals — the works table is
+	// the queue — so there is nothing for the second request to fetch.
+	const wantsRecent = type !== 'images';
 
 	async function get(path) {
 		try {
@@ -29,7 +36,7 @@ export async function load({ url, fetch }) {
 
 	const [status, recent] = await Promise.all([
 		get(`/api/crawl/status?type=${type}`),
-		get(`/api/crawl/recent?type=${type}&page=${page}&limit=24`)
+		wantsRecent ? get(`/api/crawl/recent?type=${type}&page=${page}&limit=24`) : null
 	]);
 
 	return { type, status, recent, unreachable: status === null };

@@ -46,10 +46,42 @@
 	 * The export figure is still shown, underneath, as what it is: how much of
 	 * everything TMDB knows about we happen to hold.
 	 */
+	let isImages = $derived(data.type === 'images');
+
+	/*
+	 * Artwork reports no rate of its own, on purpose: a mirrored row carries no
+	 * timestamp saying when it was mirrored, and adding one would be a column
+	 * on a million rows to drive a progress bar. This page already polls every
+	 * ten seconds and remembers what the last poll said, so it subtracts two
+	 * counts. Seeded on the first sample, which is why it reads "—" for one
+	 * refresh and a number after that.
+	 */
+	let mark = $state(/** @type {{ at: number, done: number } | null} */ (null));
+	let imagePerMinute = $state(0);
+
+	$effect(() => {
+		if (!isImages || !status) return;
+
+		const done = status.crawled ?? 0;
+		const at = Date.now();
+
+		if (mark && at > mark.at && done >= mark.done) {
+			const perMinute = ((done - mark.done) / (at - mark.at)) * 60000;
+			// A poll landing between batches reads zero; keeping the last real
+			// figure stops the estimate flickering to nothing and back.
+			if (perMinute > 0) imagePerMinute = Math.round(perMinute * 10) / 10;
+		}
+
+		mark = { at, done };
+	});
+
 	let notable = $derived(status?.notable ?? null);
-	let percent = $derived(notable?.percent ?? 0);
-	let remaining = $derived(notable?.remaining ?? 0);
-	let etaHours = $derived(notable?.etaHours ?? null);
+	let percent = $derived(isImages ? (status?.percent ?? 0) : (notable?.percent ?? 0));
+	let remaining = $derived(isImages ? (status?.remaining ?? 0) : (notable?.remaining ?? 0));
+	let etaHours = $derived.by(() => {
+		if (!isImages) return notable?.etaHours ?? null;
+		return imagePerMinute > 0 ? Math.round((remaining / imagePerMinute / 60) * 10) / 10 : null;
+	});
 
 	/*
 	 * Whole-export progress, for the line under the bar. Taken as the API
@@ -141,6 +173,9 @@
 				<button type="button" class="btn btn-sm" class:btn-primary={data.type === 'series'} onclick={() => show('series')}>
 					{t('type.series.plural')}
 				</button>
+				<button type="button" class="btn btn-sm" class:btn-primary={data.type === 'images'} onclick={() => show('images')}>
+					{t('crawler.images')}
+				</button>
 			</div>
 		</div>
 		{#if status}
@@ -160,26 +195,55 @@
 		<p class="pct">
 			<strong>{percent}%</strong>
 			<span class="faint">
-				{t('crawler.ofNotable', {
-					crawled: number(notable?.crawled ?? 0),
-					total: number(notable?.total ?? 0)
-				})}
+				{#if isImages}
+					{t('crawler.ofImages', {
+						crawled: number(status.crawled ?? 0),
+						total: number(status.total ?? 0)
+					})}
+				{:else}
+					{t('crawler.ofNotable', {
+						crawled: number(notable?.crawled ?? 0),
+						total: number(notable?.total ?? 0)
+					})}
+				{/if}
 			</span>
 		</p>
-		<p class="whole faint">
-			{t('crawler.ofExport', {
-				percent: allPercent,
-				crawled: number(allCrawled),
-				total: number(status.total)
-			})}
-		</p>
+		{#if isImages}
+			<p class="whole faint">
+				{t('crawler.postersBackdrops', {
+					posters: number(status.posters?.done ?? 0),
+					postersTotal: number(status.posters?.total ?? 0),
+					backdrops: number(status.backdrops?.done ?? 0),
+					backdropsTotal: number(status.backdrops?.total ?? 0)
+				})}
+			</p>
+		{:else}
+			<p class="whole faint">
+				{t('crawler.ofExport', {
+					percent: allPercent,
+					crawled: number(allCrawled),
+					total: number(status.total)
+				})}
+			</p>
+		{/if}
 
 		<dl class="stats">
 			<div><dt>{t('crawler.remaining')}</dt><dd>{number(remaining)}</dd></div>
 			<div><dt>{t('crawler.finishes')}</dt><dd>{finish()}</dd></div>
-			<div><dt>{t('crawler.rate')}</dt><dd>{status.perSecond ? `${status.perSecond}/s` : '—'}</dd></div>
+			<div>
+				<dt>{t('crawler.rate')}</dt>
+				<dd>
+					{#if isImages}
+						{imagePerMinute > 0 ? `${(imagePerMinute / 60).toFixed(1)}/s` : '—'}
+					{:else}
+						{status.perSecond ? `${status.perSecond}/s` : '—'}
+					{/if}
+				</dd>
+			</div>
 			<div><dt>{t('crawler.timeLeft')}</dt><dd>{etaHours !== null ? `${etaHours}h` : '—'}</dd></div>
-			<div><dt>{t('crawler.lastTitle')}</dt><dd>{ago(status.lastAddedAt)}</dd></div>
+			{#if !isImages}
+				<div><dt>{t('crawler.lastTitle')}</dt><dd>{ago(status.lastAddedAt)}</dd></div>
+			{/if}
 			<div><dt>{t('crawler.refreshes')}</dt><dd>{t('crawler.everySeconds', { n: REFRESH })}</dd></div>
 		</dl>
 
@@ -199,7 +263,9 @@
 			</ul>
 		{/if}
 
-		<h2 class="section">{t('crawler.recentlyCrawled')}</h2>
+		{#if !isImages}
+			<h2 class="section">{t('crawler.recentlyCrawled')}</h2>
+		{/if}
 
 		{#if recent}
 			<div class="results" class:refreshing aria-busy={refreshing}>
