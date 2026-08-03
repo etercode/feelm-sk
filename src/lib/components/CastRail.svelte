@@ -9,17 +9,28 @@
 		<h2 class="display">{title ?? t('cast.title')}</h2>
 		<div class="scroller track">
 			{#each cast as person (person.name + person.character)}
-				<figure>
+				<!--
+					A link now, not a caption. "What else are they in" is the
+					obvious next question from a cast list and it had no answer
+					here. Falls back to a plain figure when the payload carries
+					no slug, so an older cached response still renders.
+				-->
+				<svelte:element
+					this={person.slug ? 'a' : 'figure'}
+					href={person.slug ? `/p/${person.slug}` : undefined}
+					class="face"
+					class:linked={person.slug}
+				>
 					{#if person.photo}
 						<img src={person.photo} alt={person.name} loading="lazy" />
 					{:else}
 						<span class="blank"></span>
 					{/if}
-					<figcaption>
+					<span class="caption">
 						<strong>{person.name}</strong>
 						{#if person.character}<span class="faint">{person.character}</span>{/if}
-					</figcaption>
-				</figure>
+					</span>
+				</svelte:element>
 			{/each}
 		</div>
 	</section>
@@ -41,7 +52,7 @@
 		padding-bottom: 0.6rem;
 	}
 
-	figure {
+	.face {
 		margin: 0;
 		width: 7.5rem;
 		flex: none;
@@ -62,15 +73,23 @@
 		transition: transform 0.25s ease;
 	}
 
-	figure:hover img {
+	.face:hover img {
 		transform: translateY(-4px);
 	}
 
-	figcaption {
+	.caption {
 		display: flex;
 		flex-direction: column;
 		margin-top: 0.5rem;
 		font-size: 0.82rem;
 		line-height: 1.35;
+	}
+
+	.linked strong {
+		transition: color 0.18s ease;
+	}
+
+	.linked:hover strong {
+		color: var(--brand);
 	}
 </style>

@@ -413,6 +413,20 @@ export const en = {
 	'stars.none': 'Not rated',
 	'stars.pick': 'Rate {value} out of 5',
 
+	'person.eyebrow': 'Person',
+	'person.unknown': 'Unknown person',
+	'person.metaDescription': 'Everything {name} is credited on.',
+	'person.credited.one': 'Credited on {count} title',
+	'person.credited.other': 'Credited on {count} titles',
+	'person.nothing': 'Nothing in the catalog credits this person yet.',
+	'role.cast': 'Acting',
+	'role.director': 'Directing',
+	'role.writer': 'Writing',
+	'role.creator': 'Created',
+	'role.developer': 'Developed',
+	'role.publisher': 'Published',
+	'role.author': 'Written',
+
 	'follow.follow': 'Follow',
 	'follow.following': 'Following',
 

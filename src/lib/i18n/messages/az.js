@@ -338,6 +338,19 @@ export const az = {
 	'stars.none': 'Qiymətləndirilməyib',
 	'stars.pick': '5-dən {value} ver',
 
+	'person.eyebrow': 'Şəxs',
+	'person.unknown': 'Naməlum şəxs',
+	'person.metaDescription': '{name} adlı şəxsin iştirak etdiyi hər şey.',
+	'person.credited.other': '{count} əsərdə iştirak edir',
+	'person.nothing': 'Kataloqda bu şəxsə aid qeyd yoxdur.',
+	'role.cast': 'Aktyorluq',
+	'role.director': 'Rejissorluq',
+	'role.writer': 'Ssenari',
+	'role.creator': 'Yaradıcı',
+	'role.developer': 'Tərtibatçı',
+	'role.publisher': 'Nəşriyyat',
+	'role.author': 'Müəlliflik',
+
 	'follow.follow': 'İzlə',
 	'follow.following': 'İzlənilir',
 

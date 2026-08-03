@@ -343,6 +343,19 @@ export const tr = {
 	'stars.none': 'Puanlanmadı',
 	'stars.pick': '5 üzerinden {value} ver',
 
+	'person.eyebrow': 'Kişi',
+	'person.unknown': 'Bilinmeyen kişi',
+	'person.metaDescription': '{name} adlı kişinin yer aldığı her şey.',
+	'person.credited.other': '{count} yapıtta yer alıyor',
+	'person.nothing': 'Katalogda bu kişiye ait bir kayıt yok.',
+	'role.cast': 'Oyunculuk',
+	'role.director': 'Yönetmenlik',
+	'role.writer': 'Senaryo',
+	'role.creator': 'Yaratıcı',
+	'role.developer': 'Geliştirici',
+	'role.publisher': 'Yayıncı',
+	'role.author': 'Yazarlık',
+
 	'follow.follow': 'Takip et',
 	'follow.following': 'Takip ediliyor',
 

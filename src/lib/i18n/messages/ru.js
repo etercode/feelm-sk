@@ -375,6 +375,22 @@ export const ru = {
 	'stars.none': 'Без оценки',
 	'stars.pick': 'Поставить {value} из 5',
 
+	'person.eyebrow': 'Человек',
+	'person.unknown': 'Неизвестный человек',
+	'person.metaDescription': 'Всё, где участвует {name}.',
+	'person.nothing': 'В каталоге пока нет работ этого человека.',
+	'person.credited.one': 'Участвует в {count} работе',
+	'person.credited.few': 'Участвует в {count} работах',
+	'person.credited.many': 'Участвует в {count} работах',
+	'person.credited.other': 'Участвует в {count} работах',
+	'role.cast': 'Актёрские работы',
+	'role.director': 'Режиссура',
+	'role.writer': 'Сценарии',
+	'role.creator': 'Автор идеи',
+	'role.developer': 'Разработка',
+	'role.publisher': 'Издание',
+	'role.author': 'Книги',
+
 	'follow.follow': 'Подписаться',
 	'follow.following': 'Вы подписаны',
 
