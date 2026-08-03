@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import AuthShell from '$lib/components/AuthShell.svelte';
 	import GoogleButton from '$lib/components/GoogleButton.svelte';
+	import { t } from '$lib/i18n/index.svelte.js';
 	import { session } from '$lib/state/session.svelte.js';
 
 	let login = $state('');
@@ -35,20 +36,20 @@
 	}
 </script>
 
-<svelte:head><title>Sign in — Feelm</title></svelte:head>
+<svelte:head><title>{t('auth.signInTitle')} — Feelm</title></svelte:head>
 
 <AuthShell
-	title="Welcome back"
-	intro="Pick up your shelves, your scores and the reviews you keep rewriting."
+	title={t('auth.welcomeBack')}
+	intro={t('auth.welcomeBackIntro')}
 >
 	<form onsubmit={submit}>
 		<label>
-			<span class="eyebrow">Username</span>
+			<span class="eyebrow">{t('auth.username')}</span>
 			<input class="field" bind:value={login} placeholder="kaan" autocomplete="username" />
 		</label>
 
 		<label>
-			<span class="eyebrow">Password</span>
+			<span class="eyebrow">{t('auth.password')}</span>
 			<input
 				class="field"
 				type="password"
@@ -60,18 +61,18 @@
 		{#if error}<p class="error">{error}</p>{/if}
 
 		<button type="submit" class="btn btn-primary wide" disabled={busy}>
-			{busy ? 'Signing in…' : 'Sign in'}
+			{busy ? t('auth.signingIn') : t('nav.signIn')}
 		</button>
 
 		<button type="button" class="btn wide ghost" disabled={busy} onclick={demo}>
-			Try demo (kaan)
+			{t('auth.tryDemo')}
 		</button>
 	</form>
 
 	<GoogleButton label="signin_with" onerror={(message) => (error = message)} />
 
 	<p class="alt muted">
-		No account? <a href="/register">Create one</a>
+		{t('auth.noAccount')} <a href="/register">{t('auth.createOne')}</a>
 	</p>
 </AuthShell>
 

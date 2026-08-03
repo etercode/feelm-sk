@@ -5,6 +5,7 @@
 -->
 <script>
 	import Icon from '$lib/components/Icon.svelte';
+	import { t } from '$lib/i18n/index.svelte.js';
 
 	let {
 		value = null,
@@ -34,7 +35,9 @@
 	style="--size: {size}px"
 	onmouseleave={() => (hovered = null)}
 	role={interactive ? 'group' : 'img'}
-	aria-label={interactive ? 'Rate this' : label ?? (value ? `${value} out of 5` : 'Not rated')}
+	aria-label={interactive
+		? t('stars.rate')
+		: (label ?? (value ? t('stars.value', { value }) : t('stars.none')))}
 >
 	{#each [1, 2, 3, 4, 5] as position (position)}
 		<span class="star" style="--fill: {fillOf(position)}%">
@@ -45,7 +48,7 @@
 				<button
 					type="button"
 					class="half left"
-					aria-label="Rate {position - 0.5} out of 5"
+					aria-label={t('stars.pick', { value: position - 0.5 })}
 					onmouseenter={() => (hovered = position - 0.5)}
 					onfocus={() => (hovered = position - 0.5)}
 					onclick={() => pick(position - 0.5)}
@@ -53,7 +56,7 @@
 				<button
 					type="button"
 					class="half right"
-					aria-label="Rate {position} out of 5"
+					aria-label={t('stars.pick', { value: position })}
 					onmouseenter={() => (hovered = position)}
 					onfocus={() => (hovered = position)}
 					onclick={() => pick(position)}

@@ -1,6 +1,7 @@
 <script>
 	import { page } from '$app/state';
 	import PosterCard from '$lib/components/PosterCard.svelte';
+	import { t } from '$lib/i18n/index.svelte.js';
 	import { catalog } from '$lib/state/catalog.svelte.js';
 
 	let suggestions = $derived([
@@ -21,8 +22,8 @@
 
 <div class="frame lost">
 	<span class="code display">{page.status}</span>
-	<h1 class="display">{page.error?.message ?? 'Something went sideways.'}</h1>
-	<p class="muted">Here is something worth your evening instead.</p>
+	<h1 class="display">{page.error?.message ?? t('error.sideways')}</h1>
+	<p class="muted">{t('error.instead')}</p>
 
 	<div class="grid-posters picks">
 		{#each suggestions as item (item.id)}
@@ -30,7 +31,7 @@
 		{/each}
 	</div>
 
-	<a class="btn" href="/">Back home</a>
+	<a class="btn" href="/">{t('common.backHome')}</a>
 </div>
 
 <style>

@@ -8,7 +8,7 @@
 	import { catalog } from '$lib/state/catalog.svelte.js';
 	import { library } from '$lib/state/library.svelte.js';
 	import { session } from '$lib/state/session.svelte.js';
-	import { plural } from '$lib/util/format.js';
+	import { t } from '$lib/i18n/index.svelte.js';
 
 	/*
 	 * The rails and the release queue are this page's data, so this page asks
@@ -31,15 +31,12 @@
 
 	let sections = $derived(
 		[
-			{ type: 'movie', kicker: 'Out now', items: catalog.topOfType('movie', PER_SECTION) },
-			{
-				type: 'series',
-				kicker: 'Season by season',
-				items: catalog.topOfType('series', PER_SECTION)
-			},
-			{ type: 'game', kicker: 'On the backlog', items: catalog.topOfType('game', PER_SECTION) },
-			{ type: 'book', kicker: 'On the nightstand', items: catalog.itemsOfType('book') }
+			{ type: 'movie', items: catalog.topOfType('movie', PER_SECTION) },
+			{ type: 'series', items: catalog.topOfType('series', PER_SECTION) },
+			{ type: 'game', items: catalog.topOfType('game', PER_SECTION) },
+			{ type: 'book', items: catalog.itemsOfType('book') }
 		].map((section) => ({
+			kicker: t(`home.kicker.${section.type}`),
 			...section,
 			items: section.items.filter((item) => !item.isUpcoming)
 		}))
@@ -53,15 +50,15 @@
 </script>
 
 <svelte:head>
-	<title>Feelm — films, series, games and books people finished</title>
+	<title>{t('home.title')}</title>
 </svelte:head>
 
 {#if !catalog.ready}
-	<div class="frame loading muted">Loading catalog…</div>
+	<div class="frame loading muted">{t('home.loadingCatalog')}</div>
 {:else if catalog.error}
 	<div class="frame loading">
 		<p class="error">{catalog.error}</p>
-		<p class="muted">Is the API running at <code>VITE_API_URL</code>?</p>
+		<p class="muted">{t('home.apiHint', { url: 'VITE_API_URL' })}</p>
 	</div>
 {:else}
 	<Hero {releases} />
@@ -70,10 +67,10 @@
 		{#if unseen}
 			<p class="crawl">
 				<span class="pip"></span>
-				The crawler added {plural(unseen, 'title')} since you were last here.
+				{t('home.crawledSince', { count: unseen })}
 				{#if session.user}
 					<button type="button" onclick={() => library.catchUp(session.user.id)}>
-						Mark all as seen
+						{t('home.markSeen')}
 					</button>
 				{/if}
 			</p>
@@ -85,7 +82,7 @@
 			what is new would otherwise have to know which of them changed.
 		-->
 		{#if catalog.latest.length}
-			<Rail kicker="Just released" title="New this season" rows={2} grid>
+			<Rail kicker={t('home.latestKicker')} title={t('home.latestTitle')} rows={2} grid>
 				{#each catalog.latest as item (item.id)}
 					<PosterCard {item} showType />
 				{/each}
@@ -110,10 +107,12 @@
 		<section class="lately">
 			<header>
 				<div>
-					<span class="eyebrow">{session.user ? 'People you follow' : 'Around here'}</span>
-					<h2 class="display">Lately</h2>
+					<span class="eyebrow">
+						{session.user ? t('home.latelyFollowing') : t('home.latelyEveryone')}
+					</span>
+					<h2 class="display">{t('home.lately')}</h2>
 				</div>
-				<a class="btn btn-ghost btn-sm" href="/feed">Open the feed<Icon name="right" size={14} /></a>
+				<a class="btn btn-ghost btn-sm" href="/feed">{t('home.openFeed')}<Icon name="right" size={14} /></a>
 			</header>
 
 			<div class="feed-grid">
@@ -121,7 +120,7 @@
 					<ActivityCard {event} compact />
 				{:else}
 					<p class="muted">
-						Nobody you follow has logged anything yet. <a href="/u/ada">Find someone to follow.</a>
+						{t('home.noFollowing')} <a href="/u/ada">{t('home.findSomeone')}</a>
 					</p>
 				{/each}
 			</div>

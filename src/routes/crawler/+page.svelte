@@ -13,6 +13,8 @@
 	import Pager from '$lib/components/Pager.svelte';
 	import PosterCard from '$lib/components/PosterCard.svelte';
 	import Spinner from '$lib/components/Spinner.svelte';
+	import { i18n, t } from '$lib/i18n/index.svelte.js';
+	import { number as formatNumber } from '$lib/util/format.js';
 
 	let { data } = $props();
 
@@ -80,69 +82,79 @@
 	}
 
 	function number(value) {
-		return typeof value === 'number' ? value.toLocaleString() : '—';
+		return typeof value === 'number' ? formatNumber(value) : '—';
 	}
 
 	/** Clock time the crawl should end — easier to read than "33.2h" on a phone. */
 	function finish() {
 		if (etaHours === null) return '—';
 		const at = new Date(Date.now() + etaHours * 3600 * 1000);
-		const day = at.toDateString() === new Date().toDateString() ? '' : `${at.toLocaleDateString(undefined, { weekday: 'short' })} `;
-		return day + at.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+		// The viewer's own zone and language, not the browser's guess at either —
+		// this is a clock time somebody compares against the one on their wall.
+		const zone = { timeZone: i18n.timezone };
+		const day =
+			at.toDateString() === new Date().toDateString()
+				? ''
+				: `${new Intl.DateTimeFormat(i18n.tag, { ...zone, weekday: 'short' }).format(at)} `;
+
+		return (
+			day +
+			new Intl.DateTimeFormat(i18n.tag, { ...zone, hour: '2-digit', minute: '2-digit' }).format(at)
+		);
 	}
 
 	function ago(iso) {
-		if (!iso) return 'never';
+		if (!iso) return t('crawler.never');
 		const seconds = Math.max(0, Math.round((Date.now() - new Date(iso)) / 1000));
-		if (seconds < 60) return `${seconds}s ago`;
-		if (seconds < 3600) return `${Math.round(seconds / 60)}m ago`;
-		if (seconds < 86400) return `${Math.round(seconds / 3600)}h ago`;
-		return `${Math.round(seconds / 86400)}d ago`;
+		if (seconds < 60) return t('crawler.secondsAgo', { n: seconds });
+		if (seconds < 3600) return t('crawler.minutesAgo', { n: Math.round(seconds / 60) });
+		if (seconds < 86400) return t('crawler.hoursAgo', { n: Math.round(seconds / 3600) });
+		return t('crawler.daysAgo', { n: Math.round(seconds / 86400) });
 	}
 </script>
 
-<svelte:head><title>Crawler — Feelm</title></svelte:head>
+<svelte:head><title>{t('crawler.title')} — Feelm</title></svelte:head>
 
 <div class="frame page">
 	<header class="masthead">
 		<div>
-			<span class="eyebrow"><Icon name={data.type} size={14} />Catalog</span>
-			<h1 class="display">Crawler</h1>
+			<span class="eyebrow"><Icon name={data.type} size={14} />{t('crawler.catalog')}</span>
+			<h1 class="display">{t('crawler.title')}</h1>
 			<div class="types">
 				<button type="button" class="btn btn-sm" class:btn-primary={data.type === 'movie'} onclick={() => show('movie')}>
-					Movies
+					{t('type.movie.plural')}
 				</button>
 				<button type="button" class="btn btn-sm" class:btn-primary={data.type === 'series'} onclick={() => show('series')}>
-					Series
+					{t('type.series.plural')}
 				</button>
 			</div>
 		</div>
 		{#if status}
 			<span class="state" class:on={status.running}>
 				{#if status.running}<Spinner size={14} />{/if}
-				{status.running ? 'Running' : 'Idle'}
+				{status.running ? t('crawler.running') : t('crawler.idle')}
 			</span>
 		{/if}
 	</header>
 
 	{#if data.unreachable || !status}
-		<p class="notice">The catalog API is unreachable.</p>
+		<p class="notice">{t('common.apiUnreachable')}</p>
 	{:else}
-		<div class="progress" role="img" aria-label="{percent}% crawled">
+		<div class="progress" role="img" aria-label={t('crawler.percentCrawled', { percent })}>
 			<div class="fill" style="width: {Math.max(percent, 0.3)}%"></div>
 		</div>
 		<p class="pct">
 			<strong>{percent}%</strong>
-			<span class="faint">{number(crawled)} of {number(status.total)}</span>
+			<span class="faint">{t('crawler.ofTotal', { crawled: number(crawled), total: number(status.total) })}</span>
 		</p>
 
 		<dl class="stats">
-			<div><dt>Remaining</dt><dd>{number(remaining)}</dd></div>
-			<div><dt>Finishes</dt><dd>{finish()}</dd></div>
-			<div><dt>Rate</dt><dd>{status.perSecond ? `${status.perSecond}/s` : '—'}</dd></div>
-			<div><dt>Time left</dt><dd>{etaHours !== null ? `${etaHours}h` : '—'}</dd></div>
-			<div><dt>Last title</dt><dd>{ago(status.lastAddedAt)}</dd></div>
-			<div><dt>Refreshes</dt><dd>every {REFRESH}s</dd></div>
+			<div><dt>{t('crawler.remaining')}</dt><dd>{number(remaining)}</dd></div>
+			<div><dt>{t('crawler.finishes')}</dt><dd>{finish()}</dd></div>
+			<div><dt>{t('crawler.rate')}</dt><dd>{status.perSecond ? `${status.perSecond}/s` : '—'}</dd></div>
+			<div><dt>{t('crawler.timeLeft')}</dt><dd>{etaHours !== null ? `${etaHours}h` : '—'}</dd></div>
+			<div><dt>{t('crawler.lastTitle')}</dt><dd>{ago(status.lastAddedAt)}</dd></div>
+			<div><dt>{t('crawler.refreshes')}</dt><dd>{t('crawler.everySeconds', { n: REFRESH })}</dd></div>
 		</dl>
 
 		{#if filtered.length}
@@ -153,7 +165,7 @@
 				being invisible — a rule quietly eating a tenth of the catalog is
 				visible here rather than as titles nobody can find.
 			-->
-			<h2 class="section">Filtered out <span class="faint">{number(status.filteredTotal)}</span></h2>
+			<h2 class="section">{t('crawler.filteredOut')} <span class="faint">{number(status.filteredTotal)}</span></h2>
 			<ul class="reasons">
 				{#each filtered as [key, count] (key)}
 					<li><span class="chip">{reason(key)}</span><span class="faint">{number(count)}</span></li>
@@ -161,7 +173,7 @@
 			</ul>
 		{/if}
 
-		<h2 class="section">Recently crawled</h2>
+		<h2 class="section">{t('crawler.recentlyCrawled')}</h2>
 
 		{#if recent}
 			<div class="results" class:refreshing aria-busy={refreshing}>
@@ -169,7 +181,7 @@
 					{#each recent.items as item (item.id)}
 						<PosterCard {item} showType={false} />
 					{:else}
-						<p class="muted">Nothing crawled yet.</p>
+						<p class="muted">{t('crawler.nothingYet')}</p>
 					{/each}
 				</div>
 			</div>

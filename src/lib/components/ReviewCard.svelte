@@ -7,7 +7,8 @@
 	import Icon from '$lib/components/Icon.svelte';
 	import Stars from '$lib/components/Stars.svelte';
 	import { library } from '$lib/state/library.svelte.js';
-	import { plural, timeAgo } from '$lib/util/format.js';
+	import { t } from '$lib/i18n/index.svelte.js';
+	import { counted, timeAgo } from '$lib/util/format.js';
 
 	let { review, showAuthor = true } = $props();
 
@@ -30,7 +31,7 @@
 		<Stars value={review.rating} size={16} />
 		<span class="faint when">
 			{timeAgo(review.updatedAt)}
-			{#if review.history.length}<span class="edited">· edited</span>{/if}
+			{#if review.history.length}<span class="edited">{t('review.edited')}</span>{/if}
 		</span>
 	</div>
 
@@ -39,7 +40,7 @@
 	{#if review.history.length}
 		<button type="button" class="history-toggle" onclick={() => (historyOpen = !historyOpen)}>
 			<Icon name="history" size={14} />
-			{plural(review.history.length, 'earlier version')}
+			{counted('count.version', review.history.length)}
 			<Icon name={historyOpen ? 'up' : 'down'} size={13} />
 		</button>
 
@@ -49,7 +50,7 @@
 					<li>
 						<div class="head">
 							<Stars value={version.rating} size={13} />
-							<span class="faint when">until {timeAgo(version.editedAt)}</span>
+							<span class="faint when">{t('review.until', { when: timeAgo(version.editedAt) })}</span>
 						</div>
 						<p>{version.body}</p>
 					</li>

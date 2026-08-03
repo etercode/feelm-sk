@@ -4,7 +4,8 @@
 	import FollowButton from '$lib/components/FollowButton.svelte';
 	import { library } from '$lib/state/library.svelte.js';
 	import { session } from '$lib/state/session.svelte.js';
-	import { plural } from '$lib/util/format.js';
+	import { t } from '$lib/i18n/index.svelte.js';
+	import { counted } from '$lib/util/format.js';
 
 	const PER_PAGE = 40;
 
@@ -91,29 +92,29 @@
 	}
 </script>
 
-<svelte:head><title>Feed — Feelm</title></svelte:head>
+<svelte:head><title>{t('feed.title')} — Feelm</title></svelte:head>
 
 <div class="frame page">
 	<header>
-		<span class="eyebrow">Activity</span>
-		<h1 class="display">Lately</h1>
+		<span class="eyebrow">{t('feed.activity')}</span>
+		<h1 class="display">{t('feed.heading')}</h1>
 		{#if session.user}
 			<div class="scope">
 				<button type="button" class:on={scope === 'following'} onclick={() => (scope = 'following')}>
-					People you follow
+					{t('feed.scopeFollowing')}
 				</button>
 				<button type="button" class:on={scope === 'everyone'} onclick={() => (scope = 'everyone')}>
-					Everyone
+					{t('feed.scopeEveryone')}
 				</button>
 				<!-- Your own activity is in "People you follow" too, as on any
 				     timeline. This is the way to read it on its own. -->
 				<button type="button" class:on={scope === 'me'} onclick={() => (scope = 'me')}>
-					Just me
+					{t('feed.scopeMe')}
 				</button>
 			</div>
 		{:else}
 			<p class="muted">
-				Everything happening here. <a href="/login">Sign in</a> to narrow it down to people you follow.
+				{t('feed.signedOut')} <a href="/login">{t('nav.signIn')}</a> {t('feed.signedOutTail')}
 			</p>
 		{/if}
 	</header>
@@ -124,30 +125,26 @@
 				<ActivityCard {event} />
 			{:else}
 				{#if loading}
-					<p class="muted empty">Loading…</p>
+					<p class="muted empty">{t('common.loading')}</p>
 				{:else if failed}
-					<p class="muted empty">Could not reach the API. Try again in a moment.</p>
+					<p class="muted empty">{t('feed.failed')}</p>
 				{:else if scope === 'me'}
-					<p class="muted empty">
-						Nothing on your shelf yet. Anything you log shows up here.
-					</p>
+					<p class="muted empty">{t('feed.emptyMe')}</p>
 				{:else}
-					<p class="muted empty">
-						Quiet in here. Follow a few people and their evenings show up on this page.
-					</p>
+					<p class="muted empty">{t('feed.empty')}</p>
 				{/if}
 			{/each}
 
 			{#if hasMore}
 				<button type="button" class="btn more" disabled={loading} onclick={loadMore}>
-					{loading ? 'Loading…' : 'Load more'}
+					{loading ? t('common.loading') : t('feed.loadMore')}
 				</button>
 			{/if}
 		</div>
 
 		<aside>
 			<section class="card">
-				<h2 class="eyebrow">People to follow</h2>
+				<h2 class="eyebrow">{t('feed.peopleToFollow')}</h2>
 				<ul>
 					{#each suggestions as { person, count } (person.id)}
 						<li>
@@ -155,13 +152,13 @@
 								<Avatar user={person} size={36} />
 								<span>
 									<strong>{person.name}</strong>
-									<span class="faint">{plural(count, 'entry', 'entries')}</span>
+									<span class="faint">{counted('count.entry', count)}</span>
 								</span>
 							</a>
 							<FollowButton user={person} size="btn-sm" />
 						</li>
 					{:else}
-						<li class="faint">You already follow everyone here.</li>
+						<li class="faint">{t('feed.followEveryone')}</li>
 					{/each}
 				</ul>
 			</section>

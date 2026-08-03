@@ -9,6 +9,7 @@
 	import Stars from '$lib/components/Stars.svelte';
 	import { isUpcoming } from '$lib/data/items.js';
 	import { progressShapeOf, statusLabel, statusOrder } from '$lib/data/types.js';
+	import { t } from '$lib/i18n/index.svelte.js';
 	import { library } from '$lib/state/library.svelte.js';
 	import { session } from '$lib/state/session.svelte.js';
 
@@ -27,13 +28,13 @@
 
 	function openProgress() {
 		draft = { ...(entry?.progress ?? {}) };
-		for (const field of shape.fields) draft[field.key] ??= field.min;
+		for (const field of shape.fields()) draft[field.key] ??= field.min;
 		editingProgress = true;
 	}
 
 	function saveProgress() {
 		const progress = {};
-		for (const field of shape.fields) progress[field.key] = Number(draft[field.key]) || field.min;
+		for (const field of shape.fields()) progress[field.key] = Number(draft[field.key]) || field.min;
 		library.setProgress(session.user.id, item.id, progress);
 		editingProgress = false;
 	}
@@ -51,7 +52,7 @@
 </script>
 
 <div class="shelf">
-	<div class="statuses" role="group" aria-label="Shelf">
+	<div class="statuses" role="group" aria-label={t('shelf.label')}>
 		{#each statuses as status (status)}
 			<button
 				type="button"
@@ -68,7 +69,7 @@
 
 	{#if !unreleased}
 		<div class="rate">
-			<span class="eyebrow">Your score</span>
+			<span class="eyebrow">{t('shelf.yourScore')}</span>
 			<Stars value={entry?.rating ?? null} size={26} interactive onchange={rate} />
 			{#if entry?.rating}
 				<span class="value">{entry.rating.toFixed(1)}</span>
@@ -80,7 +81,7 @@
 		<div class="progress">
 			{#if editingProgress}
 				<div class="fields">
-					{#each shape.fields as field (field.key)}
+					{#each shape.fields() as field (field.key)}
 						<label>
 							<span class="eyebrow">{field.label}</span>
 							<input
@@ -91,17 +92,17 @@
 							/>
 						</label>
 					{/each}
-					<button type="button" class="btn btn-accent btn-sm" onclick={saveProgress}>Save</button>
+					<button type="button" class="btn btn-accent btn-sm" onclick={saveProgress}>{t('common.save')}</button>
 					<button
 						type="button"
 						class="btn btn-ghost btn-sm"
-						onclick={() => (editingProgress = false)}>Cancel</button
+						onclick={() => (editingProgress = false)}>{t('common.cancel')}</button
 					>
 				</div>
 			{:else}
 				<button type="button" class="btn btn-sm" onclick={openProgress}>
 					<Icon name="edit" size={14} />
-					{entry.progress ? 'Update progress' : 'Track progress'}
+					{entry.progress ? t('shelf.updateProgress') : t('shelf.trackProgress')}
 				</button>
 			{/if}
 		</div>

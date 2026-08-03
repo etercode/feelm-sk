@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import AuthShell from '$lib/components/AuthShell.svelte';
 	import GoogleButton from '$lib/components/GoogleButton.svelte';
+	import { t } from '$lib/i18n/index.svelte.js';
 	import { session } from '$lib/state/session.svelte.js';
 
 	let username = $state('');
@@ -21,7 +22,7 @@
 		event.preventDefault();
 
 		if (password !== repeat) {
-			error = 'The two passwords do not match.';
+			error = t('auth.mismatchError');
 			return;
 		}
 
@@ -37,25 +38,25 @@
 	}
 </script>
 
-<svelte:head><title>Create an account — Feelm</title></svelte:head>
+<svelte:head><title>{t('auth.registerTitle')} — Feelm</title></svelte:head>
 
 <AuthShell
-	title="Start a log"
-	intro="Rate what you finish, write the one review you stand behind, and follow people whose taste you trust."
+	title={t('auth.startLog')}
+	intro={t('auth.startLogIntro')}
 >
 	<form onsubmit={submit}>
 		<label>
-			<span class="eyebrow">Username</span>
+			<span class="eyebrow">{t('auth.username')}</span>
 			<input class="field" bind:value={username} placeholder="yourhandle" autocomplete="username" />
 		</label>
 
 		<label>
-			<span class="eyebrow">Display name</span>
-			<input class="field" bind:value={name} placeholder="Your name" autocomplete="name" />
+			<span class="eyebrow">{t('auth.displayName')}</span>
+			<input class="field" bind:value={name} placeholder={t('auth.yourName')} autocomplete="name" />
 		</label>
 
 		<label>
-			<span class="eyebrow">Email</span>
+			<span class="eyebrow">{t('auth.email')}</span>
 			<input
 				class="field"
 				type="email"
@@ -66,18 +67,18 @@
 		</label>
 
 		<label>
-			<span class="eyebrow">Password</span>
+			<span class="eyebrow">{t('auth.password')}</span>
 			<input
 				class="field"
 				type="password"
 				bind:value={password}
-				placeholder="At least 8 characters"
+				placeholder={t('auth.passwordHint')}
 				autocomplete="new-password"
 			/>
 		</label>
 
 		<label>
-			<span class="eyebrow">Repeat password</span>
+			<span class="eyebrow">{t('auth.repeatPassword')}</span>
 			<input
 				class="field"
 				class:wrong={mismatch}
@@ -86,25 +87,25 @@
 				autocomplete="new-password"
 				aria-invalid={mismatch}
 			/>
-			{#if mismatch}<span class="hint error">These do not match yet.</span>{/if}
+			{#if mismatch}<span class="hint error">{t('auth.mismatch')}</span>{/if}
 		</label>
 
 		<label>
-			<span class="eyebrow">One line about your taste</span>
-			<input class="field" bind:value={tagline} placeholder="Rewatcher. Slow games. Long books." />
+			<span class="eyebrow">{t('auth.tagline')}</span>
+			<input class="field" bind:value={tagline} placeholder={t('auth.taglinePlaceholder')} />
 		</label>
 
 		{#if error}<p class="error">{error}</p>{/if}
 
 		<button type="submit" class="btn btn-primary wide" disabled={busy || mismatch}>
-			{busy ? 'Creating…' : 'Create account'}
+			{busy ? t('auth.creating') : t('auth.createAccount')}
 		</button>
 	</form>
 
 	<GoogleButton label="signup_with" onerror={(message) => (error = message)} />
 
 	<p class="alt muted">
-		Already have one? <a href="/login">Sign in</a>
+		{t('auth.haveOne')} <a href="/login">{t('nav.signIn')}</a>
 	</p>
 </AuthShell>
 

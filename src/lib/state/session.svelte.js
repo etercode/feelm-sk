@@ -5,12 +5,13 @@
 
 import { browser } from '$app/environment';
 import * as api from '$lib/api/client.js';
+import { t } from '$lib/i18n/index.svelte.js';
 import { ApiError } from '$lib/api/client.js';
 import { clearTokens, hasTokens } from '$lib/auth/tokens.js';
 import { library } from '$lib/state/library.svelte.js';
 
 class Session {
-	/** @type {{ id: number, username: string, name: string, tagline?: string|null, bio?: string|null, location?: string|null, avatar?: string|null, joinedAt?: string|null, roles?: string[], handlePending?: boolean } | null} */
+	/** @type {{ id: number, username: string, name: string, tagline?: string|null, bio?: string|null, location?: string|null, avatar?: string|null, joinedAt?: string|null, roles?: string[], handlePending?: boolean, locale?: string, timezone?: string } | null} */
 	user = $state(null);
 
 	#hydrated = false;
@@ -65,7 +66,7 @@ class Session {
 	async signIn(login, password) {
 		const username = login.trim().toLowerCase();
 		if (!username || !password) {
-			return { ok: false, error: 'Enter a username and password.' };
+			return { ok: false, error: t('auth.enterBoth') };
 		}
 
 		try {
@@ -76,7 +77,7 @@ class Session {
 			await library.hydrateForUser(me);
 			return { ok: true };
 		} catch (e) {
-			return { ok: false, error: this.#errorMessage(e, 'Could not sign in.') };
+			return { ok: false, error: this.#errorMessage(e, t('auth.couldNotSignIn')) };
 		}
 	}
 
@@ -101,9 +102,9 @@ class Session {
 			return { ok: true };
 		} catch (e) {
 			if (e instanceof ApiError && e.status === 503) {
-				return { ok: false, error: 'Google sign-in is not set up on this server.' };
+				return { ok: false, error: t('auth.googleNotSetUp') };
 			}
-			return { ok: false, error: this.#errorMessage(e, 'Could not sign in with Google.') };
+			return { ok: false, error: this.#errorMessage(e, t('auth.couldNotGoogle')) };
 		}
 	}
 
@@ -114,9 +115,9 @@ class Session {
 	 */
 	async chooseUsername(username) {
 		const handle = username.trim();
-		if (handle.length < 3) return { ok: false, error: 'Pick at least 3 characters.' };
+		if (handle.length < 3) return { ok: false, error: t('welcome.tooShort') };
 		if (!/^[a-zA-Z0-9_]+$/.test(handle)) {
-			return { ok: false, error: 'Letters, numbers and underscores only.' };
+			return { ok: false, error: t('welcome.badCharacters') };
 		}
 
 		try {
@@ -124,9 +125,9 @@ class Session {
 			return { ok: true };
 		} catch (e) {
 			if (e instanceof ApiError && e.status === 409) {
-				return { ok: false, error: 'That one is taken. Try another.' };
+				return { ok: false, error: t('welcome.taken') };
 			}
-			return { ok: false, error: this.#errorMessage(e, 'Could not save that handle.') };
+			return { ok: false, error: this.#errorMessage(e, t('welcome.couldNotSave')) };
 		}
 	}
 
@@ -135,10 +136,10 @@ class Session {
 	 */
 	async register({ username, name, email, tagline, password }) {
 		const handle = username.trim().toLowerCase();
-		if (!handle) return { ok: false, error: 'Pick a username.' };
-		if (!email?.trim()) return { ok: false, error: 'An email address is required.' };
+		if (!handle) return { ok: false, error: t('auth.pickUsername') };
+		if (!email?.trim()) return { ok: false, error: t('auth.emailRequired') };
 		if (!password || password.length < 8) {
-			return { ok: false, error: 'Password must be at least 8 characters.' };
+			return { ok: false, error: t('auth.passwordTooShort') };
 		}
 
 		try {
@@ -156,11 +157,11 @@ class Session {
 					ok: false,
 					error:
 						e.body?.error === 'email_already_used'
-							? 'That email already has an account.'
-							: 'That username is taken.'
+							? t('auth.emailTaken')
+							: t('auth.usernameTaken')
 				};
 			}
-			return { ok: false, error: this.#errorMessage(e, 'Could not create account.') };
+			return { ok: false, error: this.#errorMessage(e, t('auth.couldNotCreate')) };
 		}
 	}
 
@@ -193,7 +194,7 @@ class Session {
 	/** @param {unknown} e @param {string} fallback */
 	#errorMessage(e, fallback) {
 		if (e instanceof ApiError) {
-			if (e.status === 401) return 'Invalid username or password.';
+			if (e.status === 401) return t('auth.invalidCredentials');
 			if (typeof e.body?.message === 'string') return e.body.message;
 			if (typeof e.message === 'string' && e.message !== `Request failed (${e.status})`) {
 				return e.message;

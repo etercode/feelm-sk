@@ -10,13 +10,14 @@
 -->
 <script>
 	import Icon from '$lib/components/Icon.svelte';
+	import { t } from '$lib/i18n/index.svelte.js';
 
 	/** `rows` deeper than one turns the track into a column-flow grid. */
 	let {
 		title,
 		kicker = null,
 		href = null,
-		linkLabel = 'See all',
+		linkLabel = null,
 		type = null,
 		rows = 1,
 		grid = false,
@@ -52,13 +53,13 @@
 
 		<div class="controls">
 			{#if href}
-				<a class="btn btn-ghost btn-sm" {href}>{linkLabel}<Icon name="right" size={14} /></a>
+				<a class="btn btn-ghost btn-sm" {href}>{linkLabel ?? t('common.seeAll')}<Icon name="right" size={14} /></a>
 			{/if}
 			{#if !grid}
 				<button
 					type="button"
 					class="arrow"
-					aria-label="Scroll left"
+					aria-label={t('rail.scrollLeft')}
 					disabled={atStart}
 					onclick={() => nudge(-1)}
 				>
@@ -67,7 +68,7 @@
 				<button
 					type="button"
 					class="arrow"
-					aria-label="Scroll right"
+					aria-label={t('rail.scrollRight')}
 					disabled={atEnd}
 					onclick={() => nudge(1)}
 				>

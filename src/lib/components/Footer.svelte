@@ -1,5 +1,6 @@
 <script>
 	import { types, typeKeys } from '$lib/data/types.js';
+	import { t } from '$lib/i18n/index.svelte.js';
 
 	const year = new Date().getFullYear();
 </script>
@@ -8,22 +9,19 @@
 	<div class="frame inner">
 		<div class="about">
 			<span class="wordmark"><em>feel</em>m</span>
-			<p class="muted">
-				A shared log of what people actually finished — films, series, games and books, with the
-				score and the one review they stand behind.
-			</p>
+			<p class="muted">{t('footer.blurb')}</p>
 		</div>
 
 		<nav>
-			<span class="eyebrow">Browse</span>
+			<span class="eyebrow">{t('footer.browse')}</span>
 			{#each typeKeys as key (key)}
 				<a href={types[key].browse}>{types[key].plural}</a>
 			{/each}
-			<a href="/feed">Feed</a>
+			<a href="/feed">{t('nav.feed')}</a>
 		</nav>
 
 		<div class="colophon">
-			<span class="eyebrow">Catalog</span>
+			<span class="eyebrow">{t('footer.catalog')}</span>
 			<!--
 				This said "N titles loaded", counting the front page's cache — so it
 				read "96" for a catalog of seven hundred thousand, and it was the
@@ -31,14 +29,14 @@
 				it links to has the real number.
 			-->
 			<p class="muted">
-				Filled in by the crawler. <a href="/crawler">Crawler status</a>
+				{t('footer.crawlerNote')} <a href="/crawler">{t('footer.crawlerLink')}</a>
 			</p>
 		</div>
 	</div>
 
 	<div class="frame base muted">
 		<span>© {year} Feelm</span>
-		<span class="faint">Film and series data from TMDB.</span>
+		<span class="faint">{t('footer.credit')}</span>
 	</div>
 </footer>
 

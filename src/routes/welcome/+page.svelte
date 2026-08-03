@@ -13,6 +13,7 @@
 	import Avatar from '$lib/components/Avatar.svelte';
 	import Icon from '$lib/components/Icon.svelte';
 	import Spinner from '$lib/components/Spinner.svelte';
+	import { t } from '$lib/i18n/index.svelte.js';
 	import { session } from '$lib/state/session.svelte.js';
 
 	let ready = $state(false);
@@ -54,30 +55,27 @@
 	}
 </script>
 
-<svelte:head><title>Pick your handle — Feelm</title></svelte:head>
+<svelte:head><title>{t('welcome.title')} — Feelm</title></svelte:head>
 
 <div class="frame page">
 	{#if !ready || !session.user}
-		<p class="muted loading"><Spinner size={16} /> One moment…</p>
+		<p class="muted loading"><Spinner size={16} /> {t('welcome.moment')}</p>
 	{:else}
 		<div class="card panel">
 			<div class="who">
 				<Avatar user={session.user} size={64} ring />
 				<div>
-					<span class="eyebrow">Signed in as</span>
+					<span class="eyebrow">{t('welcome.signedInAs')}</span>
 					<p class="name">{session.user.name}</p>
 				</div>
 			</div>
 
-			<h1 class="display">Pick your handle</h1>
-			<p class="muted intro">
-				We made one up from your email. It goes in the link to your profile, and it cannot be
-				changed afterwards — so this is the moment.
-			</p>
+			<h1 class="display">{t('welcome.title')}</h1>
+			<p class="muted intro">{t('welcome.intro')}</p>
 
 			<form onsubmit={save}>
 				<label>
-					<span class="eyebrow">Handle</span>
+					<span class="eyebrow">{t('welcome.handle')}</span>
 					<div class="entry">
 						<span class="at">@</span>
 						<input
@@ -96,10 +94,10 @@
 
 				<div class="actions">
 					<button type="button" class="btn" disabled={busy} onclick={keep}>
-						Keep {session.user.username}
+						{t('welcome.keep', { username: session.user.username })}
 					</button>
 					<button type="submit" class="btn btn-primary" disabled={busy || !handle.trim()}>
-						{busy ? 'Saving…' : 'That is the one'}<Icon name="right" size={14} />
+						{busy ? t('common.saving') : t('welcome.confirm')}<Icon name="right" size={14} />
 					</button>
 				</div>
 			</form>

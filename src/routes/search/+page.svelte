@@ -13,7 +13,8 @@
 	import Spinner from '$lib/components/Spinner.svelte';
 	import PosterCard from '$lib/components/PosterCard.svelte';
 	import { types, typeKeys } from '$lib/data/types.js';
-	import { plural } from '$lib/util/format.js';
+	import { t } from '$lib/i18n/index.svelte.js';
+	import { compactNumber, counted, number } from '$lib/util/format.js';
 
 	let { data } = $props();
 
@@ -29,48 +30,45 @@
 		queryText = params.get('q') ?? '';
 	});
 
-	const sortLabels = {
-		relevance: 'Best match',
-		popularity: 'Most popular',
-		score: 'Highest rated',
-		imdb: 'Highest on IMDb',
-		newest: 'Newest first',
-		oldest: 'Oldest first',
-		title: 'A–Z',
-		added: 'Recently crawled'
-	};
+	/*
+	 * All five of these are $derived rather than const: a const is evaluated
+	 * once when the module loads, which would pin every option label to
+	 * whatever language happened to be in force at that moment.
+	 */
+	let sortLabels = $derived(
+		Object.fromEntries(
+			['relevance', 'popularity', 'score', 'imdb', 'newest', 'oldest', 'title', 'added'].map(
+				(key) => [key, t(`sort.${key}`)]
+			)
+		)
+	);
 
-	const scoreSteps = [
-		{ value: '', label: 'Any score' },
-		{ value: '60', label: '60 and up' },
-		{ value: '70', label: '70 and up' },
-		{ value: '80', label: '80 and up' },
-		{ value: '90', label: '90 and up' }
-	];
+	let scoreSteps = $derived([
+		{ value: '', label: t('score.any') },
+		...[60, 70, 80, 90].map((n) => ({ value: String(n), label: t('score.min', { n }) }))
+	]);
 
 	// IMDb publishes out of 10, so the filter speaks in those units.
-	const imdbSteps = [
-		{ value: '', label: 'Any IMDb rating' },
-		{ value: '6', label: '6.0 and up' },
-		{ value: '7', label: '7.0 and up' },
-		{ value: '8', label: '8.0 and up' },
-		{ value: '9', label: '9.0 and up' }
-	];
+	let imdbSteps = $derived([
+		{ value: '', label: t('imdb.any') },
+		...[6, 7, 8, 9].map((n) => ({ value: String(n), label: t('imdb.min', { n }) }))
+	]);
 
-	const votesSteps = [
-		{ value: '', label: 'Any number of votes' },
-		{ value: '1000', label: '1k+ votes' },
-		{ value: '10000', label: '10k+ votes' },
-		{ value: '100000', label: '100k+ votes' }
-	];
+	let votesSteps = $derived([
+		{ value: '', label: t('votes.any') },
+		...[1000, 10000, 100000].map((n) => ({
+			value: String(n),
+			label: t('votes.min', { n: compactNumber(n) })
+		}))
+	]);
 
-	const runtimeSteps = [
-		{ value: '', label: 'Any length' },
-		{ value: '0-45', label: 'Under 45m' },
-		{ value: '45-90', label: '45m – 1h30' },
-		{ value: '90-150', label: '1h30 – 2h30' },
-		{ value: '150-', label: 'Over 2h30' }
-	];
+	let runtimeSteps = $derived([
+		{ value: '', label: t('length.any') },
+		{ value: '0-45', label: t('length.under45') },
+		{ value: '45-90', label: t('length.45to90') },
+		{ value: '90-150', label: t('length.90to150') },
+		{ value: '150-', label: t('length.over150') }
+	]);
 
 	/** Rewrite the query string; a filter change always returns to page 1. */
 	function apply(changes, { resetPage = true } = {}) {
@@ -123,7 +121,7 @@
 </script>
 
 <svelte:head>
-	<title>{queryText ? `${queryText} — search` : 'Search'} — Feelm</title>
+	<title>{queryText ? t('search.titleFor', { query: queryText }) : t('search.title')} — Feelm</title>
 </svelte:head>
 
 <div class="frame page">
@@ -139,14 +137,14 @@
 			class="field"
 			type="search"
 			bind:value={queryText}
-			placeholder="Title, person, genre…"
+			placeholder={t('search.placeholder')}
 			autocomplete="off"
 		/>
-		<button type="submit" class="btn btn-primary">Search</button>
+		<button type="submit" class="btn btn-primary">{t('common.search')}</button>
 	</form>
 
 	{#if data.unreachable}
-		<p class="notice">The catalog API is unreachable. Is it running on {`8092`}?</p>
+		<p class="notice">{t('search.unreachablePort', { port: '8092' })}</p>
 	{:else}
 		<div class="summary">
 			<p class="count">
@@ -156,20 +154,20 @@
 						thousand the exact figure costs more than it is worth to
 						anybody reading it, so it is not claimed.
 					-->
-					<strong>{results.total.toLocaleString()}{results.totalIsExact === false ? '+' : ''}</strong>
-					{plural(results.total, 'result').split(' ').slice(1).join(' ')}
-					{#if queryText}for “{queryText}”{/if}
+					<strong>{number(results.total)}{results.totalIsExact === false ? '+' : ''}</strong>
+					{t('noun.result', { count: results.total })}
+					{#if queryText}{t('search.forQuery', { query: queryText })}{/if}
 				{:else if activeCount}
-					Nothing matches {queryText ? `“${queryText}” with those filters` : 'those filters'}
+					{queryText ? t('search.noneWithFilters', { query: queryText }) : t('search.noneFilters')}
 				{:else if queryText}
-					Nothing matches “{queryText}”
+					{t('search.noneQuery', { query: queryText })}
 				{:else}
-					{results.total.toLocaleString()} titles
+					{t('search.allTitles', { count: results.total })}
 				{/if}
 			</p>
 
 			<label class="sort">
-				<span class="sr-only">Sort</span>
+				<span class="sr-only">{t('search.sort')}</span>
 				<select
 					class="field"
 					value={params.get('sort') ?? (queryText ? 'relevance' : 'popularity')}
@@ -186,27 +184,27 @@
 		     number of results the corrected spelling would give. -->
 		{#if results.suggestion}
 			<p class="did-you-mean">
-				Did you mean
+				{t('search.didYouMean')}
 				<a href="/search?{new URLSearchParams({ ...Object.fromEntries(params), q: results.suggestion.term, page: '1' })}">
 					{results.suggestion.term}
 				</a>?
-				<span class="faint">{plural(results.suggestion.total, 'result')}</span>
+				<span class="faint">{counted('count.result', results.suggestion.total)}</span>
 			</p>
 		{/if}
 
 		<div class="layout">
 			<aside class="filters">
 				<header>
-					<span class="eyebrow">Filters</span>
+					<span class="eyebrow">{t('search.filters')}</span>
 					{#if activeCount}
 						<a class="clear" href="/search?{new URLSearchParams(queryText ? { q: queryText } : {})}">
-							Clear {activeCount}
+							{t('common.clearCount', { count: activeCount })}
 						</a>
 					{/if}
 				</header>
 
 				<section>
-					<h2>Type</h2>
+					<h2>{t('search.type')}</h2>
 					{#each typeKeys as key (key)}
 						<label class="check" data-type={key}>
 							<input
@@ -216,14 +214,14 @@
 							/>
 							<Icon name={key} size={13} />
 							<span class="label">{types[key].plural}</span>
-							{#if facets}<span class="n">{(facets.types[key] ?? 0).toLocaleString()}</span>{/if}
+							{#if facets}<span class="n">{number(facets.types[key] ?? 0)}</span>{/if}
 						</label>
 					{/each}
 				</section>
 
 				{#if facets?.genres?.length}
 					<section>
-						<h2>Genre</h2>
+						<h2>{t('browse.genre')}</h2>
 						<div class="scroll-list">
 							{#each facets.genres as genre (genre.slug)}
 								<label class="check">
@@ -233,7 +231,7 @@
 										onchange={() => toggle('genre', genre.slug)}
 									/>
 									<span class="label">{genre.name}</span>
-									<span class="n">{genre.count.toLocaleString()}</span>
+									<span class="n">{number(genre.count)}</span>
 								</label>
 							{/each}
 						</div>
@@ -245,7 +243,7 @@
 									onchange={(event) =>
 										apply({ genreMode: event.currentTarget.checked ? 'all' : null })}
 								/>
-								<span class="label">Must match all</span>
+								<span class="label">{t('search.mustMatchAll')}</span>
 							</label>
 						{/if}
 					</section>
@@ -253,7 +251,7 @@
 
 				{#if facets?.decades?.length}
 					<section>
-						<h2>Decade</h2>
+						<h2>{t('browse.decade')}</h2>
 						<div class="chips">
 							{#each facets.decades.slice(0, 14) as bucket (bucket.decade)}
 								<button
@@ -262,7 +260,8 @@
 									class:on={decadeValue === String(bucket.decade)}
 									onclick={() => setDecade(bucket.decade)}
 								>
-									{bucket.decade}s <span class="faint">{bucket.count}</span>
+									{t('browse.decadeLabel', { decade: bucket.decade })}
+									<span class="faint">{number(bucket.count)}</span>
 								</button>
 							{/each}
 						</div>
@@ -270,7 +269,7 @@
 				{/if}
 
 				<section>
-					<h2>Score</h2>
+					<h2>{t('browse.minScore')}</h2>
 					<select
 						class="field"
 						value={params.get('scoreMin') ?? ''}
@@ -305,7 +304,7 @@
 				</section>
 
 				<section>
-					<h2>Length</h2>
+					<h2>{t('search.length')}</h2>
 					<select
 						class="field"
 						value={runtimeValue}
@@ -318,21 +317,21 @@
 				</section>
 
 				<section>
-					<h2>Release</h2>
+					<h2>{t('search.release')}</h2>
 					<select
 						class="field"
 						value={params.get('release') ?? 'any'}
 						onchange={(event) => apply({ release: event.currentTarget.value })}
 					>
-						<option value="any">Anything</option>
-						<option value="released">Out now</option>
-						<option value="upcoming">Not out yet</option>
+						<option value="any">{t('search.releaseAny')}</option>
+						<option value="released">{t('search.releaseOut')}</option>
+						<option value="upcoming">{t('search.releaseUpcoming')}</option>
 					</select>
 				</section>
 
 				{#if data.filters.certifications.length}
 					<section>
-						<h2>Rated</h2>
+						<h2>{t('facet.rated')}</h2>
 						<div class="chips">
 							{#each data.filters.certifications.slice(0, 10) as cert (cert)}
 								<button
@@ -350,7 +349,7 @@
 
 				{#if data.filters.languages.length}
 					<section>
-						<h2>Language</h2>
+						<h2>{t('search.language')}</h2>
 						<div class="chips">
 							{#each data.filters.languages.slice(0, 10) as lang (lang.code)}
 								<button
@@ -359,7 +358,7 @@
 									class:on={selected('language', lang.code)}
 									onclick={() => toggle('language', lang.code)}
 								>
-									{lang.code.toUpperCase()} <span class="faint">{lang.count}</span>
+									{lang.code.toUpperCase()} <span class="faint">{number(lang.count)}</span>
 								</button>
 							{/each}
 						</div>
@@ -371,7 +370,7 @@
 				{#if refreshing}
 					<div class="working">
 						<Spinner size={22} />
-						<span class="faint">Loading…</span>
+						<span class="faint">{t('common.loading')}</span>
 					</div>
 				{/if}
 				{#if results.items.length}
@@ -397,11 +396,11 @@
 					<div class="empty">
 						<p class="muted">
 							{#if results.suggestion}
-								Nothing under that spelling — try the correction above.
+								{t('search.emptySuggestion')}
 							{:else if activeCount}
-								No titles match all of those filters.
+								{t('search.emptyFilters')}
 							{:else}
-								Search the catalog by title, person or genre.
+								{t('search.emptyStart')}
 							{/if}
 						</p>
 					</div>

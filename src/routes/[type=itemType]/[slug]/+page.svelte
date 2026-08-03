@@ -21,7 +21,8 @@
 	import { facetsOf, lineOf, progressLabel, statusLabel, typeOf } from '$lib/data/types.js';
 	import { library } from '$lib/state/library.svelte.js';
 	import { session } from '$lib/state/session.svelte.js';
-	import { compactNumber, longDate, plural, untilRelease } from '$lib/util/format.js';
+	import { t } from '$lib/i18n/index.svelte.js';
+	import { compactNumber, counted, longDate, untilRelease } from '$lib/util/format.js';
 	import { untrack } from 'svelte';
 
 	let { data } = $props();
@@ -77,8 +78,11 @@
 						{/if}
 						{#if item.details.collection}
 							<span class="tag quiet">
-								{item.details.collection.name} · part {item.details.collection.part} of {item.details
-									.collection.total}
+								{t('work.collectionPart', {
+									name: item.details.collection.name,
+									part: item.details.collection.part,
+									total: item.details.collection.total
+								})}
 							</span>
 						{/if}
 					</div>
@@ -104,7 +108,9 @@
 									{rating.label}
 									<strong>{rating.value}</strong>
 									{#if rating.votes}
-										<span class="votes">{compactNumber(rating.votes)} votes</span>
+										<span class="votes">
+											{t('work.votes', { count: compactNumber(rating.votes) })}
+										</span>
 									{/if}
 									<Icon name="external" size={13} />
 								</a>
@@ -140,11 +146,13 @@
 						<span class="big display">{rating.average}</span>
 						<span class="stack-lines">
 							<Stars value={rating.average} size={15} />
-							<span class="faint">{plural(rating.count, 'rating')} here</span>
+							<span class="faint">
+								{t('work.ratingsHere', { ratings: counted('count.rating', rating.count) })}
+							</span>
 						</span>
 					{:else}
 						<span class="faint">
-							{unreleased ? 'Nobody can rate this yet.' : 'No ratings here yet — be the first.'}
+							{unreleased ? t('work.cannotRateYet') : t('work.noRatings')}
 						</span>
 					{/if}
 				</div>
@@ -154,7 +162,10 @@
 			{#if unreleased}
 				<p class="release-note">
 					<Icon name="calendar" size={15} />
-					Out {longDate(item.details.releaseDate)} — {untilRelease(item.details.releaseDate)}.
+					{t('work.outOn', {
+						date: longDate(item.details.releaseDate),
+						relative: untilRelease(item.details.releaseDate)
+					})}
 				</p>
 			{/if}
 
@@ -174,7 +185,7 @@
 				<Gallery shots={item.details.screenshots} />
 				{#if item.details.features?.length}
 					<section class="features">
-						<h2 class="display">On the store page</h2>
+						<h2 class="display">{t('work.storePage')}</h2>
 						<div class="chips">
 							{#each item.details.features as feature}<span class="chip">{feature}</span>{/each}
 						</div>
@@ -208,8 +219,10 @@
 			{/if}
 
 			<section class="reviews">
-				<h2 class="display">Reviews <span class="faint count">{reviews.length}</span></h2>
-				<p class="rule faint">One review each — edit it whenever you change your mind.</p>
+				<h2 class="display">
+					{t('work.reviews')} <span class="faint count">{reviews.length}</span>
+				</h2>
+				<p class="rule faint">{t('work.oneEach')}</p>
 
 				<ReviewEditor {item} />
 
@@ -218,7 +231,7 @@
 						<ReviewCard {review} />
 					{:else}
 						{#if !reviews.length}
-							<p class="muted empty">Nobody has written about this yet.</p>
+							<p class="muted empty">{t('work.noReviews')}</p>
 						{/if}
 					{/each}
 				</div>
@@ -227,7 +240,7 @@
 
 		<aside>
 			<section class="facts-card card">
-				<h2 class="eyebrow">Details</h2>
+				<h2 class="eyebrow">{t('work.details')}</h2>
 				<dl>
 					{#each facets as facet (facet.label)}
 						<div>
@@ -248,7 +261,9 @@
 
 			{#if shelved.length}
 				<section class="who card">
-					<h2 class="eyebrow">On {plural(shelved.length, 'shelf', 'shelves')}</h2>
+					<h2 class="eyebrow">
+						{t('work.onShelves', { shelves: counted('count.shelf', shelved.length) })}
+					</h2>
 					<ul>
 						{#each shelved as entry (entry.id)}
 							{@const person = library.userById(entry.userId)}
@@ -277,7 +292,7 @@
 
 	{#if data.related.length}
 		<div class="frame">
-			<Rail title="If you liked this" kicker={spec.plural} type={item.type}>
+			<Rail title={t('work.related')} kicker={spec.plural} type={item.type}>
 				{#each data.related as other (other.id)}
 					<PosterCard item={other} width="clamp(8.5rem, 13vw, 11rem)" />
 				{/each}

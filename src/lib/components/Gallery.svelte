@@ -1,8 +1,9 @@
 <!-- Screenshots, with a plain lightbox: click to enlarge, arrows or Esc to leave. -->
 <script>
 	import Icon from '$lib/components/Icon.svelte';
+	import { t } from '$lib/i18n/index.svelte.js';
 
-	let { shots = [], title = 'Screenshots' } = $props();
+	let { shots = [], title = null } = $props();
 
 	let open = $state(null);
 
@@ -23,11 +24,11 @@
 
 {#if shots.length}
 	<section class="gallery">
-		<h2 class="display">{title}</h2>
+		<h2 class="display">{title ?? t('gallery.screenshots')}</h2>
 
 		<div class="strip scroller">
 			{#each shots as shot, position (shot)}
-				<button type="button" onclick={() => (open = position)} aria-label="Open screenshot {position + 1}">
+				<button type="button" onclick={() => (open = position)} aria-label={t('gallery.open', { n: position + 1 })}>
 					<img src={shot} alt="" loading="lazy" />
 				</button>
 			{/each}
@@ -43,13 +44,13 @@
 			}}
 		>
 			<img src={shots[open]} alt="" />
-			<button type="button" class="nav prev" aria-label="Previous" onclick={() => step(-1)}>
+			<button type="button" class="nav prev" aria-label={t('common.previous')} onclick={() => step(-1)}>
 				<Icon name="left" size={20} />
 			</button>
-			<button type="button" class="nav next" aria-label="Next" onclick={() => step(1)}>
+			<button type="button" class="nav next" aria-label={t('common.next')} onclick={() => step(1)}>
 				<Icon name="right" size={20} />
 			</button>
-			<button type="button" class="nav close" aria-label="Close" onclick={() => (open = null)}>
+			<button type="button" class="nav close" aria-label={t('common.close')} onclick={() => (open = null)}>
 				<Icon name="close" size={18} />
 			</button>
 			<span class="counter">{open + 1} / {shots.length}</span>

@@ -1,14 +1,10 @@
 <script>
 	import Browse from '$lib/components/Browse.svelte';
+	import { t } from '$lib/i18n/index.svelte.js';
 
 	let { data } = $props();
 </script>
 
-<svelte:head><title>Games — Feelm</title></svelte:head>
+<svelte:head><title>{t('browse.games.title')} — Feelm</title></svelte:head>
 
-<Browse
-	{data}
-	type="game"
-	title="Games"
-	intro="Filed by perspective, mode and platform — first person, third person, isometric, and whatever Half-Life: Alyx is."
-/>
+<Browse {data} type="game" />

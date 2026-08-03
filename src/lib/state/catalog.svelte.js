@@ -4,6 +4,7 @@
  */
 
 import { browser } from '$app/environment';
+import { t } from '$lib/i18n/index.svelte.js';
 import { untrack } from 'svelte';
 import * as api from '$lib/api/client.js';
 import { isUpcoming } from '$lib/data/items.js';
@@ -86,7 +87,7 @@ class Catalog {
 			this.error = null;
 		} catch (e) {
 			console.warn('catalog load failed', e);
-			this.error = 'Could not load the catalog from the API.';
+			this.error = t('home.catalogFailed');
 			this.ready = true;
 		}
 	}

@@ -6,6 +6,8 @@
 	YouTube is never contacted for anything that does not.
 -->
 <script>
+	import { i18n, t } from '$lib/i18n/index.svelte.js';
+
 	let {
 		item,
 		/** `cover` fills its container (the home plate); `inline` is a 16:9 block. */
@@ -29,7 +31,7 @@
 					playsinline: '1',
 					rel: '0',
 					modestbranding: '1',
-					hl: 'en' // the player chrome, not the video
+					hl: i18n.locale // the player chrome, not the video
 				})
 			: null
 	);
@@ -40,7 +42,7 @@
 		{#key src}
 			<iframe
 				{src}
-				title="{item.title} trailer"
+				title={t('work.trailerTitle', { title: item.title })}
 				allow="accelerometer; autoplay; encrypted-media; picture-in-picture; fullscreen"
 				allowfullscreen
 			></iframe>

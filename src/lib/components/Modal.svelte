@@ -8,6 +8,7 @@
 -->
 <script>
 	import Icon from '$lib/components/Icon.svelte';
+	import { t } from '$lib/i18n/index.svelte.js';
 
 	let { open = false, title = '', onclose, wide = false, children } = $props();
 
@@ -52,7 +53,7 @@
 			wrapping the dialog in a button would not be valid markup. Esc and
 			the close button in the header are the other two ways out.
 		-->
-		<button type="button" class="backdrop" aria-label="Close" onclick={() => onclose?.()}></button>
+		<button type="button" class="backdrop" aria-label={t('common.close')} onclick={() => onclose?.()}></button>
 
 		<div
 			class="panel card"
@@ -65,7 +66,7 @@
 		>
 			<header>
 				<h2>{title}</h2>
-				<button type="button" class="icon-btn" aria-label="Close" onclick={() => onclose?.()}>
+				<button type="button" class="icon-btn" aria-label={t('common.close')} onclick={() => onclose?.()}>
 					<Icon name="close" size={18} />
 				</button>
 			</header>

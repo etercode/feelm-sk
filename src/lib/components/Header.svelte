@@ -9,6 +9,7 @@
 	import Icon from '$lib/components/Icon.svelte';
 	import SearchOverlay from '$lib/components/SearchOverlay.svelte';
 	import { types, typeKeys } from '$lib/data/types.js';
+	import { t } from '$lib/i18n/index.svelte.js';
 	import { session } from '$lib/state/session.svelte.js';
 	import { theme } from '$lib/state/theme.svelte.js';
 
@@ -19,7 +20,7 @@
 	let path = $derived(page.url.pathname);
 
 	const themeIcon = { light: 'sun', dark: 'moon', system: 'monitor' };
-	const themeTitle = { light: 'Light', dark: 'Dark', system: 'System' };
+	let themeTitle = $derived(t(`theme.${theme.choice}`));
 
 	// Close everything on navigation.
 	$effect(() => {
@@ -46,7 +47,7 @@
 
 <header class="bar">
 	<div class="inner frame">
-		<a class="brand" href="/" aria-label="Feelm — home">
+		<a class="brand" href="/" aria-label={t('nav.home')}>
 			<!--
 				The mark sits on its own dark tile in both themes. The F is white
 				with a blue film strip, so on paper it would be a white shape on a
@@ -69,20 +70,20 @@
 			{/each}
 			<a href="/feed" class="feed" class:active={path === '/feed'}>
 				<Icon name="activity" size={15} />
-				Feed
+				{t('nav.feed')}
 			</a>
 		</nav>
 
 		<div class="actions">
-			<button type="button" class="icon-btn" aria-label="Search" onclick={() => (searchOpen = true)}>
+			<button type="button" class="icon-btn" aria-label={t('nav.search')} onclick={() => (searchOpen = true)}>
 				<Icon name="search" size={18} />
 			</button>
 
 			<button
 				type="button"
 				class="icon-btn"
-				aria-label="Theme: {themeTitle[theme.choice]}"
-				title="Theme: {themeTitle[theme.choice]}"
+				aria-label={t('nav.theme', { mode: themeTitle })}
+				title={t('nav.theme', { mode: themeTitle })}
 				onclick={() => theme.cycle()}
 			>
 				<Icon name={themeIcon[theme.choice]} size={17} />
@@ -93,7 +94,7 @@
 					<button
 						type="button"
 						class="avatar-btn"
-						aria-label="Your account"
+						aria-label={t('nav.account')}
 						aria-expanded={menuOpen}
 						onclick={(event) => {
 							event.stopPropagation();
@@ -110,29 +111,29 @@
 								<span class="faint">@{session.user.username}</span>
 							</div>
 							<a href="/u/{session.user.username}" role="menuitem"
-								><Icon name="user" size={16} />Your profile</a
+								><Icon name="user" size={16} />{t('nav.profile')}</a
 							>
-							<a href="/feed" role="menuitem"><Icon name="activity" size={16} />Your feed</a>
-							<a href="/settings" role="menuitem"><Icon name="edit" size={16} />Settings</a>
+							<a href="/feed" role="menuitem"><Icon name="activity" size={16} />{t('nav.yourFeed')}</a>
+							<a href="/settings" role="menuitem"><Icon name="edit" size={16} />{t('nav.settings')}</a>
 							{#if session.isModerator}
 								<a href="/admin" role="menuitem" class="admin">
-									<Icon name="shield" size={16} />Admin
+									<Icon name="shield" size={16} />{t('nav.admin')}
 								</a>
 							{/if}
 							<button type="button" role="menuitem" onclick={signOut}>
-								<Icon name="logout" size={16} />Sign out
+								<Icon name="logout" size={16} />{t('nav.signOut')}
 							</button>
 						</div>
 					{/if}
 				</div>
 			{:else}
-				<a class="btn btn-sm" href="/login">Sign in</a>
+				<a class="btn btn-sm" href="/login">{t('nav.signIn')}</a>
 			{/if}
 
 			<button
 				type="button"
 				class="icon-btn burger"
-				aria-label="Menu"
+				aria-label={t('nav.menu')}
 				aria-expanded={navOpen}
 				onclick={(event) => {
 					event.stopPropagation();

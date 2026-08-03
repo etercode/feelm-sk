@@ -1,3 +1,5 @@
+import { t } from '$lib/i18n/index.svelte.js';
+
 /*
  * Pure helpers that operate on a single item (or don't need the live catalog).
  * Lists / lookups live on the reactive `catalog` store — see catalog.svelte.js.
@@ -71,7 +73,7 @@ export function externalRatings(item) {
 	return [
 		{
 			source: 'primary',
-			label: item.source?.name ?? 'Score',
+			label: item.source?.name ?? t('common.score'),
 			value: `${Math.round(item.externalScore)}%`,
 			votes: null,
 			href: item.source?.url ?? null

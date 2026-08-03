@@ -10,6 +10,7 @@
 	import { library } from '$lib/state/library.svelte.js';
 	import { session } from '$lib/state/session.svelte.js';
 	import { typeOf } from '$lib/data/types.js';
+	import { i18n, t } from '$lib/i18n/index.svelte.js';
 
 	let { item } = $props();
 
@@ -41,8 +42,8 @@
 	<div class="prompt card">
 		<Icon name="quote" size={18} filled />
 		<p>
-			<a href="/login">Sign in</a> to score this {typeOf(item).label.toLowerCase()} and leave the one
-			review you stand behind.
+			<a href="/login">{t('nav.signIn')}</a>
+			{t('review.signInPrompt', { type: typeOf(item).label.toLocaleLowerCase(i18n.tag) })}
 		</p>
 	</div>
 {:else if editing}
@@ -58,7 +59,7 @@
 			<div>
 				<strong>{session.user.name}</strong>
 				<span class="faint">
-					{mine ? 'Editing your review — the old version is kept.' : 'Your review'}
+					{mine ? t('review.editingNote') : t('review.yours')}
 				</span>
 			</div>
 			<Stars value={rating} size={22} interactive onchange={(value) => (rating = value)} />
@@ -68,34 +69,34 @@
 			class="field"
 			rows="5"
 			bind:value={body}
-			placeholder="What stayed with you?"
+			placeholder={t('review.placeholder')}
 		></textarea>
 
 		<div class="actions">
 			<button type="submit" class="btn btn-accent btn-sm" disabled={!body.trim()}>
-				{mine ? 'Save changes' : 'Post review'}
+				{mine ? t('review.saveChanges') : t('review.post')}
 			</button>
 			<button type="button" class="btn btn-ghost btn-sm" onclick={() => (editing = false)}>
-				Cancel
+				{t('common.cancel')}
 			</button>
 			{#if mine}
-				<button type="button" class="btn btn-ghost btn-sm danger" onclick={remove}>Delete</button>
+				<button type="button" class="btn btn-ghost btn-sm danger" onclick={remove}>{t('common.delete')}</button>
 			{/if}
 		</div>
 	</form>
 {:else if mine}
 	<div class="mine">
-		<span class="eyebrow">Your review</span>
+		<span class="eyebrow">{t('review.yours')}</span>
 		<ReviewCard review={mine} showAuthor={false} />
 		<button type="button" class="btn btn-sm" onclick={start}>
-			<Icon name="edit" size={14} />Edit
+			<Icon name="edit" size={14} />{t('common.edit')}
 		</button>
 	</div>
 {:else}
 	<button type="button" class="invite card" onclick={start}>
 		<Avatar user={session.user} size={34} />
-		<span>Write your review of <strong>{item.title}</strong>…</span>
-		<span class="btn btn-accent btn-sm">Write</span>
+		<span>{t('review.invite', { title: item.title })}</span>
+		<span class="btn btn-accent btn-sm">{t('review.write')}</span>
 	</button>
 {/if}
 

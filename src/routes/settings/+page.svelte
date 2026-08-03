@@ -12,6 +12,8 @@
 	import Icon from '$lib/components/Icon.svelte';
 	import ImageCropper from '$lib/components/ImageCropper.svelte';
 	import Spinner from '$lib/components/Spinner.svelte';
+	import { i18n, t } from '$lib/i18n/index.svelte.js';
+	import { LOCALES } from '$lib/i18n/locales.js';
 	import { session } from '$lib/state/session.svelte.js';
 
 	let ready = $state(false);
@@ -39,9 +41,9 @@
 		if (!file) return;
 
 		if (!file.type.startsWith('image/')) {
-			pictureError = 'That file is not an image.';
+			pictureError = t('settings.notAnImage');
 		} else if (file.size > 8 * 1024 * 1024) {
-			pictureError = 'Pictures need to be under 8 MB.';
+			pictureError = t('settings.tooBig');
 		} else {
 			picked = file;
 		}
@@ -58,7 +60,7 @@
 			session.applyUser(await api.uploadAvatar(blob));
 			picked = null;
 		} catch (error) {
-			pictureError = message(error, 'Could not upload that picture.');
+			pictureError = message(error, t('settings.uploadFailed'));
 		} finally {
 			uploading = false;
 		}
@@ -70,7 +72,7 @@
 		try {
 			session.applyUser(await api.deleteAvatar());
 		} catch (error) {
-			pictureError = message(error, 'Could not remove the picture.');
+			pictureError = message(error, t('settings.removeFailed'));
 		} finally {
 			uploading = false;
 		}
@@ -99,7 +101,7 @@
 	async function saveProfile(event) {
 		event.preventDefault();
 		if (!profile.name.trim()) {
-			profileError = 'A display name is required.';
+			profileError = t('settings.nameRequired');
 			return;
 		}
 
@@ -110,9 +112,97 @@
 			session.applyUser(await api.updateProfile(profile));
 			profileSaved = true;
 		} catch (error) {
-			profileError = message(error, 'Could not save your profile.');
+			profileError = message(error, t('settings.profileFailed'));
 		} finally {
 			savingProfile = false;
+		}
+	}
+
+	/* ---- language and timezone ------------------------------------------
+	 *
+	 * The dropdowns apply immediately, before anything is sent: the page you
+	 * are reading is the preview, and waiting on a round trip to find out what
+	 * Azerbaijani looks like would be a strange way to choose a language.
+	 * Saving is what makes the choice follow the account to the next device;
+	 * without it the cookie still remembers, on this browser.
+	 */
+
+	let savingRegion = $state(false);
+	let regionError = $state(null);
+	let regionSaved = $state(false);
+
+	/**
+	 * Every zone the runtime knows, grouped by the first part of the name.
+	 *
+	 * `Intl.supportedValuesOf` rather than a list of our own: the tz database
+	 * is updated by the platform several times a year, and a hardcoded subset
+	 * would be a release of ours every time a country changed its mind about
+	 * daylight saving. The fallback is for a runtime old enough not to have it,
+	 * where the two entries that matter are the one they are on and UTC.
+	 */
+	let zoneGroups = $derived.by(() => {
+		let zones;
+		try {
+			zones = Intl.supportedValuesOf('timeZone');
+		} catch {
+			zones = [...new Set(['UTC', i18n.timezone, i18n.guessTimezone()])];
+		}
+
+		/** @type {Map<string, string[]>} */
+		const groups = new Map();
+		for (const zone of zones) {
+			// "Asia/Baku" files under Asia; "UTC" has no slash and files alone.
+			const area = zone.includes('/') ? zone.slice(0, zone.indexOf('/')) : 'UTC';
+			if (!groups.has(area)) groups.set(area, []);
+			groups.get(area).push(zone);
+		}
+
+		return [...groups];
+	});
+
+	/** The clock in the chosen zone, so a wrong guess is visible rather than filed. */
+	let nowInZone = $derived.by(() => {
+		try {
+			return new Intl.DateTimeFormat(i18n.tag, {
+				timeZone: i18n.timezone,
+				hour: '2-digit',
+				minute: '2-digit',
+				weekday: 'short'
+			}).format(new Date());
+		} catch {
+			return '—';
+		}
+	});
+
+	/** @param {string} locale */
+	function pickLanguage(locale) {
+		i18n.choose(locale);
+		regionSaved = false;
+		regionError = null;
+	}
+
+	/** @param {string} zone */
+	function pickZone(zone) {
+		i18n.choose(i18n.locale, zone);
+		regionSaved = false;
+		regionError = null;
+	}
+
+	async function saveRegion(event) {
+		event.preventDefault();
+		savingRegion = true;
+		regionError = null;
+		regionSaved = false;
+
+		try {
+			session.applyUser(
+				await api.updatePreferences({ locale: i18n.locale, timezone: i18n.timezone })
+			);
+			regionSaved = true;
+		} catch (error) {
+			regionError = message(error, t('settings.preferencesFailed'));
+		} finally {
+			savingRegion = false;
 		}
 	}
 
@@ -129,11 +219,11 @@
 		passwordSaved = false;
 
 		if (passwords.next.length < 8) {
-			passwordError = 'The new password needs at least 8 characters.';
+			passwordError = t('settings.passwordShort');
 			return;
 		}
 		if (passwords.next !== passwords.confirm) {
-			passwordError = 'The two new passwords do not match.';
+			passwordError = t('settings.passwordMismatch');
 			return;
 		}
 
@@ -148,8 +238,8 @@
 		} catch (error) {
 			passwordError =
 				error instanceof ApiError && error.status === 403
-					? 'That is not your current password.'
-					: message(error, 'Could not change your password.');
+					? t('settings.wrongPassword')
+					: message(error, t('settings.passwordFailed'));
 		} finally {
 			savingPassword = false;
 		}
@@ -161,38 +251,35 @@
 
 		return (
 			{
-				file_too_large: 'That picture is too large.',
-				unsupported_type: 'Use a JPEG, PNG or WebP.',
-				unreadable_image: 'That file could not be read as an image.',
-				image_too_large: 'That picture has too many pixels.',
-				password_unchanged: 'That is the password you already have.'
+				file_too_large: t('settings.fileTooLarge'),
+				unsupported_type: t('settings.unsupportedType'),
+				unreadable_image: t('settings.unreadableImage'),
+				image_too_large: t('settings.imageTooLarge'),
+				password_unchanged: t('settings.passwordUnchanged')
 			}[error.body?.error] ?? fallback
 		);
 	}
 </script>
 
-<svelte:head><title>Settings — Feelm</title></svelte:head>
+<svelte:head><title>{t('settings.title')} — Feelm</title></svelte:head>
 
 <div class="frame page">
 	{#if !ready || !session.user}
-		<p class="muted loading"><Spinner size={16} /> Loading your account…</p>
+		<p class="muted loading"><Spinner size={16} /> {t('settings.loadingAccount')}</p>
 	{:else}
 		<header class="masthead">
 			<div>
-				<span class="eyebrow">Your account</span>
-				<h1 class="display">Settings</h1>
+				<span class="eyebrow">{t('settings.yourAccount')}</span>
+				<h1 class="display">{t('settings.title')}</h1>
 			</div>
 			<a class="btn btn-sm" href="/u/{session.user.username}">
-				View profile<Icon name="right" size={14} />
+				{t('settings.viewProfile')}<Icon name="right" size={14} />
 			</a>
 		</header>
 
 		<section class="card panel">
-			<h2>Picture</h2>
-			<p class="muted note">
-				Square works best. Without one you get your initials, which is a perfectly good
-				answer.
-			</p>
+			<h2>{t('settings.picture')}</h2>
+			<p class="muted note">{t('settings.pictureNote')}</p>
 
 			{#if picked}
 				<ImageCropper
@@ -211,7 +298,7 @@
 							disabled={uploading}
 							onclick={() => fileInput?.click()}
 						>
-							{session.user.avatar ? 'Change picture' : 'Upload a picture'}
+							{session.user.avatar ? t('settings.changePicture') : t('settings.uploadPicture')}
 						</button>
 						{#if session.user.avatar}
 							<button
@@ -220,7 +307,7 @@
 								disabled={uploading}
 								onclick={removePicture}
 							>
-								Remove
+								{t('common.remove')}
 							</button>
 						{/if}
 					</div>
@@ -240,42 +327,42 @@
 
 		{#if profile}
 			<section class="card panel">
-				<h2>Profile</h2>
+				<h2>{t('settings.profile')}</h2>
 				<p class="muted note">
-					Your handle stays <strong>@{session.user.username}</strong> — people have links to it.
+					{t('settings.handleNote', { handle: `@${session.user.username}` })}
 				</p>
 
 				<form onsubmit={saveProfile}>
 					<label>
-						<span class="eyebrow">Display name</span>
+						<span class="eyebrow">{t('auth.displayName')}</span>
 						<input class="field" bind:value={profile.name} maxlength="100" />
 					</label>
 
 					<label>
-						<span class="eyebrow">Tagline</span>
+						<span class="eyebrow">{t('auth.tagline')}</span>
 						<input
 							class="field"
 							bind:value={profile.tagline}
 							maxlength="255"
-							placeholder="One line under your name"
+							placeholder={t('settings.taglinePlaceholder')}
 						/>
 					</label>
 
 					<label>
-						<span class="eyebrow">Location</span>
+						<span class="eyebrow">{t('settings.location')}</span>
 						<input class="field" bind:value={profile.location} maxlength="120" />
 					</label>
 
 					<label>
-						<span class="eyebrow">About</span>
+						<span class="eyebrow">{t('settings.about')}</span>
 						<textarea class="field" rows="4" bind:value={profile.bio} maxlength="2000"></textarea>
 					</label>
 
 					<div class="row-end">
 						{#if profileError}<p class="error">{profileError}</p>{/if}
-						{#if profileSaved}<p class="ok">Saved.</p>{/if}
+						{#if profileSaved}<p class="ok">{t('common.saved')}</p>{/if}
 						<button type="submit" class="btn btn-primary" disabled={savingProfile}>
-							{savingProfile ? 'Saving…' : 'Save profile'}
+							{savingProfile ? t('common.saving') : t('settings.saveProfile')}
 						</button>
 					</div>
 				</form>
@@ -283,15 +370,71 @@
 		{/if}
 
 		<section class="card panel">
-			<h2>Password</h2>
-			<p class="muted note">
-				Your current password is required — a stolen session should not be enough to lock you
-				out.
-			</p>
+			<h2>{t('settings.region')}</h2>
+			<p class="muted note">{t('settings.regionNote')}</p>
+
+			<form onsubmit={saveRegion}>
+				<label>
+					<span class="eyebrow">{t('settings.language')}</span>
+					<!--
+						Each language names itself. Somebody hunting for Russian is
+						looking for "Русский", and a list translated into whatever
+						the site is currently set to is no help to the person most
+						likely to be using it — the one who cannot read that.
+					-->
+					<select
+						class="field"
+						value={i18n.locale}
+						onchange={(event) => pickLanguage(event.currentTarget.value)}
+					>
+						{#each LOCALES as language (language.code)}
+							<option value={language.code}>{language.name}</option>
+						{/each}
+					</select>
+				</label>
+
+				<label>
+					<span class="eyebrow">{t('settings.timezone')}</span>
+					<select
+						class="field"
+						value={i18n.timezone}
+						onchange={(event) => pickZone(event.currentTarget.value)}
+					>
+						{#each zoneGroups as [area, zones] (area)}
+							<optgroup label={area}>
+								{#each zones as zone (zone)}
+									<option value={zone}>{zone.replaceAll('_', ' ')}</option>
+								{/each}
+							</optgroup>
+						{/each}
+					</select>
+					<span class="faint hint">{t('settings.timezoneNote', { now: nowInZone })}</span>
+				</label>
+
+				<div class="row-end">
+					<button
+						type="button"
+						class="btn btn-sm btn-ghost"
+						onclick={() => pickZone(i18n.guessTimezone())}
+					>
+						{t('settings.useDeviceZone', { zone: i18n.guessTimezone() })}
+					</button>
+					{#if regionError}<p class="error">{regionError}</p>{/if}
+					{#if regionSaved}<p class="ok">{t('common.saved')}</p>{/if}
+					<button type="submit" class="btn btn-primary" disabled={savingRegion}>
+						{savingRegion ? t('common.saving') : t('settings.savePreferences')}
+					</button>
+				</div>
+			</form>
+		</section>
+
+		<section class="card panel">
+			<h2>{t('settings.password')}</h2>
+			<p class="muted note">{t('settings.passwordNote')}</p>
 
 			<form onsubmit={savePassword}>
 				<label>
-					<span class="eyebrow">Current password</span>
+					<span class="eyebrow">{t('settings.currentPassword')}</span>
 					<input
 						class="field"
 						type="password"
@@ -301,7 +444,7 @@
 				</label>
 
 				<label>
-					<span class="eyebrow">New password</span>
+					<span class="eyebrow">{t('settings.newPassword')}</span>
 					<input
 						class="field"
 						type="password"
@@ -311,7 +454,7 @@
 				</label>
 
 				<label>
-					<span class="eyebrow">Repeat new password</span>
+					<span class="eyebrow">{t('settings.repeatPassword')}</span>
 					<input
 						class="field"
 						type="password"
@@ -322,9 +465,9 @@
 
 				<div class="row-end">
 					{#if passwordError}<p class="error">{passwordError}</p>{/if}
-					{#if passwordSaved}<p class="ok">Password changed.</p>{/if}
+					{#if passwordSaved}<p class="ok">{t('settings.passwordChanged')}</p>{/if}
 					<button type="submit" class="btn btn-primary" disabled={savingPassword}>
-						{savingPassword ? 'Changing…' : 'Change password'}
+						{savingPassword ? t('settings.changing') : t('settings.changePassword')}
 					</button>
 				</div>
 			</form>
@@ -422,5 +565,18 @@
 		margin: 0;
 		color: var(--ok);
 		font-size: 0.88rem;
+	}
+
+	/* The live clock under the zone picker. */
+	.hint {
+		font-size: 0.8rem;
+	}
+
+	/*
+	 * "Use this device" is a shortcut, not the action — it pushes to the left
+	 * so it does not sit next to Save looking like the other half of a pair.
+	 */
+	.row-end .btn-ghost {
+		margin-right: auto;
 	}
 </style>

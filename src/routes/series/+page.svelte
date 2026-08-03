@@ -1,14 +1,10 @@
 <script>
 	import Browse from '$lib/components/Browse.svelte';
+	import { t } from '$lib/i18n/index.svelte.js';
 
 	let { data } = $props();
 </script>
 
-<svelte:head><title>Series — Feelm</title></svelte:head>
+<svelte:head><title>{t('browse.series.title')} — Feelm</title></svelte:head>
 
-<Browse
-	{data}
-	type="series"
-	title="Series"
-	intro="Seasons, episodes, and the exact one you stopped at. Progress is tracked per episode, not per show."
-/>
+<Browse {data} type="series" />

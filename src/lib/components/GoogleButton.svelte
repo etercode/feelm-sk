@@ -12,6 +12,7 @@
 <script>
 	import { goto } from '$app/navigation';
 	import { GOOGLE_CLIENT_ID } from '$lib/config.js';
+	import { i18n, t } from '$lib/i18n/index.svelte.js';
 	import { session } from '$lib/state/session.svelte.js';
 	import { theme } from '$lib/state/theme.svelte.js';
 
@@ -49,6 +50,14 @@
 				});
 
 				window.google.accounts.id.renderButton(holder, {
+					/*
+					 * Google draws its own text, in whatever language it decides —
+					 * left alone it reads the browser's, so a Turkish site would
+					 * show a Russian "Sign in with Google" to somebody who has
+					 * chosen Turkish on a Russian machine. This makes the one
+					 * control we do not render match the ones we do.
+					 */
+					locale: i18n.locale,
 					theme: theme.resolved === 'dark' ? 'filled_black' : 'outline',
 					size: 'large',
 					shape: 'pill',
@@ -91,7 +100,7 @@
 	/** @param {{ credential?: string }} response */
 	async function received(response) {
 		if (!response?.credential) {
-			onerror('Google did not send anything back. Try again.');
+			onerror(t('auth.googleNothing'));
 			return;
 		}
 
@@ -112,15 +121,15 @@
 
 {#if GOOGLE_CLIENT_ID}
 	<div class="google" class:busy>
-		<div class="divider"><span>or</span></div>
+		<div class="divider"><span>{t('auth.googleOr')}</span></div>
 
 		{#if failed}
-			<p class="muted note">Google sign-in could not load. Use a password for now.</p>
+			<p class="muted note">{t('auth.googleFailed')}</p>
 		{:else}
 			<div class="holder" bind:this={holder}></div>
 		{/if}
 
-		{#if busy}<p class="muted note">Signing you in…</p>{/if}
+		{#if busy}<p class="muted note">{t('auth.googleSigningIn')}</p>{/if}
 	</div>
 {/if}
 

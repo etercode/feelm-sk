@@ -1,10 +1,12 @@
 <script>
-	let { cast = [], title = 'Cast' } = $props();
+	import { t } from '$lib/i18n/index.svelte.js';
+
+	let { cast = [], title = null } = $props();
 </script>
 
 {#if cast.length}
 	<section class="cast">
-		<h2 class="display">{title}</h2>
+		<h2 class="display">{title ?? t('cast.title')}</h2>
 		<div class="scroller track">
 			{#each cast as person (person.name + person.character)}
 				<figure>

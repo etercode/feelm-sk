@@ -11,6 +11,8 @@
 	import * as api from '$lib/api/client.js';
 	import { itemPath } from '$lib/data/items.js';
 	import { lineOf, types } from '$lib/data/types.js';
+	import { t } from '$lib/i18n/index.svelte.js';
+	import { counted } from '$lib/util/format.js';
 
 	let { open = false, onclose } = $props();
 
@@ -84,7 +86,7 @@
 				suggestion = null;
 				people = [];
 				total = 0;
-				error = 'Search failed. Is the API up?';
+				error = t('search.failed');
 				console.warn('search failed', e);
 			} finally {
 				if (id === requestId) loading = false;
@@ -127,7 +129,7 @@
 			if (event.target === event.currentTarget) onclose?.();
 		}}
 	>
-		<div class="panel card" role="dialog" aria-modal="true" aria-label="Search the catalog" tabindex="-1">
+		<div class="panel card" role="dialog" aria-modal="true" aria-label={t('search.dialogLabel')} tabindex="-1">
 			<form onsubmit={submit}>
 				<Icon name="search" size={20} />
 				<input
@@ -135,7 +137,7 @@
 					bind:value={query}
 					class="input"
 					type="search"
-					placeholder="Films, series, games, books…"
+					placeholder={t('search.quickPlaceholder')}
 					autocomplete="off"
 				/>
 				<button type="button" class="btn btn-ghost btn-sm" onclick={() => onclose?.()}>Esc</button>
@@ -143,19 +145,19 @@
 
 			{#if query.trim().length >= 2}
 				{#if loading && !results.length && !suggestion}
-					<p class="hint">Searching…</p>
+					<p class="hint">{t('search.searching')}</p>
 				{:else if error}
 					<p class="hint error">{error}</p>
 				{:else}
 					{#if suggestion}
 						<button type="button" class="suggest" onclick={useSuggestion}>
-							Did you mean <strong>{suggestion.term}</strong>?
-							<span class="faint">{suggestion.total} results</span>
+							{t('search.didYouMean')} <strong>{suggestion.term}</strong>?
+							<span class="faint">{counted('count.result', suggestion.total)}</span>
 						</button>
 					{/if}
 					{#if people.length}
 						<div class="people">
-							<span class="eyebrow">People</span>
+							<span class="eyebrow">{t('common.people')}</span>
 							{#each people as person (person.slug)}
 								<a
 									class="chip"
@@ -187,9 +189,9 @@
 							</li>
 						{:else}
 							<li class="empty">
-								Nothing matches “{query}”.
+								{t('search.nothingMatches', { query })}
 								{#if !suggestion}
-									<span class="faint"> Try another spelling.</span>
+									<span class="faint"> {t('search.trySpelling')}</span>
 								{/if}
 							</li>
 						{/each}
@@ -197,8 +199,8 @@
 				{/if}
 			{:else}
 				<p class="hint">
-					Try a title, a person, a genre — or
-					<a href="/search" onclick={() => onclose?.()}>browse with filters</a>.
+					{t('search.hint')}
+					<a href="/search" onclick={() => onclose?.()}>{t('search.hintLink')}</a>.
 				</p>
 			{/if}
 
@@ -208,7 +210,7 @@
 					href="/search?q={encodeURIComponent(query.trim())}"
 					onclick={() => onclose?.()}
 				>
-					See all {total.toLocaleString()}{exactTotal ? '' : '+'} results
+					{t('search.seeAllResults', { total, more: exactTotal ? '' : '+' })}
 					<Icon name="right" size={14} />
 				</a>
 			{/if}

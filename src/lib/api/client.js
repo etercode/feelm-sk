@@ -182,6 +182,20 @@ export function updateProfile(data) {
 	return request('/api/me', { method: 'PATCH', body: JSON.stringify(data) }, true);
 }
 
+/**
+ * Language and timezone, on their own endpoint.
+ *
+ * Separate from updateProfile because a language change should not have to
+ * re-post a display name, a tagline and a bio it never touched — and because
+ * the API requires a name on that shape, which the language dropdown has no
+ * business supplying.
+ *
+ * @param {{ locale: string, timezone: string }} data
+ */
+export function updatePreferences(data) {
+	return request('/api/me/preferences', { method: 'PATCH', body: JSON.stringify(data) }, true);
+}
+
 /** @param {{ currentPassword: string, newPassword: string }} data */
 export function changePassword(data) {
 	return request('/api/me/password', { method: 'POST', body: JSON.stringify(data) }, true);

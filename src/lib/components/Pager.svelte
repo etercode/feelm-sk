@@ -16,6 +16,8 @@
 -->
 <script>
 	import Icon from '$lib/components/Icon.svelte';
+	import { t } from '$lib/i18n/index.svelte.js';
+	import { number } from '$lib/util/format.js';
 
 	let {
 		page = 1,
@@ -27,7 +29,7 @@
 		busy = false,
 		/** How many numbers to show either side of the current one. */
 		siblings = 1,
-		label = 'Pagination'
+		label = null
 	} = $props();
 
 	/** Once there are more pages than this, offer the jump box. */
@@ -91,14 +93,14 @@
 </script>
 
 {#if known ? total > 1 : current > 1 || hasMore}
-	<nav class="pager" aria-label={label}>
+	<nav class="pager" aria-label={label ?? t('pager.label')}>
 		<div class="steps">
 			<button
 				type="button"
 				class="btn btn-sm edge"
 				disabled={busy || current <= 1}
-				title="First page"
-				aria-label="First page"
+				title={t('pager.first')}
+				aria-label={t('pager.first')}
 				onclick={() => onpage(1)}
 			>
 				<Icon name="left" size={13} /><Icon name="left" size={13} />
@@ -110,7 +112,7 @@
 				disabled={busy || current <= 1}
 				onclick={() => onpage(current - 1)}
 			>
-				<Icon name="left" size={14} /><span class="word">Previous</span>
+				<Icon name="left" size={14} /><span class="word">{t('common.previous')}</span>
 			</button>
 
 			<ol class="numbers">
@@ -123,10 +125,10 @@
 								class:on={slot === current}
 								disabled={busy}
 								aria-current={slot === current ? 'page' : undefined}
-								aria-label="Page {slot.toLocaleString()}"
+								aria-label={t('pager.page', { n: slot })}
 								onclick={() => onpage(slot)}
 							>
-								{slot.toLocaleString()}
+								{number(slot)}
 							</button>
 						{:else}
 							<span class="gap" aria-hidden="true">…</span>
@@ -141,7 +143,7 @@
 				disabled={busy || (known ? current >= total : !hasMore)}
 				onclick={() => onpage(current + 1)}
 			>
-				<span class="word">Next</span><Icon name="right" size={14} />
+				<span class="word">{t('common.next')}</span><Icon name="right" size={14} />
 			</button>
 
 			{#if known}
@@ -149,8 +151,8 @@
 					type="button"
 					class="btn btn-sm edge"
 					disabled={busy || current >= total}
-					title="Last page"
-					aria-label="Last page"
+					title={t('pager.last')}
+					aria-label={t('pager.last')}
 					onclick={() => onpage(total)}
 				>
 					<Icon name="right" size={13} /><Icon name="right" size={13} />
@@ -161,19 +163,19 @@
 		{#if !known || total > JUMP_ABOVE}
 			<form class="jump" onsubmit={go}>
 				<label>
-					<span class="sr-only">Go to page</span>
+					<span class="sr-only">{t('pager.goTo')}</span>
 					<input
 						type="number"
 						min="1"
 						max={known ? total : undefined}
 						bind:value={jump}
-						placeholder="Page…"
+						placeholder={t('pager.jumpPlaceholder')}
 						disabled={busy}
 						inputmode="numeric"
 					/>
 				</label>
-				<button type="submit" class="btn btn-sm" disabled={busy || jump.trim() === ''}>Go</button>
-				{#if known}<span class="of faint">of {total.toLocaleString()}</span>{/if}
+				<button type="submit" class="btn btn-sm" disabled={busy || jump.trim() === ''}>{t('common.go')}</button>
+				{#if known}<span class="of faint">{t('pager.of', { total })}</span>{/if}
 			</form>
 		{/if}
 	</nav>

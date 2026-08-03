@@ -7,17 +7,21 @@
 	import Icon from '$lib/components/Icon.svelte';
 	import Stars from '$lib/components/Stars.svelte';
 	import { itemPath } from '$lib/data/items.js';
-	import { progressLabel, statusLabel, verbFor } from '$lib/data/types.js';
+	import { activitySentence, progressLabel, statusLabel } from '$lib/data/types.js';
+	import { segments } from '$lib/i18n/index.svelte.js';
 	import { timeAgo } from '$lib/util/format.js';
 
 	let { event, compact = false } = $props();
 
 	let { user, item, entry, review } = $derived(event);
-	let action = $derived(
-		entry.status === 'dropped'
-			? `gave up on`
-			: verbFor(item.type, entry.status)
-	);
+
+	/*
+	 * The whole line is one translated sentence, taken apart into the words
+	 * around its two names and the names themselves. It used to be a verb
+	 * dropped between two links, which fixes the English order — "Kaan watched
+	 * Dune" — onto every language, and Turkish puts the verb last.
+	 */
+	let line = $derived(segments(activitySentence(item.type, entry.status)));
 </script>
 
 <article class="activity" class:compact data-type={item.type}>
@@ -27,12 +31,23 @@
 
 	<div class="body">
 		<div class="who">
-			<a href="/u/{user.username}" class="person">
-				<Avatar {user} size={compact ? 22 : 26} />
-				<strong>{user.name}</strong>
-			</a>
-			<span class="muted">{action}</span>
-			<a href={itemPath(item)} class="what">{item.title}</a>
+			<!--
+				One inline run rather than a row of flex items: the spacing and the
+				punctuation between the words belong to the sentence the
+				translator wrote, and a flex `gap` would override both — Turkish
+				joins with a comma and no space before it.
+			-->
+			<span class="sentence"
+				>{#each line as part, position (position)}{#if part.slot === 'person'}<a
+							href="/u/{user.username}"
+							class="person"
+						>
+							<Avatar {user} size={compact ? 22 : 26} />
+							<strong>{user.name}</strong>
+						</a>{:else if part.slot === 'title'}<a href={itemPath(item)} class="what"
+							>{item.title}</a
+						>{:else}<span class="muted">{part.text}</span>{/if}{/each}</span
+			>
 			<span class="faint when">{timeAgo(entry.at)}</span>
 		</div>
 
@@ -108,10 +123,16 @@
 		line-height: 1.4;
 	}
 
+	/* Inline flow, so the translated sentence keeps its own spacing. */
+	.sentence {
+		display: inline;
+	}
+
 	.person {
 		display: inline-flex;
 		align-items: center;
 		gap: 0.4rem;
+		vertical-align: middle;
 	}
 
 	.person:hover strong {

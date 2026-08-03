@@ -11,6 +11,7 @@
 	import Stars from '$lib/components/Stars.svelte';
 	import { itemPath } from '$lib/data/items.js';
 	import { lineOf, statusLabel, statusOrder } from '$lib/data/types.js';
+	import { t } from '$lib/i18n/index.svelte.js';
 	import { library } from '$lib/state/library.svelte.js';
 
 	/**
@@ -55,22 +56,22 @@
 			{#if owner}
 				{#if confirming === row.entry.id}
 					<div class="controls confirm">
-						<span class="faint">Remove it?</span>
+						<span class="faint">{t('shelf.removeIt')}</span>
 						<button type="button" class="btn btn-sm danger" onclick={() => remove(row.item)}>
-							Remove
+							{t('common.remove')}
 						</button>
 						<button
 							type="button"
 							class="btn btn-sm btn-ghost"
 							onclick={() => (confirming = null)}
 						>
-							Keep
+							{t('common.keep')}
 						</button>
 					</div>
 				{:else}
 					<div class="controls">
 						<label>
-							<span class="sr-only">Shelf for {row.item.title}</span>
+							<span class="sr-only">{t('shelf.shelfFor', { title: row.item.title })}</span>
 							<select
 								class="field shelf"
 								value={row.entry.status}
@@ -85,7 +86,7 @@
 						<button
 							type="button"
 							class="icon"
-							aria-label="Remove {row.item.title} from the shelf"
+							aria-label={t('shelf.removeFrom', { title: row.item.title })}
 							onclick={() => (confirming = row.entry.id)}
 						>
 							<Icon name="close" size={15} />
@@ -97,7 +98,7 @@
 			{/if}
 		</li>
 	{:else}
-		<li class="muted empty">Nothing matches.</li>
+		<li class="muted empty">{t('shelf.nothingMatches')}</li>
 	{/each}
 </ul>
 

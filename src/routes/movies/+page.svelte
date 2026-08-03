@@ -1,14 +1,10 @@
 <script>
 	import Browse from '$lib/components/Browse.svelte';
+	import { t } from '$lib/i18n/index.svelte.js';
 
 	let { data } = $props();
 </script>
 
-<svelte:head><title>Movies — Feelm</title></svelte:head>
+<svelte:head><title>{t('browse.movies.title')} — Feelm</title></svelte:head>
 
-<Browse
-	{data}
-	type="movie"
-	title="Films"
-	intro="Everything with a running time and an ending. Trilogies stay together — a part knows which part it is."
-/>
+<Browse {data} type="movie" />

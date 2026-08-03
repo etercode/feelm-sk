@@ -4,11 +4,29 @@
 	import Footer from '$lib/components/Footer.svelte';
 	import Header from '$lib/components/Header.svelte';
 	import NavProgress from '$lib/components/NavProgress.svelte';
+	import { i18n } from '$lib/i18n/index.svelte.js';
 	import { library } from '$lib/state/library.svelte.js';
 	import { session } from '$lib/state/session.svelte.js';
 	import { theme } from '$lib/state/theme.svelte.js';
 
-	let { children } = $props();
+	let { children, data } = $props();
+
+	/*
+	 * Before anything renders, on the server and on the client alike.
+	 *
+	 * Not in an effect: effects run after the first paint, which would mean the
+	 * server rendered English and the browser corrected it — the flash the
+	 * cookie exists to prevent. This is a plain synchronous call in the script
+	 * body, which is also what makes the module-level singleton safe under SSR;
+	 * see the note at the top of $lib/i18n/index.svelte.js.
+	 */
+	// svelte-ignore state_referenced_locally
+	i18n.use(data.locale, data.timezone);
+
+	// And again on navigation, in case a language change arrived with new data.
+	$effect(() => {
+		i18n.use(data.locale, data.timezone);
+	});
 
 	/*
 	 * Sign in and sign up are sized to exactly one screen. A footer under them
@@ -35,8 +53,19 @@
 	 */
 	$effect(() => {
 		void library.hydrate();
-		void session.hydrate();
 		theme.hydrate();
+
+		/*
+		 * The account's language wins over the cookie once it is known — the
+		 * point of storing it on the account is that it follows you to a
+		 * borrowed laptop. Applying it through `choose` also rewrites the
+		 * cookie, so the next request server-renders in the right language
+		 * instead of correcting itself again.
+		 */
+		i18n.seedTimezone();
+		void session.hydrate().then(() => {
+			if (session.user?.locale) i18n.choose(session.user.locale, session.user.timezone);
+		});
 	});
 </script>
 

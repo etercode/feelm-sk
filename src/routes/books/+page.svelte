@@ -1,14 +1,10 @@
 <script>
 	import Browse from '$lib/components/Browse.svelte';
+	import { t } from '$lib/i18n/index.svelte.js';
 
 	let { data } = $props();
 </script>
 
-<svelte:head><title>Books — Feelm</title></svelte:head>
+<svelte:head><title>{t('browse.books.title')} — Feelm</title></svelte:head>
 
-<Browse
-	{data}
-	type="book"
-	title="Books"
-	intro="Pages, publishers and the cycle a volume belongs to. Progress is a page number, because that is how reading works."
-/>
+<Browse {data} type="book" />

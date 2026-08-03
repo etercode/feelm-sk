@@ -9,6 +9,8 @@
 	The server redraws whatever arrives anyway — this is framing, not security.
 -->
 <script>
+	import { t } from '$lib/i18n/index.svelte.js';
+
 	/**
 	 * @type {{
 	 *   file: File,
@@ -146,7 +148,7 @@
 		class="window"
 		class:dragging
 		role="group"
-		aria-label="Drag to reposition"
+		aria-label={t('cropper.drag')}
 		style="--view: {VIEW}px"
 		onpointerdown={down}
 		onpointermove={move}
@@ -168,7 +170,7 @@
 	</div>
 
 	<label class="zoom">
-		<span class="sr-only">Zoom</span>
+		<span class="sr-only">{t('cropper.zoom')}</span>
 		<input
 			type="range"
 			min="1"
@@ -179,12 +181,12 @@
 		/>
 	</label>
 
-	<p class="hint faint">Drag to reposition, slide to zoom.</p>
+	<p class="hint faint">{t('cropper.hint')}</p>
 
 	<div class="actions">
-		<button type="button" class="btn" onclick={oncancel} disabled={busy}>Cancel</button>
+		<button type="button" class="btn" onclick={oncancel} disabled={busy}>{t('common.cancel')}</button>
 		<button type="button" class="btn btn-primary" onclick={save} disabled={busy || !natural.width}>
-			{busy ? 'Uploading…' : 'Use this picture'}
+			{busy ? t('cropper.uploading') : t('cropper.use')}
 		</button>
 	</div>
 </div>

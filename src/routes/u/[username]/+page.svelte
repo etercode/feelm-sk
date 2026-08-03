@@ -26,7 +26,8 @@
 	import { catalog } from '$lib/state/catalog.svelte.js';
 	import { library } from '$lib/state/library.svelte.js';
 	import { session } from '$lib/state/session.svelte.js';
-	import { longDate, plural } from '$lib/util/format.js';
+	import { i18n, t } from '$lib/i18n/index.svelte.js';
+	import { counted, longDate, number } from '$lib/util/format.js';
 
 	let username = $derived(page.params.username);
 	let user = $derived(library.userByUsername(username));
@@ -67,7 +68,7 @@
 				}
 			})
 			.catch(() => {
-				loadError = 'Could not load this profile.';
+				loadError = t('profile.loadFailed');
 			})
 			.finally(() => {
 				loading = false;
@@ -140,7 +141,7 @@
 				shelf = { items: data.items, total: data.total, pages: data.pages };
 			})
 			.catch(() => {
-				if (live) shelfError = 'Could not load this shelf.';
+				if (live) shelfError = t('profile.shelfFailed');
 			})
 			.finally(() => {
 				if (live) shelfLoading = false;
@@ -179,18 +180,18 @@
 </script>
 
 <svelte:head>
-	<title>{user ? `${user.name} (@${user.username})` : 'Profile'} — Feelm</title>
+	<title>{user ? `${user.name} (@${user.username})` : t('profile.title')} — Feelm</title>
 </svelte:head>
 
 {#if loading}
 	<div class="frame missing">
-		<p class="muted">Loading…</p>
+		<p class="muted">{t('common.loading')}</p>
 	</div>
 {:else if !user}
 	<div class="frame missing">
-		<h1 class="display">No one goes by @{username}</h1>
-		<p class="muted">{loadError ?? 'Check the spelling and try again.'}</p>
-		<a class="btn" href="/">Back home</a>
+		<h1 class="display">{t('profile.unknown', { username })}</h1>
+		<p class="muted">{loadError ?? t('profile.checkSpelling')}</p>
+		<a class="btn" href="/">{t('common.backHome')}</a>
 	</div>
 {:else}
 	<div class="frame">
@@ -209,21 +210,23 @@
 					{#if user.tagline}<p class="tagline">{user.tagline}</p>{/if}
 					<p class="dot-list small">
 						{#if user.location}<span><Icon name="user" size={12} />{user.location}</span>{/if}
-						<span>Joined {longDate(user.joinedAt)}</span>
-						<span>{plural(followers.length, 'follower')}</span>
-						<span>{following.length} following</span>
+						<span>{t('profile.joined', { date: longDate(user.joinedAt) })}</span>
+						<span>{counted('count.follower', followers.length)}</span>
+						<span>{t('count.following', { count: following.length })}</span>
 					</p>
 				</div>
 
 				<div class="cta">
 					{#if isMe}
 						<a class="btn btn-sm" href="/settings">
-							<Icon name="edit" size={14} />Edit profile
+							<Icon name="edit" size={14} />{t('profile.editProfile')}
 						</a>
 					{:else}
 						<FollowButton {user} />
 						{#if sharedCount}
-							<span class="small in-common">{plural(sharedCount, 'title')} in common</span>
+							<span class="small in-common">
+								{t('profile.inCommon', { titles: counted('count.title', sharedCount) })}
+							</span>
 						{/if}
 					{/if}
 				</div>
@@ -238,7 +241,7 @@
 	{#if current.length}
 		<div class="frame">
 			<section class="current">
-				<h2 class="eyebrow">{isMe ? 'You are in the middle of' : 'In the middle of'}</h2>
+				<h2 class="eyebrow">{isMe ? t('profile.middleOfMine') : t('profile.middleOf')}</h2>
 				<div class="current-rail scroller">
 					{#each current as row (row.entry.id)}
 						{@const item = catalog.itemById(row.entry.itemId) ?? row.item}
@@ -254,22 +257,24 @@
 
 	<div class="frame">
 		<section class="stats">
-			<div><span class="figure display">{stats.logged}</span><span class="faint">logged</span></div>
 			<div>
-				<span class="figure display">{stats.finished}</span><span class="faint">finished</span>
+				<span class="figure display">{stats.logged}</span><span class="faint">{t('profile.logged')}</span>
 			</div>
 			<div>
-				<span class="figure display">{stats.reviews}</span><span class="faint">reviews</span>
+				<span class="figure display">{stats.finished}</span><span class="faint">{t('profile.finished')}</span>
+			</div>
+			<div>
+				<span class="figure display">{stats.reviews}</span><span class="faint">{t('profile.reviews')}</span>
 			</div>
 			<div>
 				<span class="figure display">{stats.averageRating ?? '—'}</span>
-				<span class="faint">average score</span>
+				<span class="faint">{t('profile.averageScore')}</span>
 			</div>
 			{#each typeKeys as key (key)}
 				{#if stats.byType[key]}
 					<div data-type={key} class="type-stat">
 						<span class="figure display">{stats.byType[key]}</span>
-						<span class="faint">{types[key].statuses.done.toLowerCase()}</span>
+						<span class="faint">{types[key].statuses.done.toLocaleLowerCase(i18n.tag)}</span>
 					</div>
 				{/if}
 			{/each}
@@ -277,13 +282,13 @@
 
 		<nav class="tabs">
 			<button type="button" class:on={tab === 'shelf'} onclick={() => (tab = 'shelf')}>
-				Shelf <span class="faint">{loggedTotal.toLocaleString()}</span>
+				{t('profile.tabShelf')} <span class="faint">{number(loggedTotal)}</span>
 			</button>
 			<button type="button" class:on={tab === 'reviews'} onclick={() => (tab = 'reviews')}>
-				Reviews <span class="faint">{reviews.length}</span>
+				{t('profile.tabReviews')} <span class="faint">{reviews.length}</span>
 			</button>
 			<button type="button" class:on={tab === 'people'} onclick={() => (tab = 'people')}>
-				People <span class="faint">{followers.length + following.length}</span>
+				{t('profile.tabPeople')} <span class="faint">{followers.length + following.length}</span>
 			</button>
 		</nav>
 
@@ -291,33 +296,33 @@
 			<div class="toolbar">
 				<label class="search">
 					<Icon name="search" size={15} />
-					<span class="sr-only">Search this shelf</span>
+					<span class="sr-only">{t('profile.searchTheirs')}</span>
 					<input
 						type="search"
 						bind:value={search}
-						placeholder={isMe ? 'Search your shelf' : 'Search this shelf'}
+						placeholder={isMe ? t('profile.searchMine') : t('profile.searchTheirs')}
 					/>
 				</label>
 
 				<div class="tools">
 					<label class="sort">
-						<span class="sr-only">Sort by</span>
+						<span class="sr-only">{t('browse.sortBy')}</span>
 						<select class="field" bind:value={sort} onchange={() => (pageNumber = 1)}>
-							<option value="recent">Recently updated</option>
-							<option value="rating">Highest scored</option>
-							<option value="title">Title A–Z</option>
-							<option value="year">Newest first</option>
+							<option value="recent">{t('profile.sortRecent')}</option>
+							<option value="rating">{t('profile.sortRating')}</option>
+							<option value="title">{t('profile.sortTitle')}</option>
+							<option value="year">{t('profile.sortYear')}</option>
 						</select>
 					</label>
 
-					<div class="views" role="group" aria-label="Layout">
+					<div class="views" role="group" aria-label={t('profile.layout')}>
 						<button
 							type="button"
 							class:on={view === 'grid'}
 							aria-pressed={view === 'grid'}
 							onclick={() => (view = 'grid')}
 						>
-							<Icon name="flex" size={14} />Posters
+							<Icon name="flex" size={14} />{t('profile.posters')}
 						</button>
 						<button
 							type="button"
@@ -325,7 +330,7 @@
 							aria-pressed={view === 'list'}
 							onclick={() => (view = 'list')}
 						>
-							<Icon name="menu" size={14} />{isMe ? 'Manage' : 'List'}
+							<Icon name="menu" size={14} />{isMe ? t('profile.manage') : t('profile.list')}
 						</button>
 					</div>
 				</div>
@@ -338,7 +343,7 @@
 					class:on={!typeFilter}
 					onclick={() => refilter(() => (typeFilter = null))}
 				>
-					Everything
+					{t('profile.everything')}
 				</button>
 				{#each typeKeys as key (key)}
 					<button
@@ -367,14 +372,14 @@
 
 				{#if filtered}
 					<button type="button" class="chip clear" onclick={clearFilters}>
-						<Icon name="close" size={12} />Clear
+						<Icon name="close" size={12} />{t('common.clear')}
 					</button>
 				{/if}
 			</div>
 
 			<p class="count faint" aria-live="polite">
-				{plural(shelf.total, 'title')}{filtered ? ' match' : ''}
-				{#if shelf.pages > 1}· page {pageNumber} of {shelf.pages.toLocaleString()}{/if}
+				{counted('count.title', shelf.total)}{filtered ? t('profile.matchSuffix') : ''}
+				{#if shelf.pages > 1}{t('profile.pageOf', { page: pageNumber, pages: shelf.pages })}{/if}
 				{#if shelfLoading}<Spinner size={12} />{/if}
 			</p>
 
@@ -392,7 +397,7 @@
 						{:else}
 							{#if !shelfLoading}
 								<p class="muted">
-									{filtered ? 'Nothing matches those filters.' : 'Nothing on this shelf yet.'}
+									{filtered ? t('profile.emptyFiltered') : t('profile.emptyShelf')}
 								</p>
 							{/if}
 						{/each}
@@ -422,13 +427,13 @@
 						</article>
 					{/if}
 				{:else}
-					<p class="muted">No reviews written yet.</p>
+					<p class="muted">{t('profile.noReviews')}</p>
 				{/each}
 			</div>
 		{:else}
 			<div class="people">
 				<section>
-					<h2 class="display">Following</h2>
+					<h2 class="display">{t('profile.following')}</h2>
 					<ul>
 						{#each following as person (person.id)}
 							<li>
@@ -442,13 +447,13 @@
 								<FollowButton user={person} size="btn-sm" />
 							</li>
 						{:else}
-							<li class="muted">Following nobody yet.</li>
+							<li class="muted">{t('profile.followingNobody')}</li>
 						{/each}
 					</ul>
 				</section>
 
 				<section>
-					<h2 class="display">Followers</h2>
+					<h2 class="display">{t('profile.followers')}</h2>
 					<ul>
 						{#each followers as person (person.id)}
 							<li>
@@ -462,7 +467,7 @@
 								<FollowButton user={person} size="btn-sm" />
 							</li>
 						{:else}
-							<li class="muted">No followers yet.</li>
+							<li class="muted">{t('profile.noFollowers')}</li>
 						{/each}
 					</ul>
 				</section>

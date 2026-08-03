@@ -8,6 +8,7 @@
 	import Stars from '$lib/components/Stars.svelte';
 	import { externalRatings, isUpcoming, itemPath } from '$lib/data/items.js';
 	import { lineOf, progressRatio, statusLabel } from '$lib/data/types.js';
+	import { t } from '$lib/i18n/index.svelte.js';
 	import { library } from '$lib/state/library.svelte.js';
 	import { session } from '$lib/state/session.svelte.js';
 	import { untilRelease } from '$lib/util/format.js';
@@ -45,7 +46,7 @@
 		<div class="veil"></div>
 
 		{#if fresh}
-			<span class="badge new">New</span>
+			<span class="badge new">{t('common.new')}</span>
 		{:else if showType}
 			<span class="type" title={item.type}><Icon name={item.type} size={13} /></span>
 		{/if}
@@ -70,7 +71,7 @@
 		<span class="title">{item.title}</span>
 		<span class="meta">{meta}</span>
 		{#if unreleased}
-			<span class="score faint">Not out yet</span>
+			<span class="score faint">{t('work.notOutYet')}</span>
 		{:else if community.count}
 			<span class="score">
 				<Stars value={community.average} size={12} />

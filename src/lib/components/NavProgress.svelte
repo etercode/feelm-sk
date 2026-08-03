@@ -11,6 +11,7 @@
 <script>
 	import { navigating } from '$app/state';
 	import Spinner from '$lib/components/Spinner.svelte';
+	import { t } from '$lib/i18n/index.svelte.js';
 
 	/** Milliseconds a navigation must exceed before the page is covered. */
 	const DELAY = 100;
@@ -38,7 +39,7 @@
 	<div class="scrim">
 		<div class="badge">
 			<Spinner size={24} />
-			<span>Loading…</span>
+			<span>{t('common.loading')}</span>
 		</div>
 	</div>
 	<div class="bar"></div>
@@ -49,7 +50,7 @@
 	for a gap rather than cutting in.
 -->
 <div class="sr-only" role="status" aria-live="polite">
-	{navigating.to ? 'Loading page' : ''}
+	{navigating.to ? t('common.loadingPage') : ''}
 </div>
 
 <style>

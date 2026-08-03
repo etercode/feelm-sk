@@ -7,7 +7,8 @@
 	import Icon from '$lib/components/Icon.svelte';
 	import { library } from '$lib/state/library.svelte.js';
 	import { session } from '$lib/state/session.svelte.js';
-	import { duration, longDate, plural } from '$lib/util/format.js';
+	import { t } from '$lib/i18n/index.svelte.js';
+	import { counted, duration, longDate } from '$lib/util/format.js';
 
 	let { item } = $props();
 
@@ -39,9 +40,12 @@
 {#if seasons.length}
 	<section class="seasons">
 		<header>
-			<h2 class="display">Seasons</h2>
+			<h2 class="display">{t('seasons.title')}</h2>
 			<span class="faint">
-				{plural(item.details.seasonCount, 'season')} · {plural(item.details.episodeCount, 'episode')}
+				{counted('count.season', item.details.seasonCount)} · {counted(
+					'count.episode',
+					item.details.episodeCount
+				)}
 			</span>
 		</header>
 
@@ -58,7 +62,9 @@
 					{/if}
 					<span>
 						<strong>{candidate.name}</strong>
-						<span class="faint">{candidate.year} · {candidate.episodes.length} ep</span>
+						<span class="faint">
+							{candidate.year} · {t('count.episodesShort', { count: candidate.episodes.length })}
+						</span>
 					</span>
 				</button>
 			{/each}
@@ -92,7 +98,7 @@
 							<button
 								type="button"
 								class="tick"
-								aria-label="Mark watched up to episode {episode.number}"
+								aria-label={t('seasons.markWatched', { n: episode.number })}
 								onclick={() => markWatched(episode)}
 							>
 								<Icon name="check" size={14} stroke={2.6} />

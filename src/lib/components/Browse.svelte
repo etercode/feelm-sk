@@ -19,8 +19,18 @@
 	import PosterCard from '$lib/components/PosterCard.svelte';
 	import Spinner from '$lib/components/Spinner.svelte';
 	import { types } from '$lib/data/types.js';
+	import { t } from '$lib/i18n/index.svelte.js';
 
-	let { type, title, intro, data } = $props();
+	/** The dictionary section per type — 'movie' is filed under 'movies'. */
+	const BROWSE_KEY = { movie: 'movies', series: 'series', game: 'games', book: 'books' };
+
+	let { type, data } = $props();
+
+	// The heading and the standfirst are the type's, so this component picks
+	// them up from the dictionary rather than having them handed down as props
+	// that would arrive in whatever language the route file was written in.
+	let heading = $derived(t(`browse.${BROWSE_KEY[type]}.title`));
+	let intro = $derived(t(`browse.${BROWSE_KEY[type]}.intro`));
 
 	let spec = $derived(types[type]);
 	/*
@@ -35,22 +45,18 @@
 	let params = $derived(page.url.searchParams);
 	let pageNumber = $derived(Number(params.get('page') ?? 1));
 
-	const sortLabels = {
-		popularity: 'Most popular',
-		score: 'Highest rated',
-		newest: 'Newest first',
-		oldest: 'Oldest first',
-		title: 'A–Z',
-		added: 'Recently crawled'
-	};
+	/*
+	 * Rebuilt whenever the language changes — a $derived rather than a const,
+	 * because a const would be filled in once at module load and then keep
+	 * saying "Most popular" in a Turkish page.
+	 */
+	const SORTS = ['popularity', 'score', 'newest', 'oldest', 'title', 'added'];
+	let sortLabels = $derived(Object.fromEntries(SORTS.map((key) => [key, t(`sort.${key}`)])));
 
-	const scoreSteps = [
-		{ value: '', label: 'Any score' },
-		{ value: '60', label: '60 and up' },
-		{ value: '70', label: '70 and up' },
-		{ value: '80', label: '80 and up' },
-		{ value: '90', label: '90 and up' }
-	];
+	let scoreSteps = $derived([
+		{ value: '', label: t('score.any') },
+		...[60, 70, 80, 90].map((n) => ({ value: String(n), label: t('score.min', { n }) }))
+	]);
 
 	/*
 	 * The decades the API says hold something, newest first. Derived from the
@@ -91,24 +97,24 @@
 	<header class="masthead">
 		<div>
 			<span class="eyebrow"><Icon name={type} size={14} />{spec.plural}</span>
-			<h1 class="display">{title}</h1>
+			<h1 class="display">{heading}</h1>
 			<p class="muted">{intro}</p>
 		</div>
 	</header>
 
 	{#if data.unreachable}
-		<p class="notice">The catalog API is unreachable.</p>
+		<p class="notice">{t('common.apiUnreachable')}</p>
 	{:else}
 		<div class="filters">
 			<div class="picks">
 				<label>
-					<span class="sr-only">Genre</span>
+					<span class="sr-only">{t('browse.genre')}</span>
 					<select
 						class="field"
 						value={genre}
 						onchange={(event) => apply({ genre: event.currentTarget.value || null })}
 					>
-						<option value="">Any genre</option>
+						<option value="">{t('browse.anyGenre')}</option>
 						{#each options?.genres ?? [] as g (g.slug)}
 							<option value={g.slug}>{g.name}</option>
 						{/each}
@@ -117,24 +123,24 @@
 
 				{#if decades.length}
 					<label>
-						<span class="sr-only">Decade</span>
+						<span class="sr-only">{t('browse.decade')}</span>
 						<select
 							class="field"
 							value={decade}
 							onchange={(event) => setDecade(event.currentTarget.value)}
 						>
-							<option value="">Any decade</option>
+							<option value="">{t('browse.anyDecade')}</option>
 							{#each decades as d (d)}
 								<!-- A string, because the value it is compared against came
 								     from the query string and 1990 is not '1990'. -->
-								<option value={String(d)}>{d}s</option>
+								<option value={String(d)}>{t('browse.decadeLabel', { decade: d })}</option>
 							{/each}
 						</select>
 					</label>
 				{/if}
 
 				<label>
-					<span class="sr-only">Minimum score</span>
+					<span class="sr-only">{t('browse.minScore')}</span>
 					<select
 						class="field"
 						value={scoreMin}
@@ -152,17 +158,17 @@
 						class="btn btn-sm btn-ghost"
 						onclick={() => apply({ genre: null, yearFrom: null, yearTo: null, scoreMin: null })}
 					>
-						<Icon name="close" size={12} />Clear
+						<Icon name="close" size={12} />{t('common.clear')}
 					</button>
 				{/if}
 			</div>
 
 			<div class="tools">
 				<a class="btn btn-sm" href="/search?type={type}">
-					<Icon name="search" size={13} />More filters
+					<Icon name="search" size={13} />{t('browse.moreFilters')}
 				</a>
 				<label class="sort">
-					<span class="sr-only">Sort by</span>
+					<span class="sr-only">{t('browse.sortBy')}</span>
 					<select
 						class="field"
 						value={params.get('sort') ?? 'popularity'}
@@ -187,14 +193,14 @@
 				{#each results.items as item (item.id)}
 					<PosterCard {item} showType={false} />
 				{:else}
-					<p class="muted">Nothing here with those filters.</p>
+					<p class="muted">{t('browse.empty')}</p>
 				{/each}
 			</div>
 
 			{#if refreshing}
 				<div class="working">
 					<Spinner size={22} />
-					<span class="faint">Loading…</span>
+					<span class="faint">{t('common.loading')}</span>
 				</div>
 			{/if}
 		</div>

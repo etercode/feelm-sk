@@ -10,6 +10,7 @@
 	import { itemPath } from '$lib/data/items.js';
 	import { library } from '$lib/state/library.svelte.js';
 	import { session } from '$lib/state/session.svelte.js';
+	import { t } from '$lib/i18n/index.svelte.js';
 	import { list, longDate, untilRelease } from '$lib/util/format.js';
 
 	let { releases = [] } = $props();
@@ -21,7 +22,7 @@
 </script>
 
 {#if current}
-	<section class="hero frame" aria-label="Coming up">
+	<section class="hero frame" aria-label={t('hero.comingUp')}>
 		<div class="stage" data-type={current.type}>
 			<!-- The still is the poster frame the trailer starts over. -->
 			<img class="plate" src={current.backdrop ?? current.poster} alt="" fetchpriority="high" />
@@ -34,7 +35,7 @@
 						<Icon name="calendar" size={12} />
 						{untilRelease(current.details.releaseDate)}
 					</span>
-					{#if isNew}<span class="tag new">New</span>{/if}
+					{#if isNew}<span class="tag new">{t('common.new')}</span>{/if}
 				</div>
 
 				<h1 class="display">{current.title}</h1>
@@ -46,10 +47,10 @@
 
 				<div class="actions">
 					<a class="btn btn-accent" href={itemPath(current)}>
-						<Icon name="right" size={14} />Details
+						<Icon name="right" size={14} />{t('hero.details')}
 					</a>
 					{#if current.trailer}
-						<span class="muted-note"><Icon name="play" size={12} filled />Trailer, muted</span>
+						<span class="muted-note"><Icon name="play" size={12} filled />{t('hero.mutedTrailer')}</span>
 					{/if}
 				</div>
 			</div>
@@ -64,8 +65,8 @@
 			-->
 			<div class="queue-inner">
 				<header>
-					<span class="eyebrow">Coming up</span>
-					<span class="faint">{releases.length} announced</span>
+					<span class="eyebrow">{t('hero.comingUp')}</span>
+					<span class="faint">{t('count.announced', { count: releases.length })}</span>
 				</header>
 
 				<ul>
@@ -83,7 +84,7 @@
 									<span class="date faint">{longDate(release.details.releaseDate)}</span>
 								</span>
 								{#if library.isNewFor(session.user?.id, release)}
-									<span class="dot" aria-label="New"></span>
+									<span class="dot" aria-label={t('common.new')}></span>
 								{/if}
 							</button>
 						</li>
