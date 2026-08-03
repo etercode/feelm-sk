@@ -41,9 +41,16 @@
 {#if current}
 	<section class="hero frame" aria-label={t('hero.comingUp')}>
 		<div class="stage" data-type={current.type}>
-			<!-- The still is the poster frame the trailer starts over. -->
-			<img class="plate" src={current.backdrop ?? current.poster} alt="" fetchpriority="high" />
-			<Trailer item={current} fit="cover" controls={false} loop autoplay />
+			<!--
+				The still and the trailer share a wrapper so the fade can be
+				applied to both at once — and only to them. Masking the stage
+				itself would take the title and the buttons with it.
+			-->
+			<div class="media">
+				<!-- The still is the poster frame the trailer starts over. -->
+				<img class="plate" src={current.backdrop ?? current.poster} alt="" fetchpriority="high" />
+				<Trailer item={current} fit="cover" controls={false} loop autoplay />
+			</div>
 			<div class="veil"></div>
 
 			<div class="stage-body">
@@ -126,16 +133,41 @@
 		position: relative;
 		aspect-ratio: 16 / 8;
 		/*
+		 * No border, no shadow, no plate colour behind it. On a wide screen the
+		 * hero was a rectangle sitting on the page with four hard edges, which
+		 * reads as a component rather than as the top of the page. The artwork
+		 * now fades out into the background instead — see .media.
+		 */
+		/*
 		 * Grows with the frame, which now follows the screen. At 27rem against
 		 * a 1500px-wide plate the shape was nearly 3.5:1 and a 16:9 trailer
 		 * lost half its height to the crop. The vh term keeps it from taking
 		 * the whole screen on a short laptop display.
 		 */
 		max-height: min(34rem, 58vh);
-		border-radius: var(--radius-lg);
 		overflow: hidden;
-		background: var(--surface-2);
-		box-shadow: var(--shadow-card);
+	}
+
+	/*
+	 * The fade. Two gradients intersected, so all four edges dissolve rather
+	 * than only two — a single linear-gradient mask can fade one axis, and the
+	 * corners are where a hard edge is most obvious.
+	 *
+	 * The stops are asymmetric on purpose: the left is where the title sits and
+	 * has to stay dark and readable, the bottom runs into the page and can go
+	 * further, and the top has the bar above it so it only needs softening.
+	 */
+	.media {
+		position: absolute;
+		inset: 0;
+		-webkit-mask-image:
+			linear-gradient(to right, transparent, #000 14%, #000 88%, transparent),
+			linear-gradient(to bottom, transparent, #000 12%, #000 72%, transparent);
+		mask-image:
+			linear-gradient(to right, transparent, #000 14%, #000 88%, transparent),
+			linear-gradient(to bottom, transparent, #000 12%, #000 72%, transparent);
+		-webkit-mask-composite: source-in;
+		mask-composite: intersect;
 	}
 
 	.plate {
@@ -147,12 +179,19 @@
 		object-position: center 22%;
 	}
 
+	/*
+	 * The darkening under the title. Stops short of the edges now, because a
+	 * veil drawn to the full rectangle would put back the hard edge the mask
+	 * above just removed.
+	 */
 	.veil {
 		position: absolute;
 		inset: 0;
 		background:
 			var(--veil-gradient),
-			linear-gradient(to right, rgb(8 10 15 / 0.75), transparent 65%);
+			linear-gradient(to right, rgb(8 10 15 / 0.8), transparent 60%);
+		-webkit-mask-image: linear-gradient(to right, transparent, #000 10%, #000 90%, transparent);
+		mask-image: linear-gradient(to right, transparent, #000 10%, #000 90%, transparent);
 	}
 
 	.stage-body {

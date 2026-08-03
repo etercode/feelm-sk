@@ -466,9 +466,22 @@ select {
 	gap: 0.75rem;
 }
 
+/*
+ * Posters, sized to the screen rather than to a fixed minimum.
+ *
+ * 9.5rem was chosen when the frame stopped at 84rem. Now that it follows the
+ * display, that minimum just bought more columns of the same small card — a
+ * 1900px screen showed nine 176px posters where it had room for seven at 220,
+ * and artwork is the entire point of the page.
+ *
+ * clamp rather than a plain minimum because the two ends want opposite things:
+ * a phone needs the card small enough for two per row, a desktop wants it as
+ * large as the row allows. The vw term does that and the bounds stop it at
+ * either extreme.
+ */
 .grid-posters {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+	grid-template-columns: repeat(auto-fill, minmax(clamp(8.5rem, 14vw, 12.5rem), 1fr));
 	gap: clamp(0.85rem, 2vw, 1.5rem);
 }
 
