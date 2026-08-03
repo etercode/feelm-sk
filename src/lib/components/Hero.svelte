@@ -160,12 +160,20 @@
 	.media {
 		position: absolute;
 		inset: 0;
+		/*
+		 * A soft edge, not a vignette. The first attempt went opaque only
+		 * between 12% and 72% of the height — four tenths of the plate spent
+		 * fading — and the result read as a letterboxed band floating on the
+		 * page rather than as artwork without a border. These stops leave the
+		 * middle nine tenths untouched and only dissolve the last few percent,
+		 * which is all it takes for the edge to stop being a line.
+		 */
 		-webkit-mask-image:
-			linear-gradient(to right, transparent, #000 14%, #000 88%, transparent),
-			linear-gradient(to bottom, transparent, #000 12%, #000 72%, transparent);
+			linear-gradient(to right, transparent, #000 4%, #000 94%, transparent),
+			linear-gradient(to bottom, transparent, #000 4%, #000 92%, transparent);
 		mask-image:
-			linear-gradient(to right, transparent, #000 14%, #000 88%, transparent),
-			linear-gradient(to bottom, transparent, #000 12%, #000 72%, transparent);
+			linear-gradient(to right, transparent, #000 4%, #000 94%, transparent),
+			linear-gradient(to bottom, transparent, #000 4%, #000 92%, transparent);
 		-webkit-mask-composite: source-in;
 		mask-composite: intersect;
 	}
@@ -190,8 +198,8 @@
 		background:
 			var(--veil-gradient),
 			linear-gradient(to right, rgb(8 10 15 / 0.8), transparent 60%);
-		-webkit-mask-image: linear-gradient(to right, transparent, #000 10%, #000 90%, transparent);
-		mask-image: linear-gradient(to right, transparent, #000 10%, #000 90%, transparent);
+		-webkit-mask-image: linear-gradient(to right, transparent, #000 4%, #000 94%, transparent);
+		mask-image: linear-gradient(to right, transparent, #000 4%, #000 94%, transparent);
 	}
 
 	.stage-body {

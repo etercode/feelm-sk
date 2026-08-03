@@ -90,11 +90,8 @@
 {/if}
 
 <style>
-	.player {
-		background: #000;
-	}
-
 	.inline {
+		background: #000;
 		aspect-ratio: 16 / 9;
 		border-radius: var(--radius-lg);
 		overflow: hidden;
@@ -105,6 +102,12 @@
 	 * object-fit: cover, for an iframe: size the 16:9 frame to whichever axis of
 	 * the plate is short and let the other overhang. Container units measure the
 	 * plate itself, so the crop is right at any plate shape.
+	 */
+	/*
+	 * No background colour, unlike the inline player. The still sits underneath
+	 * this on the home plate, and a black fill would cover it for however long
+	 * YouTube takes to paint the first frame — a black rectangle where the
+	 * artwork was, every time the page opens.
 	 */
 	.cover {
 		position: absolute;
@@ -124,8 +127,19 @@
 		 * than the top keeps them — the same bias the still underneath uses.
 		 */
 		top: 42%;
-		width: max(100cqw, calc(100cqh * 16 / 9));
-		height: max(100cqh, calc(100cqw * 9 / 16));
+		/*
+		 * Covered, then zoomed a further 18%.
+		 *
+		 * A trailer is usually shot wider than the 16:9 frame YouTube plays it
+		 * in — 2.39:1 is the common one — so the player hands us black bars
+		 * baked into the picture, top and bottom. Covering the plate exactly
+		 * keeps them, and on a plate this wide they read as the video being
+		 * letterboxed inside its own box. Overscanning eats them. 18% is short
+		 * of the ~34% that would clear a full cinemascope bar, because a
+		 * trailer that really is 16:9 would lose a third of itself to that.
+		 */
+		width: calc(max(100cqw, calc(100cqh * 16 / 9)) * 1.18);
+		height: calc(max(100cqh, calc(100cqw * 9 / 16)) * 1.18);
 		transform: translate(-50%, -50%);
 		/* The plate is decoration; the queue and the Details link do the work. */
 		pointer-events: none;
