@@ -15,7 +15,24 @@
 
 	let { releases = [] } = $props();
 
+	/*
+	 * Which release the plate opens on. Random rather than the first, so the
+	 * page is not the same page every visit — the queue holds a dozen or more
+	 * announcements and the top one was the only one anybody ever saw.
+	 *
+	 * Seeded in an effect rather than inline because the server and the browser
+	 * would roll different numbers and the hydration would not match. The
+	 * server renders the first, the browser picks one; that is one frame of the
+	 * first release, and it costs nothing.
+	 */
 	let index = $state(0);
+	let picked = false;
+
+	$effect(() => {
+		if (picked || releases.length < 2) return;
+		picked = true;
+		index = Math.floor(Math.random() * releases.length);
+	});
 
 	let current = $derived(releases[index] ?? null);
 	let isNew = $derived(current ? library.isNewFor(session.user?.id, current) : false);
@@ -26,7 +43,7 @@
 		<div class="stage" data-type={current.type}>
 			<!-- The still is the poster frame the trailer starts over. -->
 			<img class="plate" src={current.backdrop ?? current.poster} alt="" fetchpriority="high" />
-			<Trailer item={current} fit="cover" controls={false} loop />
+			<Trailer item={current} fit="cover" controls={false} loop autoplay />
 			<div class="veil"></div>
 
 			<div class="stage-body">
@@ -108,7 +125,13 @@
 	.stage {
 		position: relative;
 		aspect-ratio: 16 / 8;
-		max-height: 27rem;
+		/*
+		 * Grows with the frame, which now follows the screen. At 27rem against
+		 * a 1500px-wide plate the shape was nearly 3.5:1 and a 16:9 trailer
+		 * lost half its height to the crop. The vh term keeps it from taking
+		 * the whole screen on a short laptop display.
+		 */
+		max-height: min(34rem, 58vh);
 		border-radius: var(--radius-lg);
 		overflow: hidden;
 		background: var(--surface-2);
