@@ -51,9 +51,15 @@
 	let remaining = $derived(notable?.remaining ?? 0);
 	let etaHours = $derived(notable?.etaHours ?? null);
 
-	/* Whole-export progress, kept for the line under the bar. */
-	let allCrawled = $derived(status ? Math.max(status.inCatalog ?? 0, status.crawled ?? 0) : 0);
-	let allPercent = $derived(status?.total ? Math.round((allCrawled / status.total) * 10000) / 100 : 0);
+	/*
+	 * Whole-export progress, for the line under the bar. Taken as the API
+	 * reports it: this used to be max(inCatalog, crawled) here because the
+	 * endpoint published the queue's crawled_at column raw, and that reads
+	 * fifteen thousand against a catalog of seven hundred thousand. The
+	 * reconciling now happens server-side, where the two numbers come from.
+	 */
+	let allCrawled = $derived(status?.crawled ?? 0);
+	let allPercent = $derived(status?.percent ?? 0);
 
 	let pageNumber = $derived(Number(page.url.searchParams.get('page') ?? 1));
 	let refreshing = $derived(navigating.to?.route.id === page.route.id);
