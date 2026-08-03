@@ -33,19 +33,27 @@
 	let recent = $derived(data.recent);
 	let filtered = $derived(Object.entries(status?.filtered ?? {}));
 	/*
-	 * Progress is counted from titles actually in the catalog, not from the
-	 * queue's crawled_at column: the crawler only stamps that when a whole run
-	 * finishes, so across a run of three quarters of a million it never moves.
+	 * The headline is the tier the crawl actually works through — titles TMDB
+	 * scores at popularity 1 or better — not every id in the export.
 	 *
-	 * max() of the two so this stays right either way — if the API is later
-	 * changed to stamp the queue as it goes, whichever is further ahead wins.
+	 * Measuring against the export was arithmetically true and practically a
+	 * lie: it read 59% and 28 hours left for a job that was four fifths done
+	 * with four hours to run, because the other 950,000 ids are shorts and
+	 * industrial films the crawl skips on purpose. Against that denominator the
+	 * bar stops climbing around two thirds and stays there, which looks exactly
+	 * like a stall.
+	 *
+	 * The export figure is still shown, underneath, as what it is: how much of
+	 * everything TMDB knows about we happen to hold.
 	 */
-	let crawled = $derived(status ? Math.max(status.inCatalog ?? 0, status.crawled ?? 0) : 0);
-	let percent = $derived(status?.total ? Math.round((crawled / status.total) * 10000) / 100 : 0);
-	let remaining = $derived(status ? Math.max(status.total - crawled, 0) : 0);
-	let etaHours = $derived(
-		status?.perMinute > 0 ? Math.round((remaining / status.perMinute / 60) * 10) / 10 : null
-	);
+	let notable = $derived(status?.notable ?? null);
+	let percent = $derived(notable?.percent ?? 0);
+	let remaining = $derived(notable?.remaining ?? 0);
+	let etaHours = $derived(notable?.etaHours ?? null);
+
+	/* Whole-export progress, kept for the line under the bar. */
+	let allCrawled = $derived(status ? Math.max(status.inCatalog ?? 0, status.crawled ?? 0) : 0);
+	let allPercent = $derived(status?.total ? Math.round((allCrawled / status.total) * 10000) / 100 : 0);
 
 	let pageNumber = $derived(Number(page.url.searchParams.get('page') ?? 1));
 	let refreshing = $derived(navigating.to?.route.id === page.route.id);
@@ -145,7 +153,19 @@
 		</div>
 		<p class="pct">
 			<strong>{percent}%</strong>
-			<span class="faint">{t('crawler.ofTotal', { crawled: number(crawled), total: number(status.total) })}</span>
+			<span class="faint">
+				{t('crawler.ofNotable', {
+					crawled: number(notable?.crawled ?? 0),
+					total: number(notable?.total ?? 0)
+				})}
+			</span>
+		</p>
+		<p class="whole faint">
+			{t('crawler.ofExport', {
+				percent: allPercent,
+				crawled: number(allCrawled),
+				total: number(status.total)
+			})}
 		</p>
 
 		<dl class="stats">
@@ -267,6 +287,12 @@
 		background: var(--accent);
 		border-radius: 999px;
 		transition: width 0.6s ease;
+	}
+
+	/* The export figure: present, but plainly the smaller claim. */
+	.whole {
+		margin: 0.15rem 0 0;
+		font-size: 0.8rem;
 	}
 
 	.pct {
