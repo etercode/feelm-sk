@@ -129,22 +129,20 @@
 
 	/* The plate ---------------------------------------------------------- */
 
+	/*
+	 * No border, no shadow, no plate colour: the artwork fades into the page
+	 * instead of sitting on it in a box — see .media.
+	 *
+	 * Height directly, and deliberately no aspect-ratio. `aspect-ratio` with a
+	 * `max-height` does not crop, it *shrinks the width* to keep the ratio — so
+	 * a 1423px column with a 544px cap rendered a 1088px plate and left 335px
+	 * of empty page next to it. Setting the height and letting the width fill
+	 * the column is the whole fix; the artwork inside was always cropping to
+	 * whatever shape it was given.
+	 */
 	.stage {
 		position: relative;
-		aspect-ratio: 16 / 8;
-		/*
-		 * No border, no shadow, no plate colour behind it. On a wide screen the
-		 * hero was a rectangle sitting on the page with four hard edges, which
-		 * reads as a component rather than as the top of the page. The artwork
-		 * now fades out into the background instead — see .media.
-		 */
-		/*
-		 * Grows with the frame, which now follows the screen. At 27rem against
-		 * a 1500px-wide plate the shape was nearly 3.5:1 and a 16:9 trailer
-		 * lost half its height to the crop. The vh term keeps it from taking
-		 * the whole screen on a short laptop display.
-		 */
-		max-height: min(34rem, 58vh);
+		height: clamp(17rem, 30vw, 34rem);
 		overflow: hidden;
 	}
 
@@ -292,31 +290,38 @@
 		padding: 0 0.35rem 0 0;
 		display: flex;
 		flex-direction: column;
-		gap: 0.15rem;
+		gap: 0.2rem;
 		flex: 1;
 		min-height: 0;
+		/*
+		 * Scrollable, with nothing that looks like a scrollbar. A visible track
+		 * down the side of a release queue makes it read as a widget with a
+		 * hidden remainder; fading both ends says the same thing — there is
+		 * more above and below — without drawing a control for it. The wheel
+		 * and a finger still work.
+		 */
 		overflow-y: auto;
-		scrollbar-width: thin;
-		scrollbar-color: var(--line-strong) transparent;
-		/* Fades the last row out, so a cut-off row reads as "keep scrolling". */
-		mask-image: linear-gradient(to bottom, #000 calc(100% - 2.5rem), transparent);
+		scrollbar-width: none;
+		-ms-overflow-style: none;
+		mask-image: linear-gradient(
+			to bottom,
+			transparent,
+			#000 4%,
+			#000 92%,
+			transparent
+		);
 	}
 
 	.queue ul::-webkit-scrollbar {
-		width: 5px;
-	}
-
-	.queue ul::-webkit-scrollbar-thumb {
-		background: var(--line-strong);
-		border-radius: 99px;
+		display: none;
 	}
 
 	.queue button {
 		display: flex;
 		align-items: center;
-		gap: 0.65rem;
+		gap: 0.7rem;
 		width: 100%;
-		padding: 0.35rem 0.5rem;
+		padding: 0.4rem 0.5rem;
 		border: 0;
 		border-left: 2px solid transparent;
 		border-radius: var(--radius-sm);
@@ -337,8 +342,13 @@
 		border-left-color: var(--brand);
 	}
 
+	/*
+	 * Posters big enough to recognise. At 1.9rem these were thumbnails you
+	 * could not tell apart, on the one list whose whole job is to make you
+	 * want to look at something.
+	 */
 	.queue img {
-		width: 1.9rem;
+		width: 3rem;
 		aspect-ratio: 2 / 3;
 		object-fit: cover;
 		border-radius: 3px;
@@ -379,7 +389,7 @@
 		}
 
 		.stage {
-			aspect-ratio: 3 / 2;
+			height: clamp(14rem, 52vw, 22rem);
 		}
 
 		/* Back in flow below the plate, running sideways instead. */
