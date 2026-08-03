@@ -5,6 +5,7 @@
 -->
 <script>
 	import Icon from '$lib/components/Icon.svelte';
+	import QuickShelf from '$lib/components/QuickShelf.svelte';
 	import Stars from '$lib/components/Stars.svelte';
 	import { externalRatings, isUpcoming, itemPath } from '$lib/data/items.js';
 	import { lineOf, progressRatio, statusLabel } from '$lib/data/types.js';
@@ -28,15 +29,28 @@
 	let unreleased = $derived(isUpcoming(item));
 	let outside = $derived(externalRatings(item));
 	let fresh = $derived(library.isNewFor(session.user?.id, item));
+
+	/*
+	 * The quick-shelf panel, opened by the corner button. Hover opens it too,
+	 * but that is done in CSS below rather than with pointer handlers — a
+	 * hover that lives in JavaScript needs a role on the element to satisfy a
+	 * screen reader, and it does not deserve one.
+	 *
+	 * Signed-out visitors get neither: there is no shelf to put anything on,
+	 * and a control that only sends you to the sign-in page is a tease.
+	 */
+	let pinned = $state(false);
 </script>
 
-<a
-	class="poster-card"
-	href={itemPath(item)}
-	data-type={item.type}
-	style={width ? `--card-width: ${width}` : ''}
->
-	<div class="art">
+<!--
+	A container, not a link. It was one anchor wrapping everything, which cannot
+	hold the shelf buttons: a button inside an anchor is invalid markup and
+	behaves differently in every browser. The anchor now covers the card and the
+	controls sit above it.
+-->
+<div class="poster-card" data-type={item.type} style={width ? `--card-width: ${width}` : ''}>
+	<a class="link" href={itemPath(item)}>
+		<div class="art">
 		{#if item.poster}
 			<img src={item.poster} alt="" loading="lazy" decoding="async" />
 		{:else}
@@ -65,35 +79,110 @@
 		{#if ratio !== null}
 			<span class="progress"><span style="width: {Math.round(ratio * 100)}%"></span></span>
 		{/if}
-	</div>
+		</div>
 
-	<div class="label">
-		<span class="title">{item.title}</span>
-		<span class="meta">{meta}</span>
-		{#if unreleased}
-			<span class="score faint">{t('work.notOutYet')}</span>
-		{:else if community.count}
-			<span class="score">
-				<Stars value={community.average} size={12} />
-				<span class="count">{community.count}</span>
-			</span>
-		{:else if outside.length}
-			<span class="score faint outside">
-				{#each outside.slice(0, 2) as rating (rating.source)}
-					<span>{rating.label} {rating.value}</span>
-				{/each}
-			</span>
-		{/if}
-	</div>
-</a>
+		<div class="label">
+			<span class="title">{item.title}</span>
+			<span class="meta">{meta}</span>
+			{#if unreleased}
+				<span class="score faint">{t('work.notOutYet')}</span>
+			{:else if community.count}
+				<span class="score">
+					<Stars value={community.average} size={12} />
+					<span class="count">{community.count}</span>
+				</span>
+			{:else if outside.length}
+				<span class="score faint outside">
+					{#each outside.slice(0, 2) as rating (rating.source)}
+						<span>{rating.label} {rating.value}</span>
+					{/each}
+				</span>
+				{/if}
+		</div>
+	</a>
+
+	{#if session.user}
+		<QuickShelf {item} open={pinned} />
+
+		<!--
+			Touch has no hover, so it gets a way in of its own. Hidden where
+			hover works, because there the panel is already one movement away
+			and a permanent button on every poster is clutter.
+		-->
+		<button
+			type="button"
+			class="toggle"
+			aria-label={t('shelf.label')}
+			aria-expanded={pinned}
+			onclick={() => (pinned = !pinned)}
+		>
+			<Icon name={pinned ? 'close' : 'plus'} size={14} stroke={2.4} />
+		</button>
+	{/if}
+</div>
 
 <style>
 	.poster-card {
+		position: relative;
+		width: var(--card-width, 100%);
+		scroll-snap-align: start;
+	}
+
+	/* The link keeps the layout the card used to have itself. */
+	.link {
 		display: flex;
 		flex-direction: column;
 		gap: 0.6rem;
-		width: var(--card-width, 100%);
-		scroll-snap-align: start;
+	}
+
+	/*
+	 * Hover in CSS rather than JavaScript. Only where hovering is a thing a
+	 * pointer can do — a touch browser reports :hover on tap and would leave
+	 * the panel stuck open on whatever was last pressed.
+	 */
+	@media (hover: hover) {
+		.poster-card:hover :global(.quick),
+		.poster-card:focus-within :global(.quick) {
+			opacity: 1;
+			transform: none;
+			pointer-events: auto;
+		}
+	}
+
+	.toggle {
+		position: absolute;
+		top: 0.4rem;
+		right: 0.4rem;
+		display: grid;
+		place-items: center;
+		width: 1.75rem;
+		height: 1.75rem;
+		border: 1px solid rgb(255 255 255 / 0.25);
+		border-radius: 50%;
+		background: rgb(6 8 15 / 0.6);
+		backdrop-filter: blur(6px);
+		color: #fff;
+		cursor: pointer;
+		opacity: 0;
+		transition: opacity 0.18s ease;
+	}
+
+	/*
+	 * On a pointer device the panel is one movement away, so the button only
+	 * appears with the rest of the card's hover state. Where there is no hover
+	 * it is the only way in, so it is always there.
+	 */
+	@media (hover: hover) {
+		.poster-card:hover .toggle,
+		.toggle:focus-visible {
+			opacity: 1;
+		}
+	}
+
+	@media (hover: none) {
+		.toggle {
+			opacity: 1;
+		}
 	}
 
 	.art {
