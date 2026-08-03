@@ -98,7 +98,18 @@
 	--font-display: 'Instrument Serif', 'Iowan Old Style', Georgia, serif;
 	--font-ui: 'Inter Tight', system-ui, -apple-system, 'Segoe UI', sans-serif;
 
-	--frame: 84rem;
+	/*
+	 * Grows with the screen instead of sitting in a fixed column with a third
+	 * of a 1080p display empty either side. Below ~1460px the 84rem floor wins
+	 * and nothing moves — on a phone 92vw would have been *narrower* than the
+	 * full-width column, costing about 30px of poster. Above it the frame
+	 * tracks the viewport until 120rem, which is where a poster wall stops
+	 * gaining a column and starts just spreading out.
+	 *
+	 * Reading columns do not follow it: prose caps itself at 52–72ch wherever
+	 * it appears, so a wider frame buys posters and nothing else.
+	 */
+	--frame: clamp(84rem, 92vw, 120rem);
 	--pad: clamp(1rem, 4vw, 2.5rem);
 	--bar-height: 4rem;
 

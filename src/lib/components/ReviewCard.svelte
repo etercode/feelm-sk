@@ -102,6 +102,8 @@
 
 	.body {
 		margin: 0.6rem 0 0;
+		/* The frame follows the screen now; a line of prose must not. */
+		max-width: 72ch;
 		color: var(--ink);
 		opacity: 0.92;
 		white-space: pre-wrap;

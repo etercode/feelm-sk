@@ -172,6 +172,7 @@
 
 	.review p {
 		margin: 0;
+		max-width: 72ch;
 		color: var(--muted);
 		font-size: 0.9rem;
 		display: -webkit-box;
