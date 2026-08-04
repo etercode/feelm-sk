@@ -417,6 +417,17 @@
 
 	.actions :global(.quick) {
 		--star: var(--panel-star);
+		/*
+		 * And the same for the shelf buttons. QuickShelf draws them in white
+		 * because on a poster that is the only colour that survives the
+		 * artwork; here the gradient behind them is gone and the surface is
+		 * paper, so white pills on a white card were four invisible buttons
+		 * with one green one in the middle.
+		 */
+		--pill-ink: var(--muted);
+		--pill-line: var(--line-strong);
+		--pill-fill: var(--tint);
+
 		position: static;
 		padding: 0;
 		background: none;

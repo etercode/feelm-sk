@@ -145,7 +145,6 @@
 		min-width: 0;
 		overflow: hidden;
 		container-type: inline-size;
-		mask-image: linear-gradient(to bottom, #000 82%, transparent);
 	}
 
 	.tiles {
@@ -241,7 +240,6 @@
 		/* The queue is a sideways rail down here — see Hero's own media query. */
 		.queue {
 			height: auto;
-			mask-image: linear-gradient(to right, #000 calc(100% - 2rem), transparent);
 		}
 
 		.queue .eyebrow-line {

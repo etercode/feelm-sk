@@ -111,7 +111,17 @@
 	 * exists to be. The first version was positioned against the whole card and
 	 * therefore drew itself over the title.
 	 */
+	/*
+	 * The pill colours are tokens rather than literals because this component
+	 * has two homes. On a poster it sits on artwork and has to be white; in the
+	 * hover card it sits on --surface, where white on white is nothing at all.
+	 * These are the on-artwork values; HoverPreview re-points them.
+	 */
 	.quick {
+		--pill-ink: #fff;
+		--pill-line: rgb(255 255 255 / 0.24);
+		--pill-fill: rgb(255 255 255 / 0.12);
+
 		position: absolute;
 		inset: auto 0 0 0;
 		display: flex;
@@ -151,10 +161,10 @@
 		width: 1.95rem;
 		height: 1.95rem;
 		padding: 0;
-		border: 1px solid rgb(255 255 255 / 0.24);
+		border: 1px solid var(--pill-line);
 		border-radius: 50%;
-		background: rgb(255 255 255 / 0.12);
-		color: #fff;
+		background: var(--pill-fill);
+		color: var(--pill-ink);
 		cursor: pointer;
 		transition:
 			background 0.15s ease,

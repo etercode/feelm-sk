@@ -152,6 +152,14 @@
 <style>
 	.poster-card {
 		width: var(--card-width, 100%);
+		/*
+		 * Never squeezed. In a scrolling rail these are flex items, and a flex
+		 * item shrinks to fit however wide the track is — which sized each card
+		 * by how long its own fact line was, so a poster next to "25 seasons"
+		 * came out narrower than one next to "1h 53m". Ignored by grid layouts,
+		 * where the track already fixes the column.
+		 */
+		flex: none;
 		scroll-snap-align: start;
 	}
 

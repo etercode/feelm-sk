@@ -319,14 +319,16 @@
 		/*
 		 * Scrollable, with nothing that looks like a scrollbar. A visible track
 		 * down the side of a release queue makes it read as a widget with a
-		 * hidden remainder; fading both ends says the same thing — there is
-		 * more above and below — without drawing a control for it. The wheel
-		 * and a finger still work.
+		 * hidden remainder. The wheel and a finger still work.
+		 *
+		 * No fade at the ends either. It was here to say "there is more below"
+		 * without drawing a control for it, and on a grid of posters it read as
+		 * the artwork itself being faded out — a poster is the one thing on this
+		 * page that should never be half-transparent.
 		 */
 		overflow-y: auto;
 		scrollbar-width: none;
 		-ms-overflow-style: none;
-		mask-image: linear-gradient(to bottom, transparent, #000 3%, #000 94%, transparent);
 	}
 
 	.queue ul::-webkit-scrollbar {
@@ -496,7 +498,6 @@
 			overflow-y: hidden;
 			overscroll-behavior-x: contain;
 			scroll-snap-type: x proximity;
-			mask-image: linear-gradient(to right, #000 calc(100% - 2rem), transparent);
 		}
 
 		.queue li {
