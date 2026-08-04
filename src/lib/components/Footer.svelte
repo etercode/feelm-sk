@@ -1,6 +1,8 @@
 <script>
+	import Icon from '$lib/components/Icon.svelte';
 	import { types, typeKeys } from '$lib/data/types.js';
 	import { t } from '$lib/i18n/index.svelte.js';
+	import { session } from '$lib/state/session.svelte.js';
 
 	const year = new Date().getFullYear();
 </script>
@@ -10,6 +12,23 @@
 		<div class="about">
 			<span class="wordmark"><em>feel</em>m</span>
 			<p class="muted">{t('footer.blurb')}</p>
+
+			<!--
+				Under the brand rather than in the link column: it is who we are
+				rather than somewhere else on the site, and it leaves the page.
+				"Discord" is a proper noun and stays in every language, the same
+				way IMDb and TMDB do elsewhere.
+			-->
+			<a
+				class="social"
+				href="https://discord.gg/JWPKRfH2b"
+				target="_blank"
+				rel="noreferrer noopener"
+				title={t('footer.discord')}
+			>
+				<Icon name="discord" size={17} filled />
+				<span>Discord</span>
+			</a>
 		</div>
 
 		<nav>
@@ -17,7 +36,9 @@
 			{#each typeKeys as key (key)}
 				<a href={types[key].browse}>{types[key].plural}</a>
 			{/each}
-			<a href="/feed">{t('nav.feed')}</a>
+			{#if session.user}
+				<a href="/feed">{t('nav.feed')}</a>
+			{/if}
 		</nav>
 
 		<div class="colophon">
@@ -62,6 +83,34 @@
 	.wordmark em {
 		font-style: italic;
 		color: var(--brand);
+	}
+
+	/*
+	 * A pill rather than another link in a list of links: it is the one thing
+	 * down here that leaves the site, and it should not read as a fifth item
+	 * in the browse column.
+	 */
+	.social {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		margin-top: 1rem;
+		padding: 0.45rem 0.85rem;
+		border: 1px solid var(--line);
+		border-radius: 99px;
+		color: var(--muted);
+		font-size: 0.85rem;
+		font-weight: 500;
+		transition:
+			color 0.18s ease,
+			border-color 0.18s ease,
+			background 0.18s ease;
+	}
+
+	.social:hover {
+		color: var(--ink);
+		border-color: var(--line-strong);
+		background: var(--tint);
 	}
 
 	p {

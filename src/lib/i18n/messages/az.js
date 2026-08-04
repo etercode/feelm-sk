@@ -51,6 +51,7 @@ export const az = {
 
 	'footer.blurb':
 		'İnsanların həqiqətən bitirdiklərinin ortaq qeydi — filmlər, seriallar, oyunlar və kitablar; balı və arxasında durduqları tək rəyi ilə.',
+	'footer.discord': 'Feelm Discord-a qoşul',
 	'footer.browse': 'Kəşf et',
 	'footer.catalog': 'Kataloq',
 	'footer.crawlerNote': 'Krawler tərəfindən doldurulur.',

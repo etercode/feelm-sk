@@ -62,6 +62,7 @@ export const en = {
 
 	'footer.blurb':
 		'A shared log of what people actually finished — films, series, games and books, with the score and the one review they stand behind.',
+	'footer.discord': 'Join the Feelm Discord',
 	'footer.browse': 'Browse',
 	'footer.catalog': 'Catalog',
 	'footer.crawlerNote': 'Filled in by the crawler.',

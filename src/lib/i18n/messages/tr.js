@@ -54,6 +54,7 @@ export const tr = {
 
 	'footer.blurb':
 		'İnsanların gerçekten bitirdiklerinin ortak kaydı — filmler, diziler, oyunlar ve kitaplar; puanıyla ve arkasında durdukları tek yorumla.',
+	'footer.discord': "Feelm Discord'a katıl",
 	'footer.browse': 'Keşfet',
 	'footer.catalog': 'Katalog',
 	'footer.crawlerNote': 'Tarayıcı tarafından dolduruluyor.',
