@@ -99,7 +99,14 @@
 			<div class="queue-inner">
 				<header>
 					<span class="eyebrow">{t('hero.comingUp')}</span>
-					<span class="faint">{t('count.announced', { count: releases.length })}</span>
+					<!--
+						No count any more. What arrives here is forty drawn at random
+						from the most popular of eight hundred-odd, so "40 announced"
+						was reporting the size of the sample as the size of the thing.
+					-->
+					<a class="see-all" href="/search?release=upcoming">
+						{t('common.seeAll')}<Icon name="right" size={13} />
+					</a>
 				</header>
 
 				<ul>
@@ -288,6 +295,19 @@
 		gap: 0.5rem;
 		padding: 0 0.3rem 0.6rem;
 		font-size: 0.78rem;
+	}
+
+	.see-all {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.2rem;
+		color: var(--muted);
+		font-weight: 500;
+		white-space: nowrap;
+	}
+
+	.see-all:hover {
+		color: var(--brand);
 	}
 
 	/*
