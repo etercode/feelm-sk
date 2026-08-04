@@ -1,6 +1,7 @@
 <script>
 	import ActivityCard from '$lib/components/ActivityCard.svelte';
 	import Hero from '$lib/components/Hero.svelte';
+	import HomeSkeleton from '$lib/components/HomeSkeleton.svelte';
 	import Icon from '$lib/components/Icon.svelte';
 	import PosterCard from '$lib/components/PosterCard.svelte';
 	import Rail from '$lib/components/Rail.svelte';
@@ -54,7 +55,7 @@
 </svelte:head>
 
 {#if !catalog.ready}
-	<div class="frame loading muted">{t('home.loadingCatalog')}</div>
+	<HomeSkeleton />
 {:else if catalog.error}
 	<div class="frame loading">
 		<p class="error">{catalog.error}</p>

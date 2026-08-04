@@ -61,7 +61,12 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		background: rgb(from var(--paper) r g b / 0.55);
+		/*
+		 * `--page`, not `--paper` — there has never been a `--paper` token, so
+		 * this resolved to nothing and the scrim was a bare blur with a badge
+		 * floating on it in no box at all.
+		 */
+		background: rgb(from var(--page) r g b / 0.55);
 		backdrop-filter: blur(1.5px);
 		/* The point of the element: swallow clicks aimed at the page below. */
 		cursor: progress;
@@ -75,7 +80,7 @@
 		padding: 0.85rem 1.3rem;
 		border: 1px solid var(--line);
 		border-radius: var(--radius-lg);
-		background: var(--paper);
+		background: var(--surface);
 		box-shadow: 0 18px 40px rgb(0 0 0 / 0.16);
 		font-size: 0.95rem;
 		color: var(--ink);
