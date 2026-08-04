@@ -103,10 +103,14 @@
 					{types[key].plural}
 				</a>
 			{/each}
-			<a href="/feed" class="feed" class:active={path === '/feed'}>
-				<Icon name="activity" size={15} />
-				{t('nav.feed')}
-			</a>
+			<!-- Signed in only: the feed is people you follow, and there is
+			     nothing behind it for somebody with no account. -->
+			{#if session.user}
+				<a href="/feed" class="feed" class:active={path === '/feed'}>
+					<Icon name="activity" size={15} />
+					{t('nav.feed')}
+				</a>
+			{/if}
 		</nav>
 
 		<!--

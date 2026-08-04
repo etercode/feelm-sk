@@ -1,4 +1,5 @@
 <script>
+	import { goto } from '$app/navigation';
 	import ActivityCard from '$lib/components/ActivityCard.svelte';
 	import Avatar from '$lib/components/Avatar.svelte';
 	import FollowButton from '$lib/components/FollowButton.svelte';
@@ -10,6 +11,22 @@
 	const PER_PAGE = 40;
 
 	let scope = $state('following');
+
+	/*
+	 * Signed in only. The feed is other people's activity, and the endpoint
+	 * behind it is /api/me/feed, which needs a token — a signed-out visitor
+	 * used to reach this page, fire the request and get "Could not reach the
+	 * API", which is a 401 dressed as a fault. The nav link is hidden too, so
+	 * this is the bookmark and back-button case rather than the normal way in.
+	 */
+	let ready = $state(false);
+
+	$effect(() => {
+		session.hydrate().then(() => {
+			ready = true;
+			if (!session.user) goto('/login');
+		});
+	});
 
 	/*
 	 * The stream is what the server sent, kept as-is and appended to.
@@ -43,7 +60,11 @@
 	 * everyone rather than the buttons being hidden and the fetch skipped.
 	 */
 	$effect(() => {
-		const wanted = session.user ? scope : 'everyone';
+		// Nothing is fetched until we know who is asking; the guard above sends
+		// anyone without a session to /login before this can run.
+		if (!ready || !session.user) return;
+
+		const wanted = scope;
 		let live = true;
 
 		page = 1;
@@ -77,7 +98,7 @@
 
 		try {
 			const next = page + 1;
-			const data = await library.loadFeed(session.user ? scope : 'everyone', PER_PAGE, next);
+			const data = await library.loadFeed(scope, PER_PAGE, next);
 			// Appended by id, because an entry edited mid-scroll can arrive on
 			// two pages — it moves to the top of the order as it is saved.
 			const seen = new Set(events.map((event) => event.entry.id));
@@ -99,6 +120,8 @@
 		<span class="eyebrow">{t('feed.activity')}</span>
 		<h1 class="display">{t('feed.heading')}</h1>
 		{#if session.user}
+			<!-- Always true by the time this renders — the guard sends everyone
+			     else to /login — but kept so the markup cannot outrun hydration. -->
 			<div class="scope">
 				<button type="button" class:on={scope === 'following'} onclick={() => (scope = 'following')}>
 					{t('feed.scopeFollowing')}
