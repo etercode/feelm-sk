@@ -55,7 +55,6 @@ export const az = {
 	'footer.browse': 'Kəşf et',
 	'footer.catalog': 'Kataloq',
 	'footer.crawlerNote': 'Krawler tərəfindən doldurulur.',
-	'footer.crawlerLink': 'Krawler vəziyyəti',
 	'footer.credit': 'Film və serial məlumatları TMDB-dən.',
 
 	'type.movie.label': 'Film',

@@ -36,7 +36,6 @@
 		{ href: '/admin/reviews', label: 'Reviews', icon: 'quote' },
 		{ href: '/admin/works', label: 'Works', icon: 'film' },
 		{ href: '/admin/people', label: 'People', icon: 'user' },
-		{ href: '/crawler', label: 'Crawler', icon: 'refresh' },
 		{ href: '/admin/settings', label: 'Settings', icon: 'gear' }
 	];
 

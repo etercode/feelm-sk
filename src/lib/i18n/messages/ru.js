@@ -55,7 +55,6 @@ export const ru = {
 	'footer.browse': 'Каталог',
 	'footer.catalog': 'Каталог',
 	'footer.crawlerNote': 'Заполняется краулером.',
-	'footer.crawlerLink': 'Статус краулера',
 	'footer.credit': 'Данные о фильмах и сериалах — TMDB.',
 
 	'type.movie.label': 'Фильм',

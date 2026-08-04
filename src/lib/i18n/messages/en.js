@@ -66,7 +66,6 @@ export const en = {
 	'footer.browse': 'Browse',
 	'footer.catalog': 'Catalog',
 	'footer.crawlerNote': 'Filled in by the crawler.',
-	'footer.crawlerLink': 'Crawler status',
 	'footer.credit': 'Film and series data from TMDB.',
 
 	/* ---- the four types ----------------------------------------------- */

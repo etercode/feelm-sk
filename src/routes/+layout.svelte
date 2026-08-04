@@ -49,7 +49,7 @@
 	 * The catalog is deliberately not hydrated here. It is a cache of the home
 	 * page — four rails and the release queue, five requests and something like
 	 * 120 KB — and loading it from the root layout meant every visit to /movies,
-	 * /search, /crawler or /settings paid for rails it never drew. The pages
+	 * /search or /settings paid for rails it never drew. The pages
 	 * that read it ask for it themselves.
 	 */
 	$effect(() => {

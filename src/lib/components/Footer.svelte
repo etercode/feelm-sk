@@ -43,15 +43,7 @@
 
 		<div class="colophon">
 			<span class="eyebrow">{t('footer.catalog')}</span>
-			<!--
-				This said "N titles loaded", counting the front page's cache — so it
-				read "96" for a catalog of seven hundred thousand, and it was the
-				last reason every page in the site had to load that cache. The page
-				it links to has the real number.
-			-->
-			<p class="muted">
-				{t('footer.crawlerNote')} <a href="/crawler">{t('footer.crawlerLink')}</a>
-			</p>
+			<p class="muted">{t('footer.crawlerNote')}</p>
 		</div>
 	</div>
 

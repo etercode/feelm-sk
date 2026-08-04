@@ -58,7 +58,6 @@ export const tr = {
 	'footer.browse': 'Keşfet',
 	'footer.catalog': 'Katalog',
 	'footer.crawlerNote': 'Tarayıcı tarafından dolduruluyor.',
-	'footer.crawlerLink': 'Tarayıcı durumu',
 	'footer.credit': 'Film ve dizi verileri TMDB’den.',
 
 	'type.movie.label': 'Film',
