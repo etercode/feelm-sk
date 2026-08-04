@@ -19,24 +19,35 @@
  */
 
 :root {
-	/* Paper */
-	--page: #f6f7fb;
+	/*
+	 * Paper. Four steps on one hue (265°), spaced evenly in OKLCH so each rise
+	 * reads as the same amount of lift — the old ramp was mixed by eye and the
+	 * gap from surface-2 to surface-3 was half the size of the one below it.
+	 * `--surface` stays pure white: a card is paper laid on the page, and the
+	 * page is the only thing carrying the tint.
+	 */
+	--page: #f3f6fb;
 	--surface: #ffffff;
-	--surface-2: #eef0f7;
-	--surface-3: #e3e7f1;
+	--surface-2: #ebeff6;
+	--surface-3: #dce1ec;
 
-	/* Ink */
-	--ink: #14161f;
+	/*
+	 * Ink, in three tiers at L 21 / 44 / 54. `--faint` used to be L 65, which
+	 * is 3.4:1 on the page — under AA, on the tier that carries dates and
+	 * @handles. It is 4.6:1 now, and `--muted` moved down to keep the three
+	 * tiers visibly apart.
+	 */
+	--ink: #131823;
 	--ink-strong: #05070c;
-	--muted: #59607a;
-	--faint: #878ea6;
+	--muted: #485268;
+	--faint: #667085;
 
 	/* Lines and washes — used instead of ad-hoc black/white alphas */
-	--line: rgb(22 24 40 / 0.11);
-	--line-strong: rgb(22 24 40 / 0.2);
-	--tint: rgb(22 24 40 / 0.04);
-	--tint-strong: rgb(22 24 40 / 0.08);
-	--glass: rgb(246 247 251 / 0.82);
+	--line: rgb(19 24 35 / 0.11);
+	--line-strong: rgb(19 24 35 / 0.2);
+	--tint: rgb(19 24 35 / 0.04);
+	--tint-strong: rgb(19 24 35 / 0.08);
+	--glass: rgb(243 246 251 / 0.82);
 
 	/*
 	 * The brand accent. Sampled from the film strip down the side of the mark:
@@ -45,22 +56,35 @@
 	 *
 	 * Stars used to take this too. They no longer do — see --star.
 	 */
-	--brand: #1268e0;
-	--brand-soft: rgb(18 104 224 / 0.12);
+	--brand: #1066d5;
+	--brand-soft: rgb(16 102 213 / 0.12);
 	/* The navy the mark's own shadows use — what the logo tile is filled with. */
 	--brand-tile: #081430;
 
 	/*
 	 * One hue per activity type. Films take the brand blue — they are the
 	 * centre of the app — and the others are spaced far enough around the
-	 * wheel that two chips side by side never read as the same tag. Series
-	 * moved further into magenta when the brand did: the old violet sat 45°
-	 * from the new blue, which is close enough to argue about on a chip.
+	 * wheel that two chips side by side never read as the same tag.
+	 *
+	 * ---- why these four share a lightness -----------------------------
+	 *
+	 * All four sit at L 53 here and L 70 in the dark theme, and only the hue
+	 * changes. That is what makes them read as one set rather than four
+	 * unrelated colours: a chip that is lighter than the chip beside it looks
+	 * like it is switched on. The dark theme was the bad case — game and book
+	 * were 9 and 12 points lighter than movie and series, so a row of type
+	 * chips had two of them glowing.
+	 *
+	 * They do *not* share a chroma, and cannot. sRGB simply holds less colour
+	 * at a teal or an amber than at a blue or a violet — at L 53 the ceiling
+	 * is 0.10 for teal against 0.27 for violet. Forcing one number on all four
+	 * would mean pinning every colour to the weakest, which drains the blue
+	 * this app is named after. Each takes its own hue's ceiling instead.
 	 */
-	--movie: #1268e0;
-	--series: #8b3fd0;
-	--game: #0b7d67;
-	--book: #9a6a0c;
+	--movie: #1066d5;
+	--series: #913bbd;
+	--game: #147e60;
+	--book: #935f10;
 
 	/* `--accent` is re-pointed per section by [data-type] below */
 	--accent: var(--brand);
@@ -68,8 +92,8 @@
 
 	/* The two washes under the page, and how much grain sits over it */
 	--wash:
-		radial-gradient(70rem 40rem at 8% -10%, rgb(18 104 224 / 0.10), transparent 62%),
-		radial-gradient(60rem 34rem at 100% 2%, rgb(34 176 253 / 0.07), transparent 58%);
+		radial-gradient(70rem 40rem at 8% -10%, rgb(16 102 213 / 0.10), transparent 62%),
+		radial-gradient(60rem 34rem at 100% 2%, rgb(145 59 189 / 0.05), transparent 58%);
 	--grain: 0.022;
 
 	/* Text that sits on top of an accent fill or a photograph */
@@ -84,9 +108,9 @@
 	--veil-strong: rgb(10 12 18 / 0.85);
 	--veil-gradient: linear-gradient(to top, rgb(8 10 15 / 0.92), rgb(8 10 15 / 0.15) 60%, transparent);
 
-	--danger: #c2392f;
-	--ok: #1c7a4f;
-	--new: #d1421f;
+	--danger: #bc332e;
+	--ok: #007e4b;
+	--new: #cd3e21;
 	/*
 	 * Stars are gold, not brand blue. A score out of five is read at a glance
 	 * against every other star rating anybody has ever seen, and all of them are
@@ -125,45 +149,63 @@
 }
 
 :root[data-theme='dark'] {
-	/* Indigo, and lifted well clear of black — see the note at the top. */
-	--page: #141826;
-	--surface: #1c2133;
-	--surface-2: #242a3f;
-	--surface-3: #2f3650;
+	/*
+	 * A dark room, not a grey one. The old page sat at L 21% and the whole ramp
+	 * was squeezed into 21–34% at a chroma of 0.03 — which is not indigo, it is
+	 * grey that owns a blue jumper. The base drops to 17% so posters are the
+	 * brightest thing on the screen, and the steps are even in OKLCH so a card
+	 * lifting off the page is the same lift everywhere.
+	 *
+	 * A card also separates from the page more than it used to (1.16:1, was
+	 * 1.11:1) despite the darker base, because the step sizes were fixed.
+	 */
+	--page: #090f1c;
+	--surface: #181f2f;
+	--surface-2: #232b3d;
+	--surface-3: #303a51;
 
-	--ink: #eceff8;
+	--ink: #ebeef5;
 	--ink-strong: #ffffff;
-	--muted: #a8b0c8;
-	--faint: #7d86a2;
+	--muted: #a3abbc;
+	/* L 64 rather than 62: the old one was 3.9:1 on a card, under AA. */
+	--faint: #838ca0;
 
 	--line: rgb(255 255 255 / 0.1);
 	--line-strong: rgb(255 255 255 / 0.2);
 	--tint: rgb(255 255 255 / 0.05);
 	--tint-strong: rgb(255 255 255 / 0.1);
-	--glass: rgb(20 24 38 / 0.82);
+	--glass: rgb(9 15 28 / 0.82);
 
-	--brand: #5aa9ff;
-	--brand-soft: rgb(90 169 255 / 0.16);
+	--brand: #649ff6;
+	--brand-soft: rgb(100 159 246 / 0.16);
 	/* Lifted off the light theme's navy so the tile is not a hole in the bar. */
 	--brand-tile: #0d1c3d;
 
-	--movie: #5aa9ff;
-	--series: #bb8cff;
-	--game: #4fdcbe;
-	--book: #f2c46a;
+	--movie: #649ff6;
+	--series: #bf7ee6;
+	--game: #33b78f;
+	--book: #d48d2c;
 
-	--on-accent: #14101a;
+	/* The page colour, so anything sitting on an accent fill reads as a hole
+	   punched through to the background rather than a fifth dark tone. */
+	--on-accent: #090f1c;
 
+	/*
+	 * The projector. A cool beam from the top left and a much fainter warm
+	 * bounce from the right — tungsten light is warm, and a room lit from one
+	 * side only is the flattest way to light anything. The warm one is at 0.06
+	 * because at any more the blue turns to slate.
+	 */
 	--wash:
-		radial-gradient(70rem 40rem at 8% -10%, rgb(34 126 253 / 0.18), transparent 62%),
-		radial-gradient(60rem 34rem at 100% 2%, rgb(34 176 253 / 0.11), transparent 58%);
+		radial-gradient(70rem 40rem at 8% -10%, rgb(60 128 246 / 0.16), transparent 62%),
+		radial-gradient(60rem 34rem at 100% 2%, rgb(212 141 44 / 0.06), transparent 58%);
 	--grain: 0.038;
 
-	--danger: #f87171;
+	--danger: #ef736c;
 	/* Lifted for a dark background — see the note in the light block. */
 	--star: #ffc94d;
-	--ok: #4ade80;
-	--new: #ff6a45;
+	--ok: #40c786;
+	--new: #f57055;
 
 	--shadow-card: 0 12px 30px -16px rgb(0 0 0 / 0.8);
 	--shadow-lift: 0 22px 44px -20px rgb(0 0 0 / 0.85);
