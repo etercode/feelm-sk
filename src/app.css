@@ -39,9 +39,11 @@
 	--glass: rgb(246 247 251 / 0.82);
 
 	/*
-	 * The brand accent, and the colour of a star. Sampled from the film strip
-	 * down the side of the mark: #1577f1 is its midtone, #22b0fd the highlight
-	 * along the top edge, #0b2a5e the shadow inside the perforations.
+	 * The brand accent. Sampled from the film strip down the side of the mark:
+	 * #1577f1 is its midtone, #22b0fd the highlight along the top edge,
+	 * #0b2a5e the shadow inside the perforations.
+	 *
+	 * Stars used to take this too. They no longer do — see --star.
 	 */
 	--brand: #1268e0;
 	--brand-soft: rgb(18 104 224 / 0.12);
@@ -85,6 +87,12 @@
 	--danger: #c2392f;
 	--ok: #1c7a4f;
 	--new: #d1421f;
+	/*
+	 * Stars are gold, not brand blue. A score out of five is read at a glance
+	 * against every other star rating anybody has ever seen, and all of them are
+	 * this colour; painting ours in the link colour made it look like a control.
+	 */
+	--star: #d99521;
 
 	--radius-sm: 6px;
 	--radius: 12px;
@@ -152,6 +160,8 @@
 	--grain: 0.038;
 
 	--danger: #f87171;
+	/* Lifted for a dark background — see the note in the light block. */
+	--star: #ffc94d;
 	--ok: #4ade80;
 	--new: #ff6a45;
 
