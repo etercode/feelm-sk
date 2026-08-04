@@ -11,6 +11,7 @@
 	import { lineOf, progressRatio, statusLabel } from '$lib/data/types.js';
 	import { t } from '$lib/i18n/index.svelte.js';
 	import { library } from '$lib/state/library.svelte.js';
+	import { preview } from '$lib/state/preview.svelte.js';
 	import { session } from '$lib/state/session.svelte.js';
 	import { untilRelease } from '$lib/util/format.js';
 
@@ -45,12 +46,36 @@
 <!--
 	A container, not a link. It was one anchor wrapping everything, which cannot
 	hold the shelf buttons: a button inside an anchor is invalid markup and
-	behaves differently in every browser. The anchor now covers the card and the
-	controls sit above it.
+	behaves differently in every browser.
+
+	Two anchors instead, one over the artwork and one over the caption, with the
+	controls between them. The first attempt had a single anchor around the lot
+	and the shelf panel positioned against the whole card — which put it over the
+	title, because the title is part of the card. It belongs to the artwork, so
+	the artwork is what it is positioned against.
 -->
 <div class="poster-card" data-type={item.type} style={width ? `--card-width: ${width}` : ''}>
-	<a class="link" href={itemPath(item)}>
-		<div class="art">
+	<div class="art-wrap">
+		<!--
+			The pointer handlers sit on the link rather than the wrapper: a div
+			that reacts to a cursor needs an ARIA role to explain itself, and
+			this one has nothing to explain — the anchor is already the
+			interactive thing, and its box is the artwork, which is what the
+			card grows from.
+
+			The rect is read at the moment of entry rather than stored, because
+			a rail scrolls and a kept one is wrong immediately.
+		-->
+		<a
+			class="link"
+			href={itemPath(item)}
+			aria-label={item.title}
+			onpointerenter={(event) =>
+				event.pointerType === 'mouse' &&
+				preview.enter(item, event.currentTarget.getBoundingClientRect())}
+			onpointerleave={() => preview.leave()}
+		>
+			<div class="art">
 		{#if item.poster}
 			<img src={item.poster} alt="" loading="lazy" decoding="async" />
 		{:else}
@@ -77,10 +102,32 @@
 		{/if}
 
 		{#if ratio !== null}
-			<span class="progress"><span style="width: {Math.round(ratio * 100)}%"></span></span>
-		{/if}
-		</div>
+				<span class="progress"><span style="width: {Math.round(ratio * 100)}%"></span></span>
+			{/if}
+			</div>
+		</a>
 
+		{#if session.user}
+			<QuickShelf {item} open={pinned} />
+
+			<!--
+				Touch has no hover, so it gets a way in of its own. Hidden where
+				hover works, because there the panel is already one movement away
+				and a permanent button on every poster is clutter.
+			-->
+			<button
+				type="button"
+				class="toggle"
+				aria-label={t('shelf.label')}
+				aria-expanded={pinned}
+				onclick={() => (pinned = !pinned)}
+			>
+				<Icon name={pinned ? 'close' : 'plus'} size={14} stroke={2.4} />
+			</button>
+		{/if}
+	</div>
+
+	<a class="label-link" href={itemPath(item)} tabindex="-1" aria-hidden="true">
 		<div class="label">
 			<span class="title">{item.title}</span>
 			<span class="meta">{meta}</span>
@@ -97,52 +144,43 @@
 						<span>{rating.label} {rating.value}</span>
 					{/each}
 				</span>
-				{/if}
+			{/if}
 		</div>
 	</a>
-
-	{#if session.user}
-		<QuickShelf {item} open={pinned} />
-
-		<!--
-			Touch has no hover, so it gets a way in of its own. Hidden where
-			hover works, because there the panel is already one movement away
-			and a permanent button on every poster is clutter.
-		-->
-		<button
-			type="button"
-			class="toggle"
-			aria-label={t('shelf.label')}
-			aria-expanded={pinned}
-			onclick={() => (pinned = !pinned)}
-		>
-			<Icon name={pinned ? 'close' : 'plus'} size={14} stroke={2.4} />
-		</button>
-	{/if}
 </div>
 
 <style>
 	.poster-card {
-		position: relative;
 		width: var(--card-width, 100%);
 		scroll-snap-align: start;
 	}
 
-	/* The link keeps the layout the card used to have itself. */
-	.link {
-		display: flex;
-		flex-direction: column;
-		gap: 0.6rem;
+	/*
+	 * The positioning context for the shelf panel and its button. It is the
+	 * artwork and nothing else, which is the whole correction: positioning them
+	 * against the card put them over the caption.
+	 */
+	.art-wrap {
+		position: relative;
+	}
+
+	.link,
+	.label-link {
+		display: block;
+	}
+
+	.label-link {
+		margin-top: 0.6rem;
 	}
 
 	/*
-	 * Hover in CSS rather than JavaScript. Only where hovering is a thing a
-	 * pointer can do — a touch browser reports :hover on tap and would leave
-	 * the panel stuck open on whatever was last pressed.
+	 * Hover in CSS rather than JavaScript, and only where hovering is something
+	 * a pointer can do — a touch browser reports :hover on tap and would leave
+	 * the panel stuck open on whatever was pressed last.
 	 */
 	@media (hover: hover) {
-		.poster-card:hover :global(.quick),
-		.poster-card:focus-within :global(.quick) {
+		.art-wrap:hover :global(.quick),
+		.art-wrap:focus-within :global(.quick) {
 			opacity: 1;
 			transform: none;
 			pointer-events: auto;
@@ -168,12 +206,12 @@
 	}
 
 	/*
-	 * On a pointer device the panel is one movement away, so the button only
-	 * appears with the rest of the card's hover state. Where there is no hover
-	 * it is the only way in, so it is always there.
+	 * On a pointer device the panel is one movement away, so the button appears
+	 * with the rest of the card's hover state. Where there is no hover it is the
+	 * only way in, so it is always there.
 	 */
 	@media (hover: hover) {
-		.poster-card:hover .toggle,
+		.art-wrap:hover .toggle,
 		.toggle:focus-visible {
 			opacity: 1;
 		}

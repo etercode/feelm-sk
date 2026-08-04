@@ -3,6 +3,7 @@
 	import { page } from '$app/state';
 	import Footer from '$lib/components/Footer.svelte';
 	import Header from '$lib/components/Header.svelte';
+	import HoverPreview from '$lib/components/HoverPreview.svelte';
 	import NavProgress from '$lib/components/NavProgress.svelte';
 	import { i18n } from '$lib/i18n/index.svelte.js';
 	import { library } from '$lib/state/library.svelte.js';
@@ -70,6 +71,12 @@
 </script>
 
 <NavProgress />
+
+<!--
+	Once, at the root. A rail clips anything positioned inside it, and the
+	poster being hovered is usually the one at its edge — see the component.
+-->
+<HoverPreview />
 
 <Header />
 
