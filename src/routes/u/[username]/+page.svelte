@@ -11,6 +11,7 @@
 	because accounts created in the browser only exist there.
 -->
 <script>
+	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import * as api from '$lib/api/client.js';
 	import Avatar from '$lib/components/Avatar.svelte';
@@ -18,6 +19,8 @@
 	import Icon from '$lib/components/Icon.svelte';
 	import Pager from '$lib/components/Pager.svelte';
 	import PosterCard from '$lib/components/PosterCard.svelte';
+	import ProfileSummary from '$lib/components/ProfileSummary.svelte';
+	import Rail from '$lib/components/Rail.svelte';
 	import ReviewCard from '$lib/components/ReviewCard.svelte';
 	import ShelfManager from '$lib/components/ShelfManager.svelte';
 	import Spinner from '$lib/components/Spinner.svelte';
@@ -33,12 +36,40 @@
 	let user = $derived(library.userByUsername(username));
 	let isMe = $derived(Boolean(session.user && user && session.user.id === user.id));
 
-	let tab = $state('shelf');
+	/*
+	 * Which tab, and which shelf the shelf tab is showing, live in the URL.
+	 *
+	 * Not for its own sake: every rail on the overview ends in a "see all", and
+	 * a see-all that is a real link — right-clickable, shareable, survives a
+	 * reload — is worth the three parameters. `type`, the search box and the
+	 * page number stay local; they are where you are inside a shelf rather than
+	 * which shelf you are on.
+	 */
+	let params = $derived(page.url.searchParams);
+	let tab = $derived(params.get('tab') ?? 'overview');
+	let statusFilter = $derived(params.get('status') || null);
+	let sort = $derived(params.get('sort') ?? 'recent');
+
 	let typeFilter = $state(null);
-	let statusFilter = $state(null);
 	let search = $state('');
-	let sort = $state('recent');
 	let view = $state('grid');
+
+	/** @param {Record<string, string|null>} patch */
+	function setParams(patch) {
+		const next = new URLSearchParams(page.url.searchParams);
+
+		for (const [key, value] of Object.entries(patch)) {
+			if (value === null || value === '') next.delete(key);
+			else next.set(key, value);
+		}
+
+		const query = next.toString();
+		goto(query ? `?${query}` : page.url.pathname, {
+			noScroll: true,
+			keepFocus: true,
+			replaceState: true
+		});
+	}
 
 	let stats = $derived(user ? library.statsOf(user.id) : null);
 	let reviews = $derived(user ? library.reviewsBy(user.id) : []);
@@ -103,7 +134,16 @@
 		return () => clearTimeout(timer);
 	});
 
-	// Any change of filter is a new first page.
+	// Any change of filter is a new first page. Status and sort come from the
+	// URL now, so they cannot go through refilter() — this catches all of them.
+	$effect(() => {
+		statusFilter;
+		sort;
+		typeFilter;
+		term;
+		pageNumber = 1;
+	});
+
 	function refilter(change) {
 		change();
 		pageNumber = 1;
@@ -172,10 +212,64 @@
 
 	function clearFilters() {
 		typeFilter = null;
-		statusFilter = null;
 		search = '';
 		term = '';
 		pageNumber = 1;
+		setParams({ status: null });
+	}
+
+	/* ---- the overview ---------------------------------------------------- */
+
+	/**
+	 * Five short shelves and a summary of taste, in one request.
+	 *
+	 * Fetched lazily: somebody who lands on ?tab=shelf never asks for it. The
+	 * rails are declared here rather than in the template so the order — what
+	 * you are watching, what you loved, what you just finished — is one list to
+	 * read instead of five blocks to compare.
+	 */
+	const RAILS = [
+		{ key: 'watching', status: 'active', sort: null },
+		{ key: 'loved', status: 'done', sort: 'rating' },
+		{ key: 'finished', status: 'done', sort: null },
+		{ key: 'wishlist', status: 'wishlist', sort: null },
+		{ key: 'dropped', status: 'dropped', sort: null }
+	];
+
+	let overview = $state(null);
+	let overviewFor = $state(null);
+
+	$effect(() => {
+		if (tab !== 'overview' || !user) return;
+		if (overviewFor === username) return;
+
+		const handle = username;
+		api
+			.getUserOverview(handle)
+			.then((data) => {
+				if (handle !== username) return;
+				overviewFor = handle;
+				overview = data;
+				for (const rail of Object.values(data.rails ?? {})) {
+					library.ingestEntries(rail.items ?? []);
+				}
+			})
+			.catch(() => {
+				// The rails are a summary of shelves that are reachable anyway.
+				// Losing them is not worth an error state over the whole page.
+				overviewFor = handle;
+				overview = { rails: {}, taste: null };
+			});
+	});
+
+	/** @param {{ key: string, status: string, sort: string|null }} rail */
+	function railLink(rail) {
+		const next = new URLSearchParams();
+		next.set('tab', 'shelf');
+		next.set('status', rail.status);
+		if (rail.sort) next.set('sort', rail.sort);
+
+		return `?${next}`;
 	}
 </script>
 
@@ -238,23 +332,13 @@
 		{/if}
 	</div>
 
-	{#if current.length}
-		<div class="frame">
-			<section class="current">
-				<h2 class="eyebrow">{isMe ? t('profile.middleOfMine') : t('profile.middleOf')}</h2>
-				<div class="current-rail scroller">
-					{#each current as row (row.entry.id)}
-						{@const item = catalog.itemById(row.entry.itemId) ?? row.item}
-						<a class="current-card" href={itemPath(item)} data-type={item.type}>
-							<img src={item.poster} alt="" loading="lazy" />
-							<span class="current-title">{item.title}</span>
-						</a>
-					{/each}
-				</div>
-			</section>
-		</div>
-	{/if}
-
+	<!--
+		The "in the middle of" strip that used to sit here is gone. It is the
+		first rail of the overview now, with posters the size of every other
+		poster on the site instead of its own smaller ones — two rails of the
+		same titles, one above the other, was most of what made this page read
+		as a pile.
+	-->
 	<div class="frame">
 		<section class="stats">
 			<div>
@@ -281,18 +365,57 @@
 		</section>
 
 		<nav class="tabs">
-			<button type="button" class:on={tab === 'shelf'} onclick={() => (tab = 'shelf')}>
+			<button type="button" class:on={tab === 'overview'} onclick={() => setParams({ tab: null, status: null, sort: null })}>
+				{t('profile.tabOverview')}
+			</button>
+			<button type="button" class:on={tab === 'shelf'} onclick={() => setParams({ tab: 'shelf' })}>
 				{t('profile.tabShelf')} <span class="faint">{number(loggedTotal)}</span>
 			</button>
-			<button type="button" class:on={tab === 'reviews'} onclick={() => (tab = 'reviews')}>
+			<button type="button" class:on={tab === 'reviews'} onclick={() => setParams({ tab: 'reviews' })}>
 				{t('profile.tabReviews')} <span class="faint">{reviews.length}</span>
 			</button>
-			<button type="button" class:on={tab === 'people'} onclick={() => (tab = 'people')}>
+			<button type="button" class:on={tab === 'people'} onclick={() => setParams({ tab: 'people' })}>
 				{t('profile.tabPeople')} <span class="faint">{followers.length + following.length}</span>
 			</button>
 		</nav>
 
-		{#if tab === 'shelf'}
+		{#if tab === 'overview'}
+			<!--
+				The grouped front of the profile. Watching first because that is
+				what the owner came for; loved second because it is what a visitor
+				came for. Everything after those two is context.
+			-->
+			{#if !overview}
+				<p class="loading-rails faint"><Spinner size={14} /> {t('common.loading')}</p>
+			{:else}
+				{#each RAILS as rail (rail.key)}
+					{@const shelfRail = overview.rails?.[rail.key]}
+					{#if shelfRail?.items?.length}
+						<Rail
+							kicker={counted('count.title', shelfRail.total)}
+							title={t(`profile.rail.${rail.key}`)}
+							href={railLink(rail)}
+						>
+							{#each shelfRail.items as row (row.entry.id)}
+								{@const item = catalog.itemById(row.entry.itemId) ?? row.item}
+								<PosterCard {item} ownerId={user.id} showType width="clamp(8.5rem, 13vw, 11rem)" />
+							{/each}
+						</Rail>
+					{/if}
+				{/each}
+
+				{#if overview.taste || overview.highlights}
+					<ProfileSummary highlights={overview.highlights} taste={overview.taste} />
+				{/if}
+
+				{#if !Object.values(overview.rails ?? {}).some((r) => r.items?.length)}
+					<p class="muted empty-overview">
+						{isMe ? t('profile.emptyOverviewMine') : t('profile.emptyOverview')}
+					</p>
+				{/if}
+			{/if}
+		{:else if tab === 'shelf'}
+
 			<div class="toolbar">
 				<label class="search">
 					<Icon name="search" size={15} />
@@ -307,7 +430,11 @@
 				<div class="tools">
 					<label class="sort">
 						<span class="sr-only">{t('browse.sortBy')}</span>
-						<select class="field" bind:value={sort} onchange={() => (pageNumber = 1)}>
+						<select
+						class="field"
+						value={sort}
+						onchange={(event) => setParams({ sort: event.currentTarget.value })}
+					>
 							<option value="recent">{t('profile.sortRecent')}</option>
 							<option value="rating">{t('profile.sortRating')}</option>
 							<option value="title">{t('profile.sortTitle')}</option>
@@ -364,7 +491,7 @@
 						type="button"
 						class="chip"
 						class:on={statusFilter === status}
-						onclick={() => refilter(() => (statusFilter = statusFilter === status ? null : status))}
+						onclick={() => setParams({ status: statusFilter === status ? null : status })}
 					>
 						{statusLabel(typeFilter ?? 'movie', status)}
 					</button>
@@ -597,56 +724,6 @@
 		white-space: pre-line;
 	}
 
-	/* In the middle of ---------------------------------------------------- */
-
-	.current {
-		margin-top: 2rem;
-	}
-
-	.current h2 {
-		margin-bottom: 0.7rem;
-	}
-
-	.current-rail {
-		display: flex;
-		gap: 0.7rem;
-		padding-bottom: 0.6rem;
-	}
-
-	.current-card {
-		flex: none;
-		width: 7.5rem;
-		display: flex;
-		flex-direction: column;
-		gap: 0.4rem;
-	}
-
-	.current-card img {
-		width: 100%;
-		aspect-ratio: 2 / 3;
-		object-fit: cover;
-		border-radius: var(--radius-sm);
-		background: var(--surface-2);
-		box-shadow: var(--shadow-card);
-		transition: transform 0.18s ease;
-	}
-
-	.current-card:hover img {
-		transform: translateY(-3px);
-	}
-
-	.current-title {
-		font-size: 0.82rem;
-		line-height: 1.3;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-
-	.current-card:hover .current-title {
-		color: var(--accent);
-	}
-
 	/* Stats -------------------------------------------------------------- */
 
 	.stats {
@@ -676,6 +753,18 @@
 	}
 
 	/* Tabs --------------------------------------------------------------- */
+
+	.loading-rails {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 2rem 0;
+		font-size: 0.9rem;
+	}
+
+	.empty-overview {
+		padding: 2.5rem 0;
+	}
 
 	.tabs {
 		display: flex;

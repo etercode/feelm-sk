@@ -324,6 +324,17 @@ export function getUserEntries(username, params = {}) {
 	return request(`/api/users/${username}/entries${query(params)}`);
 }
 
+/**
+ * The front of a profile: five short shelves and a summary of taste, in one
+ * response. Five calls to `getUserEntries` would fetch the same genre and
+ * rating rows five times over — see ProfileOverviewController.
+ *
+ * @param {string} username
+ */
+export function getUserOverview(username) {
+	return request(`/api/users/${username}/overview`);
+}
+
 /** @param {string} username */
 export function getFollowers(username) {
 	return request(`/api/users/${username}/followers`);
