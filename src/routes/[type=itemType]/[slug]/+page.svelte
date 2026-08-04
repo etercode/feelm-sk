@@ -17,6 +17,7 @@
 	import ShelfControls from '$lib/components/ShelfControls.svelte';
 	import Stars from '$lib/components/Stars.svelte';
 	import Trailer from '$lib/components/Trailer.svelte';
+	import WatchSearch from '$lib/components/WatchSearch.svelte';
 	import { externalRatings, isUpcoming, itemPath } from '$lib/data/items.js';
 	import { facetsOf, lineOf, progressLabel, statusLabel, typeOf } from '$lib/data/types.js';
 	import { library } from '$lib/state/library.svelte.js';
@@ -97,6 +98,16 @@
 					</p>
 
 					<div class="actions">
+						<!--
+							First, and the only filled button here: the ratings beside it
+							are references, and this is the thing somebody came to do.
+							Hidden for anything that is not out — there is nowhere to
+							watch a film that does not exist yet.
+						-->
+						{#if !isUpcoming(item)}
+							<WatchSearch {item} />
+						{/if}
+
 						{#if outside.length}
 							{#each outside as rating (rating.source)}
 								<a
@@ -304,11 +315,21 @@
 <style>
 	/* Banner ------------------------------------------------------------ */
 
+	/*
+	 * Not `overflow: hidden`, which is where it started: the rounded corners
+	 * only ever needed to clip the artwork, and clipping the whole banner meant
+	 * clipping anything that opens out of it — the "where to watch" panel was
+	 * being cut off at the bottom edge. The two layers that need the corners
+	 * take them themselves now.
+	 *
+	 * The z-index is what keeps that panel over the sections below rather than
+	 * behind them, now that there is nothing stopping it reaching them.
+	 */
 	.banner {
 		position: relative;
+		z-index: 1;
 		margin-top: clamp(1rem, 3vw, 1.75rem);
 		border-radius: var(--radius-lg);
-		overflow: hidden;
 		background: var(--surface-2);
 		box-shadow: var(--shadow-card);
 	}
@@ -316,6 +337,8 @@
 	.plate {
 		position: absolute;
 		inset: 0;
+		border-radius: inherit;
+		overflow: hidden;
 	}
 
 	.plate img {
@@ -334,6 +357,7 @@
 	.veil {
 		position: absolute;
 		inset: 0;
+		border-radius: inherit;
 		background:
 			linear-gradient(to top, rgb(8 10 15 / 0.92), rgb(8 10 15 / 0.55) 60%, rgb(8 10 15 / 0.35)),
 			linear-gradient(to right, rgb(8 10 15 / 0.75), transparent 70%);
