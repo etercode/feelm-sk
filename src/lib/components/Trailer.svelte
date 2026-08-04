@@ -96,6 +96,23 @@
 	let scrub = $state(0);
 	let expanded = $state(false);
 
+	/* ---- whether the volume slider is open --------------------------------
+	 *
+	 * This was `:hover, :focus-within` in CSS and it stuck open: dragging the
+	 * slider leaves it focused, so `:focus-within` stayed true after the cursor
+	 * had gone and the slider never closed again.
+	 *
+	 * Focus still has to open it or a keyboard could never reach it, so the
+	 * three reasons are tracked apart. `keyed` is set only when the input
+	 * matches :focus-visible — which a range input does for a Tab and not for a
+	 * click, and that difference is exactly the one that was missing.
+	 */
+	let hovering = $state(false);
+	/** The thumb is held. Keeps the track open when the drag leaves the box. */
+	let holding = $state(false);
+	let keyed = $state(false);
+	let volumeOpen = $derived(hovering || holding || keyed);
+
 	/** @type {HTMLIFrameElement | undefined} */
 	let frame = $state();
 	/** @type {HTMLDivElement | undefined} */
@@ -211,6 +228,21 @@
 		const sync = () => (expanded = document.fullscreenElement === shell);
 		document.addEventListener('fullscreenchange', sync);
 		return () => document.removeEventListener('fullscreenchange', sync);
+	});
+
+	// A drag can end anywhere — off the slider, off the window — so the release
+	// is caught globally. Listening only while held keeps it to the one case.
+	$effect(() => {
+		if (!holding) return;
+
+		const drop = () => (holding = false);
+		window.addEventListener('pointerup', drop);
+		window.addEventListener('pointercancel', drop);
+
+		return () => {
+			window.removeEventListener('pointerup', drop);
+			window.removeEventListener('pointercancel', drop);
+		};
 	});
 
 	function togglePlay() {
@@ -343,7 +375,13 @@
 					Button and slider are one control. The slider is always in the
 					DOM so the tab order reaches it; it is the width that opens.
 				-->
-				<div class="volume">
+				<!-- svelte-ignore a11y_no_static_element_interactions -->
+				<div
+					class="volume"
+					class:open={volumeOpen}
+					onpointerenter={() => (hovering = true)}
+					onpointerleave={() => (hovering = false)}
+				>
 					<button
 						type="button"
 						class="ctl"
@@ -364,6 +402,10 @@
 						aria-label={t('work.volume')}
 						style="--filled: {loudness}%"
 						oninput={(event) => setLevel(Number(event.currentTarget.value))}
+						onpointerdown={() => (holding = true)}
+						onfocus={(event) => (keyed = event.currentTarget.matches(':focus-visible'))}
+						onblur={() => (keyed = false)}
+						onkeydown={() => (keyed = true)}
 					/>
 				</div>
 
@@ -512,12 +554,22 @@
 
 	/*
 	 * Out of the way while the video is doing its job, back the moment there is
-	 * a cursor on it — or a keyboard in it, which is what focus-within is for.
-	 * A paused video keeps it: the way out of paused is a control.
+	 * a cursor on it. A paused video keeps it: the way out of paused is a
+	 * control.
 	 */
 	.player:hover .bar,
-	.player:focus-within .bar,
 	.player.paused .bar {
+		opacity: 1;
+	}
+
+	/*
+	 * And back for a keyboard. :focus-visible rather than :focus-within, which
+	 * was the bug — clicking play leaves the button focused, so the bar stayed
+	 * up over the video for the rest of the session. A separate rule because a
+	 * selector list is not forgiving: an engine without :has() would have
+	 * thrown away the hover rule above along with this one.
+	 */
+	.player:has(:focus-visible) .bar {
 		opacity: 1;
 	}
 
@@ -644,7 +696,11 @@
 	/*
 	 * Closed to nothing and opened by hovering the pair. Width rather than
 	 * display, so it can animate and so it stays focusable while shut — tabbing
-	 * to it opens it through :focus-within.
+	 * to it opens it, which is what `keyed` in the script is for.
+	 *
+	 * `.open` is a class rather than `:hover, :focus-within` because the second
+	 * of those never let go: a dragged slider keeps focus, so the track stayed
+	 * open after the cursor left. See the note on `volumeOpen`.
 	 */
 	.level {
 		width: 0;
@@ -654,8 +710,7 @@
 			opacity 0.18s ease;
 	}
 
-	.volume:hover .level,
-	.volume:focus-within .level {
+	.volume.open .level {
 		width: 4.5rem;
 		opacity: 1;
 	}
