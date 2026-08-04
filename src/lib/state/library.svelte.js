@@ -77,8 +77,13 @@ class Library {
 			this.reviews = [];
 			this.follows = [];
 
+			// Titles first, so the recent rows that have one resolve against it.
+			for (const item of entriesPayload?.items ?? []) {
+				catalog.remember(item);
+			}
+
 			for (const row of entriesPayload?.entries ?? []) {
-				this.#ingestEntryRow(row.entry, row.item);
+				this.#ingestEntryRow(row);
 			}
 
 			this.seenItemIds = new Set(seenPayload?.itemIds ?? []);
@@ -103,8 +108,12 @@ class Library {
 	}
 
 	/** @param {any} entry @param {any} apiItem */
-	#ingestEntryRow(entry, apiItem) {
-		const itemId = this.#catalogId(apiItem);
+	#ingestEntryRow(entry, apiItem = null) {
+		// The shelf now arrives as state without titles — /api/me/entries used to
+		// send a whole detail page per row and exhausted the server's memory on a
+		// large shelf. Rows that do carry an item (a profile page, a rail) still
+		// hand it over to be remembered; rows that do not name their title by id.
+		const itemId = apiItem ? this.#catalogId(apiItem) : (entry?.itemId ?? null);
 		if (!itemId || !entry) return;
 
 		const normalized = {
