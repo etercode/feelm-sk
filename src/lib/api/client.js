@@ -368,6 +368,25 @@ export function adminOverview() {
 	return request('/api/admin/overview', {}, true);
 }
 
+/** Where notifications go. The bot token comes back as a hint, never in full. */
+export function adminTelegram() {
+	return request('/api/admin/settings/telegram', {}, true);
+}
+
+/** @param {{ token?: string, clearToken?: boolean, chat?: string, enabled?: boolean, events?: Record<string, boolean> }} data */
+export function adminSaveTelegram(data) {
+	return request('/api/admin/settings/telegram', { method: 'PATCH', body: JSON.stringify(data) }, true);
+}
+
+/** Chats that have messaged the bot — a bot cannot start a conversation. */
+export function adminTelegramChats() {
+	return request('/api/admin/settings/telegram/chats', { method: 'POST' }, true);
+}
+
+export function adminTelegramTest() {
+	return request('/api/admin/settings/telegram/test', { method: 'POST' }, true);
+}
+
 /** @param {{ q?: string, role?: string, status?: string, sort?: string, page?: number, limit?: number }} [params] */
 export function adminUsers(params = {}) {
 	return request(`/api/admin/users${query(params)}`, {}, true);
