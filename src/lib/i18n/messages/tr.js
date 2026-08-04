@@ -189,7 +189,6 @@ export const tr = {
 
 	'hero.comingUp': 'Yakında',
 	'hero.details': 'Ayrıntılar',
-	'hero.mutedTrailer': 'Fragman, sessiz',
 
 	'rail.scrollLeft': 'Sola kaydır',
 	'rail.scrollRight': 'Sağa kaydır',
@@ -311,6 +310,14 @@ export const tr = {
 	'work.votes': '{count} oy',
 	'work.notOutYet': 'Henüz çıkmadı',
 	'work.trailerTitle': '{title} fragmanı',
+	'work.soundOn': 'Sesi aç',
+	'work.soundOff': 'Sesi kapat',
+	'work.play': 'Oynat',
+	'work.pause': 'Duraklat',
+	'work.fullscreen': 'Tam ekran',
+	'work.exitFullscreen': 'Tam ekrandan çık',
+	'work.volume': 'Ses düzeyi',
+	'work.seek': 'İleri sar',
 
 	'seasons.title': 'Sezonlar',
 	'seasons.markWatched': '{n}. bölüme kadar izlendi işaretle',

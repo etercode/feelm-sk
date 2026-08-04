@@ -49,7 +49,15 @@
 		filter: 'M4 5.5h16l-6.2 7.2V19l-3.6-2.2v-4.1L4 5.5Z',
 		dots: 'M6 12h.01M12 12h.01M18 12h.01',
 		key: 'M15.5 4a4.5 4.5 0 1 0-4.2 6.1L10 11.4H7.5l-1 1v2.3l-1 1v2.3h3.2l6.1-6.1A4.5 4.5 0 0 0 15.5 4ZM16.3 7.6h.01',
-		mail: 'M3.5 6h17v12h-17zM3.5 7l8.5 6 8.5-6'
+		mail: 'M3.5 6h17v12h-17zM3.5 7l8.5 6 8.5-6',
+		// A speaker with two arcs, and the same speaker with the arcs struck out.
+		// The cone is identical in both so the toggle reads as one control
+		// changing state rather than two different buttons.
+		sound: 'M4 9.5h3L11 6v12l-4-3.5H4v-5ZM14.4 9.4a3.8 3.8 0 0 1 0 5.2M17.2 6.8a7.6 7.6 0 0 1 0 10.4',
+		mute: 'M4 9.5h3L11 6v12l-4-3.5H4v-5ZM15 10l4.5 4.5M19.5 10 15 14.5',
+		pause: 'M9 5v14M15 5v14',
+		expand: 'M9 4H4v5M20 9V4h-5M15 20h5v-5M4 15v5h5',
+		collapse: 'M4 9h5V4M20 9h-5V4M15 20v-5h5M9 20v-5H4'
 	};
 
 	/** Type keys map onto their own glyph so callers can pass an item type. */

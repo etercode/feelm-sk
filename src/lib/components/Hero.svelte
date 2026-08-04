@@ -49,7 +49,7 @@
 			<div class="media">
 				<!-- The still is the poster frame the trailer starts over. -->
 				<img class="plate" src={current.backdrop ?? current.poster} alt="" fetchpriority="high" />
-				<Trailer item={current} fit="cover" controls={false} loop autoplay />
+				<Trailer item={current} fit="cover" loop autoplay />
 			</div>
 			<div class="veil"></div>
 
@@ -69,13 +69,15 @@
 						· {list(current.details.directors, 1)}{/if}
 				</p>
 
+				<!--
+					The "Trailer, muted" note that used to sit beside this is gone:
+					the player draws its own speaker now, which says the same thing
+					and can be pressed to change it.
+				-->
 				<div class="actions">
 					<a class="btn btn-accent" href={itemPath(current)}>
 						<Icon name="right" size={14} />{t('hero.details')}
 					</a>
-					{#if current.trailer}
-						<span class="muted-note"><Icon name="play" size={12} filled />{t('hero.mutedTrailer')}</span>
-					{/if}
 				</div>
 			</div>
 		</div>
@@ -120,60 +122,51 @@
 {/if}
 
 <style>
+	/*
+	 * The plate is sized by its height and the queue takes the rest.
+	 *
+	 * `auto` rather than `1fr` for the first column: the plate's width is not a
+	 * share of the row, it is whatever 16:9 makes of its height. Letting a 1fr
+	 * column decide the width instead is what forced the choice between a
+	 * cropped plate and an enormous one — the ratio was being driven by however
+	 * wide the screen happened to be.
+	 *
+	 * The queue then gets everything left over, which on a wide screen is a lot,
+	 * and it has been given something to do with it. See `.queue ul`.
+	 */
 	.hero {
 		display: grid;
-		grid-template-columns: minmax(0, 1fr) 19rem;
-		gap: 1rem;
+		grid-template-columns: auto minmax(19rem, 1fr);
+		gap: clamp(1rem, 1.6vw, 1.75rem);
 		padding-top: clamp(1rem, 3vw, 1.75rem);
 	}
 
 	/* The plate ---------------------------------------------------------- */
 
 	/*
-	 * No border, no shadow, no plate colour: the artwork fades into the page
-	 * instead of sitting on it in a box — see .media.
-	 *
-	 * Height directly, and deliberately no aspect-ratio. `aspect-ratio` with a
-	 * `max-height` does not crop, it *shrinks the width* to keep the ratio — so
-	 * a 1423px column with a 544px cap rendered a 1088px plate and left 335px
-	 * of empty page next to it. Setting the height and letting the width fill
-	 * the column is the whole fix; the artwork inside was always cropping to
-	 * whatever shape it was given.
+	 * Height first: with `aspect-ratio` alongside it the width follows, which is
+	 * what lets the grid column above be `auto`. Nothing is cropped because the
+	 * box is the shape of the thing inside it.
 	 */
 	.stage {
 		position: relative;
-		height: clamp(17rem, 30vw, 34rem);
+		height: clamp(12rem, 34vw, 38rem);
+		aspect-ratio: 16 / 9;
+		border-radius: var(--radius-lg);
 		overflow: hidden;
+		background: var(--surface-2);
 	}
 
 	/*
-	 * The fade. Two gradients intersected, so all four edges dissolve rather
-	 * than only two — a single linear-gradient mask can fade one axis, and the
-	 * corners are where a hard edge is most obvious.
-	 *
-	 * The stops are asymmetric on purpose: the left is where the title sits and
-	 * has to stay dark and readable, the bottom runs into the page and can go
-	 * further, and the top has the bar above it so it only needs softening.
+	 * No mask. The fade was an attempt to stop a full-bleed plate looking like a
+	 * component pasted on the page, and it made the video look letterboxed
+	 * instead — dissolving the edges of a picture is only free when there is no
+	 * picture near them, and on a 16:9 trailer there always is. A corner radius
+	 * does the same job without touching the image.
 	 */
 	.media {
 		position: absolute;
 		inset: 0;
-		/*
-		 * A soft edge, not a vignette. The first attempt went opaque only
-		 * between 12% and 72% of the height — four tenths of the plate spent
-		 * fading — and the result read as a letterboxed band floating on the
-		 * page rather than as artwork without a border. These stops leave the
-		 * middle nine tenths untouched and only dissolve the last few percent,
-		 * which is all it takes for the edge to stop being a line.
-		 */
-		-webkit-mask-image:
-			linear-gradient(to right, transparent, #000 4%, #000 94%, transparent),
-			linear-gradient(to bottom, transparent, #000 4%, #000 92%, transparent);
-		mask-image:
-			linear-gradient(to right, transparent, #000 4%, #000 94%, transparent),
-			linear-gradient(to bottom, transparent, #000 4%, #000 92%, transparent);
-		-webkit-mask-composite: source-in;
-		mask-composite: intersect;
 	}
 
 	.plate {
@@ -185,19 +178,15 @@
 		object-position: center 22%;
 	}
 
-	/*
-	 * The darkening under the title. Stops short of the edges now, because a
-	 * veil drawn to the full rectangle would put back the hard edge the mask
-	 * above just removed.
-	 */
+	/* The darkening the title sits on. Decoration, so it never eats a click —
+	   the player's speaker button is underneath it in DOM order. */
 	.veil {
 		position: absolute;
 		inset: 0;
 		background:
 			var(--veil-gradient),
 			linear-gradient(to right, rgb(8 10 15 / 0.8), transparent 60%);
-		-webkit-mask-image: linear-gradient(to right, transparent, #000 4%, #000 94%, transparent);
-		mask-image: linear-gradient(to right, transparent, #000 4%, #000 94%, transparent);
+		pointer-events: none;
 	}
 
 	.stage-body {
@@ -252,14 +241,6 @@
 		margin-top: 1rem;
 	}
 
-	.muted-note {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.35rem;
-		font-size: 0.76rem;
-		opacity: 0.65;
-	}
-
 	/* The queue ---------------------------------------------------------- */
 
 	.queue {
@@ -284,13 +265,29 @@
 		font-size: 0.78rem;
 	}
 
+	/*
+	 * A grid, not a column, so the queue uses the width it is given.
+	 *
+	 * On a wide screen the plate takes only as much as 16:9 needs and leaves
+	 * several hundred pixels beside it — which used to be the hole in the page.
+	 * auto-fill turns that into a second and third column of releases instead:
+	 * one column at 19rem, two by about 40rem, three past 60rem. Nothing is
+	 * hidden and nothing is stretched; there is simply more of the list where
+	 * there is more room for it.
+	 *
+	 * dense packing because the rows are a fixed height and a gap in the flow
+	 * would be more obvious than a title arriving one place earlier than its
+	 * date order suggests.
+	 */
 	.queue ul {
 		list-style: none;
 		margin: 0;
 		padding: 0 0.35rem 0 0;
-		display: flex;
-		flex-direction: column;
-		gap: 0.2rem;
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+		grid-auto-rows: max-content;
+		grid-auto-flow: row dense;
+		gap: 0.2rem 0.5rem;
 		flex: 1;
 		min-height: 0;
 		/*
@@ -303,17 +300,19 @@
 		overflow-y: auto;
 		scrollbar-width: none;
 		-ms-overflow-style: none;
-		mask-image: linear-gradient(
-			to bottom,
-			transparent,
-			#000 4%,
-			#000 92%,
-			transparent
-		);
+		mask-image: linear-gradient(to bottom, transparent, #000 3%, #000 94%, transparent);
 	}
 
 	.queue ul::-webkit-scrollbar {
 		display: none;
+	}
+
+	/*
+	 * A container, so a row's poster can be sized against the column it is in
+	 * rather than against the viewport — see `.queue img`.
+	 */
+	.queue li {
+		container-type: inline-size;
 	}
 
 	.queue button {
@@ -346,9 +345,14 @@
 	 * Posters big enough to recognise. At 1.9rem these were thumbnails you
 	 * could not tell apart, on the one list whose whole job is to make you
 	 * want to look at something.
+	 *
+	 * Sized against the row rather than fixed, because the queue is a grid now
+	 * and its columns are wide where the screen is: a poster that suits a
+	 * 19rem single column is lost in a 20rem one at the other end. The cap
+	 * stops a row growing taller than the text beside it needs.
 	 */
 	.queue img {
-		width: 3rem;
+		width: clamp(3.25rem, 24cqw, 5.25rem);
 		aspect-ratio: 2 / 3;
 		object-fit: cover;
 		border-radius: 3px;
@@ -388,8 +392,13 @@
 			grid-template-columns: minmax(0, 1fr);
 		}
 
+		/*
+		 * Still 16:9 on a phone — the whole frame, same as everywhere else. The
+		 * override that used to be here reshaped it, and reshaping is what
+		 * crops.
+		 */
 		.stage {
-			height: clamp(14rem, 52vw, 22rem);
+			aspect-ratio: 16 / 9;
 		}
 
 		/* Back in flow below the plate, running sideways instead. */

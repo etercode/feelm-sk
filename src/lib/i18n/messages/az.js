@@ -185,7 +185,6 @@ export const az = {
 
 	'hero.comingUp': 'Tezliklə',
 	'hero.details': 'Ətraflı',
-	'hero.mutedTrailer': 'Treyler, səssiz',
 
 	'rail.scrollLeft': 'Sola sürüşdür',
 	'rail.scrollRight': 'Sağa sürüşdür',
@@ -307,6 +306,14 @@ export const az = {
 	'work.votes': '{count} səs',
 	'work.notOutYet': 'Hələ çıxmayıb',
 	'work.trailerTitle': '{title} treyleri',
+	'work.soundOn': 'Səsi aç',
+	'work.soundOff': 'Səsi bağla',
+	'work.play': 'Oynat',
+	'work.pause': 'Dayandır',
+	'work.fullscreen': 'Tam ekran',
+	'work.exitFullscreen': 'Tam ekrandan çıx',
+	'work.volume': 'Səs səviyyəsi',
+	'work.seek': 'Axtarış',
 
 	'seasons.title': 'Sezonlar',
 	'seasons.markWatched': '{n}-ci bölümə qədər izlənilib işarələ',

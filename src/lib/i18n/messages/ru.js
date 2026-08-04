@@ -221,7 +221,6 @@ export const ru = {
 
 	'hero.comingUp': 'Скоро',
 	'hero.details': 'Подробнее',
-	'hero.mutedTrailer': 'Трейлер, без звука',
 
 	'rail.scrollLeft': 'Прокрутить влево',
 	'rail.scrollRight': 'Прокрутить вправо',
@@ -343,6 +342,14 @@ export const ru = {
 	'work.votes': '{count} голосов',
 	'work.notOutYet': 'Ещё не вышло',
 	'work.trailerTitle': 'Трейлер: {title}',
+	'work.soundOn': 'Включить звук',
+	'work.soundOff': 'Выключить звук',
+	'work.play': 'Воспроизвести',
+	'work.pause': 'Пауза',
+	'work.fullscreen': 'Полный экран',
+	'work.exitFullscreen': 'Выйти из полноэкранного режима',
+	'work.volume': 'Громкость',
+	'work.seek': 'Перемотка',
 
 	'seasons.title': 'Сезоны',
 	'seasons.markWatched': 'Отметить просмотренным до эпизода {n}',

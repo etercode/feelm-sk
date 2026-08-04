@@ -240,7 +240,6 @@ export const en = {
 
 	'hero.comingUp': 'Coming up',
 	'hero.details': 'Details',
-	'hero.mutedTrailer': 'Trailer, muted',
 
 	/* ---- rails and galleries ------------------------------------------- */
 
@@ -374,6 +373,14 @@ export const en = {
 	'work.votes': '{count} votes',
 	'work.notOutYet': 'Not out yet',
 	'work.trailerTitle': '{title} trailer',
+	'work.soundOn': 'Turn sound on',
+	'work.soundOff': 'Turn sound off',
+	'work.play': 'Play',
+	'work.pause': 'Pause',
+	'work.fullscreen': 'Full screen',
+	'work.exitFullscreen': 'Exit full screen',
+	'work.volume': 'Volume',
+	'work.seek': 'Seek',
 
 	/* ---- seasons ------------------------------------------------------- */
 
