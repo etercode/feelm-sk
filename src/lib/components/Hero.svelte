@@ -40,18 +40,25 @@
 
 {#if current}
 	<section class="hero frame" aria-label={t('hero.comingUp')}>
-		<div class="stage" data-type={current.type}>
-			<!--
-				The still and the trailer share a wrapper so the fade can be
-				applied to both at once — and only to them. Masking the stage
-				itself would take the title and the buttons with it.
-			-->
-			<div class="media">
-				<!-- The still is the poster frame the trailer starts over. -->
-				<img class="plate" src={current.backdrop ?? current.poster} alt="" fetchpriority="high" />
-				<Trailer item={current} fit="cover" loop autoplay />
+		<!--
+			The plate and the copy are siblings rather than parent and child so a
+			phone can put the copy underneath. Overlaid on a 16:9 box 220px tall,
+			a two-line title and a button had nowhere to go — see the media query.
+		-->
+		<div class="feature" data-type={current.type}>
+			<div class="stage">
+				<!--
+					The still and the trailer share a wrapper so the fade can be
+					applied to both at once — and only to them. Masking the stage
+					itself would take the title and the buttons with it.
+				-->
+				<div class="media">
+					<!-- The still is the poster frame the trailer starts over. -->
+					<img class="plate" src={current.backdrop ?? current.poster} alt="" fetchpriority="high" />
+					<Trailer item={current} fit="cover" loop autoplay />
+				</div>
+				<div class="veil"></div>
 			</div>
-			<div class="veil"></div>
 
 			<div class="stage-body">
 				<div class="labels">
@@ -103,6 +110,7 @@
 								class:on={position === index}
 								onclick={() => (index = position)}
 								aria-current={position === index ? 'true' : undefined}
+								title={release.title}
 							>
 								<img src={release.poster} alt="" loading="lazy" />
 								<span class="text">
@@ -142,6 +150,15 @@
 	}
 
 	/* The plate ---------------------------------------------------------- */
+
+	/*
+	 * What the copy is positioned against. Its width comes from the stage
+	 * inside it, so the `auto` grid column above still resolves to 16:9.
+	 */
+	.feature {
+		position: relative;
+		min-width: 0;
+	}
 
 	/*
 	 * Height first: with `aspect-ratio` alongside it the width follows, which is
@@ -243,9 +260,17 @@
 
 	/* The queue ---------------------------------------------------------- */
 
+	/*
+	 * A container, so the grid inside can be sized against this column rather
+	 * than against the viewport. That distinction is the whole fix: this column
+	 * is what the plate leaves over, and how much that is does not track the
+	 * screen width at all. A 1440px laptop leaves it *less* room than a 1280px
+	 * one, because the plate's height clamp grows faster than the page does.
+	 */
 	.queue {
 		position: relative;
 		min-width: 0;
+		container-type: inline-size;
 	}
 
 	.queue-inner {
@@ -266,28 +291,29 @@
 	}
 
 	/*
-	 * A grid, not a column, so the queue uses the width it is given.
+	 * A wall of posters, not a list of rows — and the number of columns is set
+	 * per band rather than by auto-fill.
 	 *
-	 * On a wide screen the plate takes only as much as 16:9 needs and leaves
-	 * several hundred pixels beside it — which used to be the hole in the page.
-	 * auto-fill turns that into a second and third column of releases instead:
-	 * one column at 19rem, two by about 40rem, three past 60rem. Nothing is
-	 * hidden and nothing is stretched; there is simply more of the list where
-	 * there is more room for it.
+	 * auto-fill was the trouble. It sizes columns to a minimum in rem, so this
+	 * column got two of them only past about 1850px and one everywhere below:
+	 * a 400px-wide box, 435px tall, showing three of thirteen releases behind a
+	 * fade. Explicit counts against the container's own width give four columns
+	 * on a laptop and six on a large monitor, so somewhere between six and all
+	 * thirteen are on screen at every size instead of three.
 	 *
-	 * dense packing because the rows are a fixed height and a gap in the flow
-	 * would be more obvious than a title arriving one place earlier than its
-	 * date order suggests.
+	 * Posters end up 84–100px wide — the same size the old rows capped at, so
+	 * nothing became harder to recognise. There are simply four of them across
+	 * where there used to be one.
 	 */
 	.queue ul {
 		list-style: none;
 		margin: 0;
 		padding: 0 0.35rem 0 0;
 		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+		grid-template-columns: repeat(2, minmax(0, 1fr));
 		grid-auto-rows: max-content;
-		grid-auto-flow: row dense;
-		gap: 0.2rem 0.5rem;
+		align-items: start;
+		gap: 0.9rem 0.7rem;
 		flex: 1;
 		min-height: 0;
 		/*
@@ -307,85 +333,125 @@
 		display: none;
 	}
 
-	/*
-	 * A container, so a row's poster can be sized against the column it is in
-	 * rather than against the viewport — see `.queue img`.
-	 */
-	.queue li {
-		container-type: inline-size;
+	/* Measured against `.queue`, which is the leftover column — not the screen. */
+	@container (min-width: 14rem) {
+		.queue ul {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+		}
+	}
+
+	@container (min-width: 18rem) {
+		.queue ul {
+			grid-template-columns: repeat(4, minmax(0, 1fr));
+		}
+	}
+
+	@container (min-width: 28rem) {
+		.queue ul {
+			grid-template-columns: repeat(5, minmax(0, 1fr));
+		}
+	}
+
+	@container (min-width: 36rem) {
+		.queue ul {
+			grid-template-columns: repeat(6, minmax(0, 1fr));
+		}
+	}
+
+	@container (min-width: 44rem) {
+		.queue ul {
+			grid-template-columns: repeat(7, minmax(0, 1fr));
+		}
 	}
 
 	.queue button {
+		position: relative;
 		display: flex;
-		align-items: center;
-		gap: 0.7rem;
+		flex-direction: column;
+		gap: 0.4rem;
 		width: 100%;
-		padding: 0.4rem 0.5rem;
+		padding: 0;
 		border: 0;
-		border-left: 2px solid transparent;
-		border-radius: var(--radius-sm);
 		background: none;
 		text-align: left;
 		cursor: pointer;
-		transition:
-			background 0.18s ease,
-			border-color 0.18s ease;
-	}
-
-	.queue button:hover {
-		background: var(--tint);
-	}
-
-	.queue button.on {
-		background: var(--tint);
-		border-left-color: var(--brand);
 	}
 
 	/*
-	 * Posters big enough to recognise. At 1.9rem these were thumbnails you
-	 * could not tell apart, on the one list whose whole job is to make you
-	 * want to look at something.
-	 *
-	 * Sized against the row rather than fixed, because the queue is a grid now
-	 * and its columns are wide where the screen is: a poster that suits a
-	 * 19rem single column is lost in a 20rem one at the other end. The cap
-	 * stops a row growing taller than the text beside it needs.
+	 * The poster is the whole card. Lifting it on hover rather than tinting a
+	 * row behind it: there is no row any more, and the same lift is what the
+	 * poster wall further down the page does.
 	 */
 	.queue img {
-		width: clamp(3.25rem, 24cqw, 5.25rem);
+		width: 100%;
 		aspect-ratio: 2 / 3;
 		object-fit: cover;
-		border-radius: 3px;
-		flex: none;
+		border-radius: var(--radius-sm);
+		background: var(--surface-2);
+		transition:
+			transform 0.2s cubic-bezier(0.2, 0.7, 0.3, 1),
+			box-shadow 0.2s ease;
+	}
+
+	.queue button:hover img,
+	.queue button:focus-visible img {
+		transform: translateY(-4px);
+		box-shadow: var(--shadow-lift);
+	}
+
+	/*
+	 * Which one is on the plate. An outline rather than a fill, because the
+	 * artwork is what is being marked and a border would crop it.
+	 */
+	.queue button.on img {
+		outline: 2px solid var(--brand);
+		outline-offset: 2px;
 	}
 
 	.text {
 		display: flex;
 		flex-direction: column;
 		min-width: 0;
-		flex: 1;
 		line-height: 1.3;
 	}
 
+	/*
+	 * One line. In a 90px column a title is a hint rather than a label — the
+	 * poster does the recognising and the plate spells out whichever one is
+	 * selected — so it truncates instead of wrapping and pushing the grid about.
+	 * The full title is on the button's `title`.
+	 */
 	.name {
-		font-size: 0.84rem;
+		font-size: 0.75rem;
 		font-weight: 500;
+		color: var(--muted);
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
 	}
 
-	.date {
-		font-size: 0.72rem;
+	.queue button.on .name {
+		color: var(--ink);
+		font-weight: 600;
 	}
 
+	.date {
+		font-size: 0.68rem;
+	}
+
+	/* On the artwork now that the card is a column — a row has an end, a card has a corner. */
 	.dot {
-		width: 0.45rem;
-		height: 0.45rem;
+		position: absolute;
+		top: 0.4rem;
+		right: 0.4rem;
+		width: 0.5rem;
+		height: 0.5rem;
 		border-radius: 50%;
 		background: var(--new);
-		flex: none;
+		box-shadow: 0 0 0 2px rgb(8 10 15 / 0.55);
 	}
+
+	/* ---- one column, and the queue on its side --------------------------- */
 
 	@media (max-width: 900px) {
 		.hero {
@@ -395,9 +461,12 @@
 		/*
 		 * Still 16:9 on a phone — the whole frame, same as everywhere else. The
 		 * override that used to be here reshaped it, and reshaping is what
-		 * crops.
+		 * crops. Full width now rather than sized from a height clamp, which
+		 * left a ragged strip of page beside it on a narrow screen.
 		 */
 		.stage {
+			width: 100%;
+			height: auto;
 			aspect-ratio: 16 / 9;
 		}
 
@@ -406,27 +475,85 @@
 			position: static;
 		}
 
+		/*
+		 * The same cards, laid end to end instead of wrapped. There is no room
+		 * beside the plate down here, so the wall turns into one row that
+		 * scrolls — which is what every other rail on this page does, and the
+		 * cards themselves need no changes to do it.
+		 *
+		 * Written after the @container rules on purpose: they and this have the
+		 * same specificity, so source order is what decides, and here the rail
+		 * has to win.
+		 */
 		.queue ul {
-			flex-direction: row;
+			grid-template-columns: none;
+			grid-auto-flow: column;
+			grid-auto-columns: 6.5rem;
+			grid-auto-rows: auto;
+			gap: 0.8rem;
+			padding: 0.25rem 0 0.3rem;
 			overflow-x: auto;
 			overflow-y: hidden;
-			gap: 0.4rem;
-			padding-right: 0;
-			mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent);
+			overscroll-behavior-x: contain;
+			scroll-snap-type: x proximity;
+			mask-image: linear-gradient(to right, #000 calc(100% - 2rem), transparent);
 		}
 
-		.queue button {
-			width: auto;
-			border-left: 0;
-			border-bottom: 2px solid transparent;
+		.queue li {
+			scroll-snap-align: start;
 		}
 
-		.queue button.on {
-			border-bottom-color: var(--brand);
+		/* A finger scrolls the rail; there is nothing to lift out of the way of. */
+		.queue button:hover img,
+		.queue button:focus-visible img {
+			transform: none;
+			box-shadow: none;
+		}
+	}
+
+	/* ---- the copy comes out from under the plate ------------------------- */
+
+	/*
+	 * A phone's plate is about 220px tall, and a title, a genre line, two tags
+	 * and a button do not fit inside that — they were overlapping the picture
+	 * and each other. Below it there is as much room as the copy needs, and the
+	 * plate goes back to being only a plate.
+	 */
+	@media (max-width: 700px) {
+		.stage-body {
+			position: static;
+			padding: 0.9rem 0.15rem 0;
+			color: var(--ink);
 		}
 
-		.name {
-			max-width: 9rem;
+		/* Nothing is over the picture any more, so nothing needs darkening. */
+		.veil {
+			display: none;
+		}
+
+		.tag {
+			background: var(--tint-strong);
+			backdrop-filter: none;
+			color: var(--muted);
+		}
+
+		.tag.new {
+			background: var(--new);
+			color: #fff;
+		}
+
+		h1 {
+			font-size: clamp(1.5rem, 7vw, 2.1rem);
+			max-width: none;
+		}
+
+		.meta {
+			opacity: 1;
+			color: var(--muted);
+		}
+
+		.actions {
+			margin-top: 0.85rem;
 		}
 	}
 </style>
