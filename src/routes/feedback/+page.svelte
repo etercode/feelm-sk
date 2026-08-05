@@ -17,7 +17,7 @@
 	import * as api from '$lib/api/client.js';
 	import { t } from '$lib/i18n/index.svelte.js';
 	import { session } from '$lib/state/session.svelte.js';
-	import { relativeTime } from '$lib/util/format.js';
+	import { timeAgo } from '$lib/util/format.js';
 
 	const CATEGORIES = ['bug', 'idea', 'other'];
 
@@ -201,7 +201,7 @@
 						<div class="head">
 							<span class="state {tone(item.status)}">{t(`feedback.status.${item.status}`)}</span>
 							<span class="faint kind">{t(`feedback.category.${item.category}`)}</span>
-							<span class="faint when">{relativeTime(item.createdAt)}</span>
+							<span class="faint when">{timeAgo(item.createdAt)}</span>
 						</div>
 
 						{#if editing === item.id}

@@ -15,7 +15,7 @@
 	import Pager from '$lib/components/Pager.svelte';
 	import * as api from '$lib/api/client.js';
 	import { session } from '$lib/state/session.svelte.js';
-	import { relativeTime } from '$lib/util/format.js';
+	import { timeAgo } from '$lib/util/format.js';
 
 	const STATUSES = ['new', 'accepted', 'done', 'declined'];
 	const CATEGORIES = ['bug', 'idea', 'other'];
@@ -142,7 +142,7 @@
 					{#if item.user}
 						<a class="who" href="/u/{item.user.username}">@{item.user.username}</a>
 					{/if}
-					<span class="faint when">{relativeTime(item.createdAt)}</span>
+					<span class="faint when">{timeAgo(item.createdAt)}</span>
 				</div>
 
 				<p class="body">{item.body}</p>
