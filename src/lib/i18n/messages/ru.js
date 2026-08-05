@@ -661,5 +661,7 @@ export const ru = {
 	'feedback.loadFailed': 'Не удалось загрузить ваши отзывы.',
 	'feedback.imageFailed': 'Это изображение не загрузилось.',
 	'feedback.sendFailed': 'Не отправилось. Попробовать ещё раз?',
-	'feedback.confirmDelete': 'Точно удалить'
+	'feedback.confirmDelete': 'Точно удалить',
+	'browse.country': 'Страна',
+	'browse.anyCountry': 'Любая страна'
 };

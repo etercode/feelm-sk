@@ -19,7 +19,7 @@
 	import PosterCard from '$lib/components/PosterCard.svelte';
 	import Spinner from '$lib/components/Spinner.svelte';
 	import { types } from '$lib/data/types.js';
-	import { t } from '$lib/i18n/index.svelte.js';
+	import { i18n, t } from '$lib/i18n/index.svelte.js';
 
 	/** The dictionary section per type — 'movie' is filed under 'movies'. */
 	const BROWSE_KEY = { movie: 'movies', series: 'series', game: 'games', book: 'books' };
@@ -65,8 +65,28 @@
 	 */
 	let decades = $derived(options?.decades ?? []);
 
+	/*
+	 * Countries come back as ISO codes; Intl turns them into whatever language
+	 * the page is in, so the list reads "Türkiye" in Turkish without us shipping
+	 * a table of names. Codes Intl does not recognise fall back to themselves.
+	 */
+	let countryNames = $derived(new Intl.DisplayNames([i18n.tag], { type: 'region' }));
+	let countries = $derived(
+		(options?.countries ?? []).map((row) => ({
+			code: row.code,
+			name: (() => {
+				try {
+					return countryNames.of(row.code) ?? row.code;
+				} catch {
+					return row.code;
+				}
+			})()
+		}))
+	);
+
 	// One genre at a time here; /search is where several can be combined.
 	let genre = $derived(params.get('genre') ?? '');
+	let country = $derived(params.get('country') ?? '');
 	let decade = $derived(params.get('yearFrom') ?? '');
 	let scoreMin = $derived(params.get('scoreMin') ?? '');
 
@@ -75,7 +95,7 @@
 		apply({ yearFrom: value, yearTo: Number(value) + 9 });
 	}
 
-	let activeCount = $derived([genre, decade, scoreMin].filter(Boolean).length);
+	let activeCount = $derived([genre, country, decade, scoreMin].filter(Boolean).length);
 
 	function apply(changes, { resetPage = true } = {}) {
 		const next = new URLSearchParams(params);
@@ -121,6 +141,22 @@
 					</select>
 				</label>
 
+				{#if countries.length}
+					<label>
+						<span class="sr-only">{t('browse.country')}</span>
+						<select
+							class="field"
+							value={country}
+							onchange={(event) => apply({ country: event.currentTarget.value || null })}
+						>
+							<option value="">{t('browse.anyCountry')}</option>
+							{#each countries as c (c.code)}
+								<option value={c.code}>{c.name}</option>
+							{/each}
+						</select>
+					</label>
+				{/if}
+
 				{#if decades.length}
 					<label>
 						<span class="sr-only">{t('browse.decade')}</span>
@@ -156,7 +192,8 @@
 					<button
 						type="button"
 						class="btn btn-sm btn-ghost"
-						onclick={() => apply({ genre: null, yearFrom: null, yearTo: null, scoreMin: null })}
+						onclick={() =>
+								apply({ genre: null, country: null, yearFrom: null, yearTo: null, scoreMin: null })}
 					>
 						<Icon name="close" size={12} />{t('common.clear')}
 					</button>

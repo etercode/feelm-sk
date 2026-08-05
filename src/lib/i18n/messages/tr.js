@@ -612,5 +612,7 @@ export const tr = {
 	'feedback.loadFailed': 'Geri bildirimleriniz yüklenemedi.',
 	'feedback.imageFailed': 'Bu görsel yüklenemedi.',
 	'feedback.sendFailed': 'Gönderilemedi. Tekrar deneyelim mi?',
-	'feedback.confirmDelete': 'Gerçekten sil'
+	'feedback.confirmDelete': 'Gerçekten sil',
+	'browse.country': 'Ülke',
+	'browse.anyCountry': 'Tüm ülkeler'
 };

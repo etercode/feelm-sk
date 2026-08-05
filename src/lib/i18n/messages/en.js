@@ -699,5 +699,7 @@ export const en = {
 	'feedback.loadFailed': 'Could not load your feedback.',
 	'feedback.imageFailed': 'That image would not upload.',
 	'feedback.sendFailed': 'That did not send. Try again?',
-	'feedback.confirmDelete': 'Really delete'
+	'feedback.confirmDelete': 'Really delete',
+	'browse.country': 'Country',
+	'browse.anyCountry': 'Any country'
 };

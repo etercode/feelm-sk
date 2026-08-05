@@ -605,5 +605,7 @@ export const az = {
 	'feedback.loadFailed': 'Rəyləriniz yüklənmədi.',
 	'feedback.imageFailed': 'Bu şəkil yüklənmədi.',
 	'feedback.sendFailed': 'Göndərilmədi. Yenidən cəhd edək?',
-	'feedback.confirmDelete': 'Doğrudan silinsin'
+	'feedback.confirmDelete': 'Doğrudan silinsin',
+	'browse.country': 'Ölkə',
+	'browse.anyCountry': 'Bütün ölkələr'
 };
