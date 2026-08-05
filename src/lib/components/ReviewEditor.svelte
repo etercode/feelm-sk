@@ -28,12 +28,12 @@
 
 	function save() {
 		if (!body.trim()) return;
-		library.saveReview(session.user.id, item.id, { rating, body: body.trim() });
+		library.saveReview(session.user.id, item, { rating, body: body.trim() });
 		editing = false;
 	}
 
 	function remove() {
-		library.deleteReview(session.user.id, item.id);
+		library.deleteReview(session.user.id, item);
 		editing = false;
 	}
 </script>

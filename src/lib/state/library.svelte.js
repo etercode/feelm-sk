@@ -290,9 +290,30 @@ class Library {
 		return data?.rating ?? null;
 	}
 
-	#pathOf(itemId) {
-		const item = catalog.itemById(itemId);
-		if (!item) return null;
+	/**
+	 * The API addresses a title by type and slug, so every mutator below needs
+	 * both — and every caller of them is already holding the title, so they
+	 * hand over the item rather than its id.
+	 *
+	 * They used to pass an id and this resolved it against `catalog`. That
+	 * store is a cache of the front page, not a copy of the catalogue, so a
+	 * title it had never heard of resolved to null and the mutator returned
+	 * without doing anything or saying anything. On /movies that was every
+	 * poster past the first few rows: the page is sorted by popularity, the top
+	 * of it overlaps the home rails and your own shelf, so the titles that
+	 * happened to be cached worked and the rest silently did nothing.
+	 *
+	 * Acting on a title is also as good a reason as any to remember it — the
+	 * activity list and the community score read items back out of the store by
+	 * id, and would not have found one shelved from a grid.
+	 */
+	#pathOf(item) {
+		if (!item?.id || !item.type || !item.slug) {
+			console.warn('library: cannot address', item);
+			return null;
+		}
+
+		catalog.remember(item);
 		return { type: item.type, slug: item.slug };
 	}
 
@@ -321,10 +342,10 @@ class Library {
 		return list.filter((item) => this.isNewFor(userId, item));
 	}
 
-	markSeen(userId, itemId) {
-		const path = this.#pathOf(itemId);
+	markSeen(userId, item) {
+		const path = this.#pathOf(item);
 		if (!path) return;
-		this.seenItemIds = new Set([...this.seenItemIds, itemId]);
+		this.seenItemIds = new Set([...this.seenItemIds, item.id]);
 		void api.markSeen(path.type, path.slug).catch(() => {});
 	}
 
@@ -353,9 +374,10 @@ class Library {
 			.sort((a, b) => b.at.localeCompare(a.at));
 	}
 
-	setStatus(userId, itemId, status) {
-		const path = this.#pathOf(itemId);
+	setStatus(userId, item, status) {
+		const path = this.#pathOf(item);
 		if (!path) return;
+		const itemId = item.id;
 		const existing = this.entryFor(userId, itemId);
 
 		if (!status) {
@@ -386,18 +408,16 @@ class Library {
 		void api
 			.upsertEntry(path.type, path.slug, { status })
 			.then((row) => {
-				if (row) {
-					const item = catalog.itemById(itemId);
-					if (item) this.#ingestEntryRow(row, item);
-				}
+				if (row) this.#ingestEntryRow(row, item);
 			})
 			.catch(() => {});
 	}
 
-	setProgress(userId, itemId, progress) {
-		const path = this.#pathOf(itemId);
+	setProgress(userId, item, progress) {
+		const path = this.#pathOf(item);
 		if (!path) return;
-		if (!this.entryFor(userId, itemId)) this.setStatus(userId, itemId, 'active');
+		const itemId = item.id;
+		if (!this.entryFor(userId, itemId)) this.setStatus(userId, item, 'active');
 
 		this.entries = this.entries.map((entry) =>
 			entry.userId === userId && entry.itemId === itemId
@@ -408,10 +428,11 @@ class Library {
 		void api.upsertEntry(path.type, path.slug, { progress }).catch(() => {});
 	}
 
-	setRating(userId, itemId, rating) {
-		const path = this.#pathOf(itemId);
+	setRating(userId, item, rating) {
+		const path = this.#pathOf(item);
 		if (!path) return;
-		if (!this.entryFor(userId, itemId)) this.setStatus(userId, itemId, 'done');
+		const itemId = item.id;
+		if (!this.entryFor(userId, itemId)) this.setStatus(userId, item, 'done');
 
 		this.entries = this.entries.map((entry) =>
 			entry.userId === userId && entry.itemId === itemId
@@ -422,7 +443,7 @@ class Library {
 		void api.upsertEntry(path.type, path.slug, { rating }).catch(() => {});
 
 		const review = this.reviewFor(userId, itemId);
-		if (review && rating) this.saveReview(userId, itemId, { rating, body: review.body });
+		if (review && rating) this.saveReview(userId, item, { rating, body: review.body });
 	}
 
 	reviewFor(userId, itemId) {
@@ -445,9 +466,10 @@ class Library {
 			.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
 	}
 
-	saveReview(userId, itemId, { rating, body }) {
-		const path = this.#pathOf(itemId);
+	saveReview(userId, item, { rating, body }) {
+		const path = this.#pathOf(item);
 		if (!path) return;
+		const itemId = item.id;
 		const now = new Date().toISOString();
 		const existing = this.reviewFor(userId, itemId);
 
@@ -478,7 +500,7 @@ class Library {
 			];
 		}
 
-		if (!this.entryFor(userId, itemId)) this.setStatus(userId, itemId, 'done');
+		if (!this.entryFor(userId, itemId)) this.setStatus(userId, item, 'done');
 		this.entries = this.entries.map((candidate) =>
 			candidate.userId === userId && candidate.itemId === itemId
 				? { ...candidate, rating }
@@ -488,16 +510,15 @@ class Library {
 		void api
 			.saveReview(path.type, path.slug, { rating, body })
 			.then((row) => {
-				const item = catalog.itemById(itemId);
-				if (row && item) this.#ingestReview(row, item);
+				if (row) this.#ingestReview(row, item);
 			})
 			.catch(() => {});
 	}
 
-	deleteReview(userId, itemId) {
-		const path = this.#pathOf(itemId);
+	deleteReview(userId, item) {
+		const path = this.#pathOf(item);
 		this.reviews = this.reviews.filter(
-			(review) => !(review.userId === userId && review.itemId === itemId)
+			(review) => !(review.userId === userId && review.itemId === item?.id)
 		);
 		if (path) void api.deleteReview(path.type, path.slug).catch(() => {});
 	}

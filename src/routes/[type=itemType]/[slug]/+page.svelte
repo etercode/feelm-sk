@@ -44,7 +44,7 @@
 	$effect(() => {
 		const current = item;
 		const userId = session.user?.id;
-		if (userId) untrack(() => library.markSeen(userId, current.id));
+		if (userId) untrack(() => library.markSeen(userId, current));
 		void library.loadItemReviews(current);
 	});
 </script>

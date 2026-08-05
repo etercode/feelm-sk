@@ -59,13 +59,13 @@
 	/** @param {string} status */
 	function choose(status) {
 		if (!session.user) return goto('/login');
-		library.setStatus(session.user.id, item.id, entry?.status === status ? null : status);
+		library.setStatus(session.user.id, item, entry?.status === status ? null : status);
 	}
 
 	/** @param {number | null} value */
 	function rate(value) {
 		if (!session.user) return goto('/login');
-		library.setRating(session.user.id, item.id, value);
+		library.setRating(session.user.id, item, value);
 	}
 </script>
 

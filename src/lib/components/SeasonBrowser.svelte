@@ -30,7 +30,7 @@
 
 	function markWatched(episode) {
 		if (!session.user) return;
-		library.setProgress(session.user.id, item.id, {
+		library.setProgress(session.user.id, item, {
 			season: season.number,
 			episode: episode.number
 		});

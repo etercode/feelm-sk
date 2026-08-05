@@ -381,13 +381,21 @@
 
 		{#if tab === 'overview'}
 			<!--
-				The grouped front of the profile. Watching first because that is
-				what the owner came for; loved second because it is what a visitor
-				came for. Everything after those two is context.
+				The grouped front of the profile. The fun facts lead: they are the
+				one thing on this page that is about the person rather than about
+				a list of titles, and they are what both readers came for — the
+				owner to see what their logging adds up to, a visitor to size
+				somebody up in a glance. Under them the rails, watching first
+				because that is what the owner came back for and loved second
+				because that is what a visitor came to see.
 			-->
 			{#if !overview}
 				<p class="loading-rails faint"><Spinner size={14} /> {t('common.loading')}</p>
 			{:else}
+				{#if overview.taste || overview.highlights}
+					<ProfileSummary highlights={overview.highlights} taste={overview.taste} />
+				{/if}
+
 				{#each RAILS as rail (rail.key)}
 					{@const shelfRail = overview.rails?.[rail.key]}
 					{#if shelfRail?.items?.length}
@@ -403,10 +411,6 @@
 						</Rail>
 					{/if}
 				{/each}
-
-				{#if overview.taste || overview.highlights}
-					<ProfileSummary highlights={overview.highlights} taste={overview.taste} />
-				{/if}
 
 				{#if !Object.values(overview.rails ?? {}).some((r) => r.items?.length)}
 					<p class="muted empty-overview">

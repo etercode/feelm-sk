@@ -28,12 +28,12 @@
 
 	/** @param {any} item @param {string} status */
 	function move(item, status) {
-		library.setStatus(userId, item.id, status);
+		library.setStatus(userId, item, status);
 	}
 
 	/** @param {any} item */
 	function remove(item) {
-		library.setStatus(userId, item.id, null);
+		library.setStatus(userId, item, null);
 		confirming = null;
 	}
 </script>
