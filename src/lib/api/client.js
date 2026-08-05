@@ -358,6 +358,42 @@ export function listSeen() {
 	return request('/api/me/seen', {}, true);
 }
 
+// ---- Feedback -------------------------------------------------------------
+//
+// A person's own reports. Everything is scoped to the caller server-side, so
+// there is no id to pass beyond the one being changed.
+
+export function listFeedback(params = {}) {
+	return request(`/api/feedback?${new URLSearchParams(params)}`, {}, true);
+}
+
+export function createFeedback(body, category) {
+	return request('/api/feedback', { method: 'POST', body: JSON.stringify({ body, category }) }, true);
+}
+
+export function updateFeedback(id, patch) {
+	return request(`/api/feedback/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }, true);
+}
+
+export function deleteFeedback(id) {
+	return request(`/api/feedback/${id}`, { method: 'DELETE' }, true);
+}
+
+/**
+ * One screenshot per call, so a rejected image does not take the others with
+ * it. `file` is a File or a Blob — a paste gives the latter.
+ */
+export function addFeedbackImage(id, file) {
+	const form = new FormData();
+	form.append('image', file, file.name ?? 'screenshot.png');
+
+	return request(`/api/feedback/${id}/images`, { method: 'POST', body: form }, true);
+}
+
+export function removeFeedbackImage(id, imageId) {
+	return request(`/api/feedback/${id}/images/${imageId}`, { method: 'DELETE' }, true);
+}
+
 // ---- Admin ---------------------------------------------------------------
 //
 // Everything here needs at least ROLE_MODERATOR, and the ones that change a
@@ -567,4 +603,23 @@ export function adminUpdateCredit(id, data) {
 /** @param {number} id */
 export function adminDeleteCredit(id) {
 	return request(`/api/admin/credits/${id}`, { method: 'DELETE' }, true);
+}
+
+export function adminFeedback(params = {}) {
+	return request(`/api/admin/feedback?${new URLSearchParams(params)}`, {}, true);
+}
+
+export function adminSetFeedbackStatus(id, status, note) {
+	return request(`/api/admin/feedback/${id}/status`, {
+		method: 'POST',
+		body: JSON.stringify({ status, note })
+	}, true);
+}
+
+export function adminUpdateFeedback(id, patch) {
+	return request(`/api/admin/feedback/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }, true);
+}
+
+export function adminDeleteFeedback(id) {
+	return request(`/api/admin/feedback/${id}`, { method: 'DELETE' }, true);
 }

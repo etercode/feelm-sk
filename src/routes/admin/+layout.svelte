@@ -34,6 +34,7 @@
 		{ href: '/admin', label: 'Overview', icon: 'chart', exact: true },
 		{ href: '/admin/users', label: 'Users', icon: 'users' },
 		{ href: '/admin/reviews', label: 'Reviews', icon: 'quote' },
+		{ href: '/admin/feedback', label: 'Feedback', icon: 'megaphone' },
 		{ href: '/admin/works', label: 'Works', icon: 'film' },
 		{ href: '/admin/people', label: 'People', icon: 'user' },
 		{ href: '/admin/settings', label: 'Settings', icon: 'gear' }
