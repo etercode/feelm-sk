@@ -1,13 +1,20 @@
 <!--
 	The top of the home page: what the crawler found that nobody can watch yet.
-	The plate plays the trailer for whichever release is selected — muted and
-	looping, because it is playing on its own — and the queue beside it picks
-	the next one.
+	The plate plays the trailer for whichever release is selected — muted,
+	because it is playing on its own — and the queue beside it picks the next
+	one.
+
+	It used to loop one trailer forever. A queue of a dozen announcements
+	sitting next to a plate replaying the same ninety seconds is a list nobody
+	has a reason to look at, so the plate now works through them: when a trailer
+	ends the next one starts, and the queue highlight follows it.
 -->
 <script>
+	import { goto } from '$app/navigation';
 	import Icon from '$lib/components/Icon.svelte';
 	import Trailer from '$lib/components/Trailer.svelte';
 	import { itemPath } from '$lib/data/items.js';
+	import { statusLabel } from '$lib/data/types.js';
 	import { library } from '$lib/state/library.svelte.js';
 	import { session } from '$lib/state/session.svelte.js';
 	import { t } from '$lib/i18n/index.svelte.js';
@@ -28,14 +35,47 @@
 	let index = $state(0);
 	let picked = false;
 
+	/*
+	 * Which of them can actually take a turn. Not every announcement has a
+	 * trailer cut yet, and one that has none shows a still and never ends —
+	 * so it is never auto-selected and never advanced to. Clicking it in the
+	 * queue still works; the plate simply stays on it, which is what choosing
+	 * it meant.
+	 */
+	let playable = $derived(
+		releases.map((release, position) => (release?.trailer?.key ? position : -1)).filter((p) => p >= 0)
+	);
+
 	$effect(() => {
 		if (picked || releases.length < 2) return;
 		picked = true;
-		index = Math.floor(Math.random() * releases.length);
+		const pool = playable.length ? playable : releases.map((_, position) => position);
+		index = pool[Math.floor(Math.random() * pool.length)];
 	});
+
+	/** The next one with a trailer, wrapping. */
+	function advance() {
+		if (playable.length < 2) return;
+		index = playable.find((position) => position > index) ?? playable[0];
+	}
 
 	let current = $derived(releases[index] ?? null);
 	let isNew = $derived(current ? library.isNewFor(session.user?.id, current) : false);
+
+	let entry = $derived(
+		session.user && current ? library.entryFor(session.user.id, current.id) : null
+	);
+	let saved = $derived(entry?.status === 'wishlist');
+
+	/*
+	 * Wishlist and nothing else. Everything on this rail is unreleased, so the
+	 * other three shelves would be offering to record something that cannot
+	 * have happened — the same rule QuickShelf applies over a poster.
+	 */
+	function watchlist() {
+		if (!session.user) return goto('/login');
+		library.setStatus(session.user.id, current, saved ? null : 'wishlist');
+	}
 </script>
 
 {#if current}
@@ -55,7 +95,19 @@
 				<div class="media">
 					<!-- The still is the poster frame the trailer starts over. -->
 					<img class="plate" src={current.backdrop ?? current.poster} alt="" fetchpriority="high" />
-					<Trailer item={current} fit="cover" loop autoplay />
+					<!--
+						Looping only when there is nothing to advance *to*. One
+						trailer that stops dead on its last frame is worse than
+						one that repeats; several that repeat is the thing this
+						replaced.
+					-->
+					<Trailer
+						item={current}
+						fit="cover"
+						autoplay
+						loop={playable.length < 2}
+						onended={advance}
+					/>
 				</div>
 				<div class="veil"></div>
 			</div>
@@ -81,10 +133,19 @@
 					the player draws its own speaker now, which says the same thing
 					and can be pressed to change it.
 				-->
+				<!--
+					Two actions, because the plate is where somebody decides they
+					want this — and making them open the page to say so is the
+					navigation the shelf buttons on a poster exist to avoid.
+				-->
 				<div class="actions">
 					<a class="btn btn-accent" href={itemPath(current)}>
 						<Icon name="right" size={14} />{t('hero.details')}
 					</a>
+					<button type="button" class="btn save" class:on={saved} aria-pressed={saved} onclick={watchlist}>
+						<Icon name={saved ? 'check' : 'bookmark'} size={14} />
+						{statusLabel(current.type, 'wishlist')}
+					</button>
 				</div>
 			</div>
 		</div>
@@ -261,8 +322,33 @@
 
 	.actions {
 		display: flex;
+		flex-wrap: wrap;
 		gap: 0.5rem;
 		margin-top: 1rem;
+	}
+
+	/*
+	 * Sits on artwork, so it carries its own translucent plate rather than the
+	 * theme surface — a light-theme button over a dark backdrop is a white slab
+	 * in the middle of a photograph.
+	 */
+	.save {
+		border-color: rgb(255 255 255 / 0.28);
+		background: rgb(10 12 20 / 0.45);
+		color: #fff;
+		backdrop-filter: blur(6px);
+	}
+
+	.save:hover {
+		border-color: rgb(255 255 255 / 0.5);
+		background: rgb(10 12 20 / 0.62);
+	}
+
+	/* Already saved: stated, not shouted. It is a thing that is true, not a
+	   thing to press again. */
+	.save.on {
+		border-color: color-mix(in srgb, var(--brand) 70%, transparent);
+		background: color-mix(in srgb, var(--brand) 55%, rgb(10 12 20 / 0.5));
 	}
 
 	/* The queue ---------------------------------------------------------- */
@@ -575,6 +661,25 @@
 
 		.actions {
 			margin-top: 0.85rem;
+		}
+
+		/* Off the artwork and onto the page, so it goes back to being an
+		   ordinary button — the same move .tag makes just above. */
+		.save {
+			border-color: var(--line-strong);
+			background: var(--surface-2);
+			color: var(--ink);
+			backdrop-filter: none;
+		}
+
+		.save:hover {
+			background: var(--tint-strong);
+		}
+
+		.save.on {
+			border-color: var(--brand);
+			background: var(--brand);
+			color: var(--on-accent);
 		}
 	}
 </style>

@@ -1,11 +1,12 @@
 <!--
 	The trailer.
 
-	Two different jobs from one component. On the home plate it is decoration:
-	looping, playing the moment the page opens because that is the whole point of
-	the plate. On a detail page it is content, and content does not start on its
-	own — that one waits to be asked, and until it is asked YouTube is never
-	contacted at all.
+	Two different jobs from one component. On the home plate and the hover card
+	it is decoration, playing the moment it appears because that is the whole
+	point of both — the hover card loops its few seconds, while the plate reports
+	the end through `onended` so the hero can move to the next announcement. On a
+	detail page it is content, and content does not start on its own — that one
+	waits to be asked, and until it is asked YouTube is never contacted at all.
 
 	`autoplay` is the switch and it defaults to off. An embed that plays on sight
 	should have to be opted into rather than remembered about.
@@ -34,6 +35,35 @@
 	this hides it. That is a call for whoever ships the site, not a technical
 	limit.
 -->
+<script module>
+	/**
+	 * Where the volume starts, for every trailer everywhere.
+	 *
+	 * Full volume is the wrong opening bid for something that begins playing
+	 * next to whatever you were already listening to. Half is audible without
+	 * being an event, and the slider is right there.
+	 *
+	 * It has to be sent as a command as well as asked for in the URL, because
+	 * YouTube remembers a viewer's last volume across embeds and will happily
+	 * come back at whatever they left a different site on.
+	 */
+	const START_VOLUME = 50;
+
+	/*
+	 * The level to open the *next* one at.
+	 *
+	 * In the module block, so it is one number for the whole session rather
+	 * than one per player. The home plate advances by itself now, and a viewer
+	 * who turns a trailer up should not have to turn the one after it up as
+	 * well — but that is a preference for this visit, not something to write
+	 * down, so it starts at START_VOLUME again on the next page load.
+	 *
+	 * Only ever written from a browser event, so it cannot leak between SSR
+	 * requests.
+	 */
+	let chosen = START_VOLUME;
+</script>
+
 <script>
 	import Icon from '$lib/components/Icon.svelte';
 	import { i18n, t } from '$lib/i18n/index.svelte.js';
@@ -45,7 +75,9 @@
 		/** Left unset, this follows `autoplay` — see `silent` below. */
 		muted,
 		loop = false,
-		autoplay = false
+		autoplay = false,
+		/** Called once when the video reaches its end. Never fires while looping. */
+		onended
 	} = $props();
 
 	let key = $derived(item?.trailer?.key ?? null);
@@ -88,7 +120,7 @@
 	let mode = $state(-1);
 	let at = $state(0);
 	let span = $state(0);
-	let level = $state(100);
+	let level = $state(chosen);
 	let sound = $state(false);
 
 	/** While a thumb is held, incoming times are ignored — see `receive`. */
@@ -129,6 +161,7 @@
 		mode = -1;
 		at = 0;
 		span = 0;
+		level = chosen;
 	});
 
 	let src = $derived(
@@ -207,13 +240,25 @@
 				return; // not ours, or not JSON
 			}
 
-			if (data?.event === 'onReady') ready = true;
+			if (data?.event === 'onReady') {
+				ready = true;
+				// Before anything is audible: an unmuted player would otherwise
+				// open at whatever volume YouTube remembers for this viewer.
+				command('setVolume', [level]);
+			}
 			if (data?.event !== 'infoDelivery' && data?.event !== 'onReady') return;
 
 			const info = data.info;
 			if (!info) return;
 
-			if (typeof info.playerState === 'number') mode = info.playerState;
+			if (typeof info.playerState === 'number') {
+				const was = mode;
+				mode = info.playerState;
+				// On the transition, not on the state: a finished player keeps
+				// reporting 0 until something else happens to it, and a handler
+				// that advances a queue must not be told twice.
+				if (0 === mode && 0 !== was) onended?.();
+			}
 			if (typeof info.duration === 'number' && info.duration > 0) span = info.duration;
 			if (typeof info.currentTime === 'number' && !scrubbing) at = info.currentTime;
 			if (typeof info.volume === 'number') level = info.volume;
@@ -261,13 +306,16 @@
 		// A player created with mute=1 can come back at zero rather than at a
 		// volume it never had; and a slider dragged to nothing then unmuted
 		// should make a noise.
-		if (level === 0) level = 100;
+		if (level === 0) level = chosen = START_VOLUME;
 		command('setVolume', [level]);
 	}
 
 	/** @param {number} value */
 	function setLevel(value) {
 		level = value;
+		// Deliberately chosen, so the next trailer opens here rather than back
+		// at the default.
+		chosen = value;
 		command('setVolume', [value]);
 
 		// The slider is the mute button's other face: drag it to nothing and the
