@@ -613,6 +613,16 @@ export const tr = {
 	'feedback.imageFailed': 'Bu görsel yüklenemedi.',
 	'feedback.sendFailed': 'Gönderilemedi. Tekrar deneyelim mi?',
 	'feedback.confirmDelete': 'Gerçekten sil',
+	'feedback.newReport': 'Bize bir şey söyleyin',
+	'feedback.tabAll': 'Hepsi',
+	'feedback.filterLabel': 'Duruma göre süz',
+	'feedback.emptyTab': 'Burada bir şey yok.',
+	'feedback.dockTitle': 'Bize bir şey söyleyin',
+	'feedback.dockOpen': 'Geri bildirim gönder',
+	'feedback.dockAll': 'Tümünü gör',
+	'feedback.dockHint': 'Enter gönderir · Shift+Enter yeni satır',
+	'feedback.dockThanks': 'Aldık — teşekkürler.',
+	'feedback.dockAnother': 'Bir tane daha gönder',
 	'browse.country': 'Ülke',
 	'browse.anyCountry': 'Tüm ülkeler'
 };

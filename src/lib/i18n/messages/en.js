@@ -700,6 +700,16 @@ export const en = {
 	'feedback.imageFailed': 'That image would not upload.',
 	'feedback.sendFailed': 'That did not send. Try again?',
 	'feedback.confirmDelete': 'Really delete',
+	'feedback.newReport': 'Tell us something',
+	'feedback.tabAll': 'Everything',
+	'feedback.filterLabel': 'Filter by status',
+	'feedback.emptyTab': 'Nothing in this one.',
+	'feedback.dockTitle': 'Tell us something',
+	'feedback.dockOpen': 'Send feedback',
+	'feedback.dockAll': 'See all',
+	'feedback.dockHint': 'Enter sends · Shift+Enter for a new line',
+	'feedback.dockThanks': 'Got it — thank you.',
+	'feedback.dockAnother': 'Send another',
 	'browse.country': 'Country',
 	'browse.anyCountry': 'Any country'
 };

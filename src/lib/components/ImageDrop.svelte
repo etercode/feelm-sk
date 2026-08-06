@@ -12,10 +12,23 @@
 	the moment you press Ctrl+V the focus is wherever you were typing, which is
 	the textarea next door. Scoped to when the component is mounted, so it never
 	steals a paste from a page that has no upload on it.
+
+	---- the thumbnail appears before the upload does ---------------------------
+
+	A pasted screenshot used to show nothing at all until the round-trip
+	finished, which reads exactly like a paste that did not work — so people
+	paste again, and now there are two. Every file gets a local object URL the
+	moment it is handed over, drawn dimmed with a spinner over it, and the
+	server's own copy replaces it when the upload lands.
+
+	They are uploaded one at a time, and that is not incidental: the first
+	attach is what creates the report the rest hang on, so two in flight at once
+	race to create two reports out of one paste.
 -->
 <script>
 	import Icon from '$lib/components/Icon.svelte';
 	import Spinner from '$lib/components/Spinner.svelte';
+	import { mediaUrl } from '$lib/config.js';
 	import { t } from '$lib/i18n/index.svelte.js';
 
 	/**
@@ -24,28 +37,62 @@
 	 *   max?: number,
 	 *   busy?: boolean,
 	 *   disabled?: boolean,
-	 *   onadd: (file: File) => void,
+	 *   compact?: boolean,
+	 *   onadd: (file: File) => void | Promise<void>,
 	 *   onremove?: (imageId: number) => void
 	 * }}
 	 */
-	let { images = [], max = 4, busy = false, disabled = false, onadd, onremove } = $props();
+	let { images = [], max = 4, busy = false, disabled = false, compact = false, onadd, onremove } = $props();
 
 	let dragging = $state(false);
 	/** @type {HTMLInputElement | undefined} */
 	let picker = $state();
 
-	let full = $derived(images.length >= max);
+	/** Files handed over but not yet acknowledged by the server. */
+	let pending = $state(/** @type {Array<{ key: number, preview: string }>} */ ([]));
+	let seq = 0;
+
+	let count = $derived(images.length + pending.length);
+	let full = $derived(count >= max);
 	let closed = $derived(disabled || full);
+	let working = $derived(busy || pending.length > 0);
 
 	/** @param {FileList | File[] | null | undefined} files */
-	function take(files) {
+	async function take(files) {
 		if (closed || !files) return;
+
 		// Only as many as there is room for; the rest are ignored rather than
 		// sent and refused one by one.
-		for (const file of [...files].slice(0, max - images.length)) {
-			if (file.type.startsWith('image/')) onadd(file);
+		for (const file of [...files].slice(0, max - count)) {
+			if (!file.type.startsWith('image/')) continue;
+
+			const shot = { key: ++seq, preview: URL.createObjectURL(file) };
+			pending = [...pending, shot];
+
+			let failed = false;
+			try {
+				await onadd(file);
+			} catch {
+				// The caller owns the message. What matters here is that the
+				// thumbnail stops claiming to be on its way.
+				failed = true;
+			} finally {
+				pending = pending.filter((p) => p.key !== shot.key);
+			}
+
+			// Usually the report itself could not be created, and the rest of
+			// the batch would only queue up to fail the same way.
+			if (failed) break;
 		}
 	}
+
+	/*
+	 * Revoked on the way out rather than the moment each upload lands. The
+	 * server's copy is a fresh URL the browser has to go and fetch, and pulling
+	 * the local one out from under it first is a blank square for the length of
+	 * that request — the flicker this whole mechanism exists to remove.
+	 */
+	$effect(() => () => pending.forEach((shot) => URL.revokeObjectURL(shot.preview)));
 
 	/** @param {ClipboardEvent} event */
 	function onpaste(event) {
@@ -78,6 +125,7 @@
 	class="drop"
 	class:dragging
 	class:closed
+	class:compact
 	ondragover={(event) => {
 		if (closed) return;
 		event.preventDefault();
@@ -92,14 +140,14 @@
 	role="group"
 	aria-label={t('feedback.images')}
 >
-	{#if images.length}
+	{#if count}
 		<ul class="shots">
 			{#each images as image (image.id)}
 				<li>
 					{#if image.purged}
 						<span class="gone" title={t('feedback.imagePurged')}><Icon name="image" size={16} /></span>
 					{:else}
-						<img src={image.url} alt="" />
+						<img src={mediaUrl(image.url)} alt="" />
 					{/if}
 					{#if onremove && !disabled}
 						<button type="button" class="drop-x" aria-label={t('common.remove')} onclick={() => onremove(image.id)}>
@@ -108,13 +156,20 @@
 					{/if}
 				</li>
 			{/each}
+
+			{#each pending as shot (shot.key)}
+				<li class="waiting">
+					<img src={shot.preview} alt="" />
+					<span class="veil"><Spinner size={16} /></span>
+				</li>
+			{/each}
 		</ul>
 	{/if}
 
 	{#if !closed}
 		<div class="invite">
-			<button type="button" class="btn btn-sm" onclick={() => picker?.click()} disabled={busy}>
-				{#if busy}<Spinner size={13} />{:else}<Icon name="image" size={13} />{/if}
+			<button type="button" class="btn btn-sm" onclick={() => picker?.click()} disabled={working}>
+				{#if working}<Spinner size={13} />{:else}<Icon name="image" size={13} />{/if}
 				{t('feedback.addImage')}
 			</button>
 			<span class="faint hint">{t('feedback.dropHint')}</span>
@@ -162,6 +217,18 @@
 		opacity: 0.75;
 	}
 
+	/* Inside the dock the box sits under a textarea in a narrow panel, where a
+	   dashed frame around a dashed frame is all anybody sees. */
+	.drop.compact {
+		padding: 0;
+		border: none;
+		gap: 0.45rem;
+	}
+
+	.drop.compact .hint {
+		font-size: 0.72rem;
+	}
+
 	.shots {
 		display: flex;
 		flex-wrap: wrap;
@@ -184,6 +251,19 @@
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
+	}
+
+	/* Dimmed and spinning: it is the picture you pasted, and it is on its way. */
+	.waiting img {
+		opacity: 0.45;
+	}
+
+	.veil {
+		position: absolute;
+		inset: 0;
+		display: grid;
+		place-items: center;
+		color: var(--ink);
 	}
 
 	/* A reclaimed screenshot still takes its place, so the report keeps saying

@@ -662,6 +662,16 @@ export const ru = {
 	'feedback.imageFailed': 'Это изображение не загрузилось.',
 	'feedback.sendFailed': 'Не отправилось. Попробовать ещё раз?',
 	'feedback.confirmDelete': 'Точно удалить',
+	'feedback.newReport': 'Расскажите нам',
+	'feedback.tabAll': 'Все',
+	'feedback.filterLabel': 'Фильтр по статусу',
+	'feedback.emptyTab': 'Здесь пока пусто.',
+	'feedback.dockTitle': 'Расскажите нам',
+	'feedback.dockOpen': 'Отправить отзыв',
+	'feedback.dockAll': 'Показать все',
+	'feedback.dockHint': 'Enter — отправить · Shift+Enter — новая строка',
+	'feedback.dockThanks': 'Получили — спасибо.',
+	'feedback.dockAnother': 'Отправить ещё',
 	'browse.country': 'Страна',
 	'browse.anyCountry': 'Любая страна'
 };

@@ -1,6 +1,7 @@
 <script>
 	import '../app.css';
 	import { page } from '$app/state';
+	import FeedbackDock from '$lib/components/FeedbackDock.svelte';
 	import Footer from '$lib/components/Footer.svelte';
 	import Header from '$lib/components/Header.svelte';
 	import HoverPreview from '$lib/components/HoverPreview.svelte';
@@ -87,6 +88,12 @@
 {#if !bare}
 	<Footer />
 {/if}
+
+<!--
+	Once, at the root, so the button is on every page and the panel survives
+	navigating between them. It draws nothing at all when signed out.
+-->
+<FeedbackDock />
 
 <style>
 	main {

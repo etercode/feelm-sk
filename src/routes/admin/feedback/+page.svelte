@@ -5,6 +5,11 @@
 	exists to answer is "what have I not looked at yet". Accepting is the
 	consequential click — it takes the report away from its author — so it is
 	the one with a primary button, and declining asks for a reason.
+
+	The status is a row of tabs rather than one more dropdown beside the others.
+	It is not a filter like the rest: it is which queue you are working, each
+	with its own backlog number, and a select hid both the choice and the count
+	behind a click.
 -->
 <script>
 	import { goto } from '$app/navigation';
@@ -13,12 +18,21 @@
 	import Spinner from '$lib/components/Spinner.svelte';
 	import Toolbar from '$lib/components/admin/Toolbar.svelte';
 	import Pager from '$lib/components/Pager.svelte';
+	import { mediaUrl } from '$lib/config.js';
 	import * as api from '$lib/api/client.js';
 	import { session } from '$lib/state/session.svelte.js';
 	import { timeAgo } from '$lib/util/format.js';
 
 	const STATUSES = ['new', 'accepted', 'done', 'declined'];
 	const CATEGORIES = ['bug', 'idea', 'other'];
+
+	/** The queue's own words for the four states — "new" is a backlog, not a date. */
+	const LABELS = {
+		new: 'Waiting',
+		accepted: 'Accepted',
+		done: 'Done',
+		declined: 'Declined'
+	};
 
 	let ready = $state(false);
 	let loading = $state(true);
@@ -32,6 +46,8 @@
 
 	let params = $derived(page.url.searchParams);
 	let pageNumber = $derived(Number(params.get('page') ?? 1));
+	let tab = $derived(params.get('status') ?? '');
+	let allCount = $derived(STATUSES.reduce((sum, s) => sum + (data?.counts?.[s] ?? 0), 0));
 
 	$effect(() => {
 		session.hydrate().then(() => {
@@ -95,26 +111,31 @@
 
 <header class="masthead">
 	<h1 class="display">Feedback</h1>
-	{#if data?.counts}
-		<p class="muted">
-			{data.counts.new} waiting · {data.counts.accepted} accepted · {data.counts.done} done · {data.counts.declined} declined
-		</p>
-	{/if}
 </header>
 
 {#if error}<p class="error">{error}</p>{/if}
+
+<nav class="tabs" aria-label="Status">
+	<button type="button" class="tab" class:on={tab === ''} onclick={() => apply({ status: null })}>
+		Everything<span class="n">{allCount}</span>
+	</button>
+	{#each STATUSES as status (status)}
+		<button
+			type="button"
+			class="tab {tone(status)}"
+			class:on={tab === status}
+			onclick={() => apply({ status })}
+		>
+			{LABELS[status]}<span class="n">{data?.counts?.[status] ?? 0}</span>
+		</button>
+	{/each}
+</nav>
 
 <Toolbar
 	term={params.get('q') ?? ''}
 	onterm={(value) => apply({ q: value })}
 	placeholder="Search the text or an author…"
 	filters={[
-		{
-			key: 'status',
-			label: 'Status',
-			value: params.get('status') ?? '',
-			options: [{ value: '', label: 'Any status' }, ...STATUSES.map((s) => ({ value: s, label: s }))]
-		},
 		{
 			key: 'category',
 			label: 'Kind',
@@ -154,8 +175,8 @@
 								{#if image.purged}
 									<span class="gone" title="Screenshot purged"><Icon name="image" size={15} /></span>
 								{:else}
-									<a href={image.url} target="_blank" rel="noreferrer">
-										<img src={image.url} alt="" loading="lazy" />
+									<a href={mediaUrl(image.url)} target="_blank" rel="noreferrer">
+										<img src={mediaUrl(image.url)} alt="" loading="lazy" />
 									</a>
 								{/if}
 							</li>
@@ -226,12 +247,71 @@
 		margin: 0 0 0.25rem;
 	}
 
-	.masthead p {
-		margin: 0;
-		font-size: 0.85rem;
+	.error {
+		color: var(--danger);
 	}
 
-	.error {
+	.tabs {
+		display: flex;
+		gap: 0.3rem;
+		flex-wrap: wrap;
+		margin-bottom: 0.9rem;
+		padding-bottom: 0.6rem;
+		border-bottom: 1px solid var(--line);
+	}
+
+	.tabs .tab {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		padding: 0.35rem 0.7rem;
+		border: 1px solid transparent;
+		border-radius: 99px;
+		background: none;
+		color: var(--muted);
+		font: inherit;
+		font-size: 0.85rem;
+		cursor: pointer;
+		transition:
+			background 0.15s ease,
+			color 0.15s ease;
+	}
+
+	.tabs .tab:hover:not(.on) {
+		background: var(--tint);
+		color: var(--ink);
+	}
+
+	.tabs .tab.on {
+		background: var(--surface-2);
+		border-color: var(--line-strong);
+		color: var(--ink);
+		font-weight: 600;
+	}
+
+	/* The number is the point of the tab — how much is left in that queue. */
+	.n {
+		min-width: 1.35rem;
+		padding: 0.05rem 0.35rem;
+		border-radius: 99px;
+		background: var(--tint);
+		font-size: 0.72rem;
+		font-variant-numeric: tabular-nums;
+		text-align: center;
+	}
+
+	.tab.on.go .n {
+		background: color-mix(in srgb, var(--brand) 20%, transparent);
+		color: var(--brand);
+	}
+
+	.tab.on.ok .n {
+		background: color-mix(in srgb, var(--game) 22%, transparent);
+		color: var(--game);
+	}
+
+	.tab.on.no .n {
+		background: color-mix(in srgb, var(--danger) 18%, transparent);
 		color: var(--danger);
 	}
 

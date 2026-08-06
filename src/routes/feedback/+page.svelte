@@ -1,61 +1,80 @@
 <!--
-	Tell us something, and see what happened to it.
+	Everything you have told us, and what happened to it.
 
-	One page rather than a modal, because the second half — the list of what you
-	have already sent and where it got to — is the part that makes people file a
-	second report. A form that swallows things and never mentions them again
-	gets used once.
+	The composer used to be at the top of this page. It has moved into the dock
+	that sits on every page, because the moment you want to report something is
+	the moment you are looking at it, not one navigation later — so what is left
+	here is the archive: tabs for the four states a report can be in, a page at a
+	time, and the edit and withdraw controls for the ones still yours to change.
+
+	State lives in the query string, so a tab and a page can be linked to and
+	survive a reload.
 
 	No load function: the shelf pattern. getAccessToken() is browser-only, so
 	everything is fetched in an $effect once the session has hydrated.
 -->
 <script>
 	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 	import Icon from '$lib/components/Icon.svelte';
-	import ImageDrop from '$lib/components/ImageDrop.svelte';
+	import Pager from '$lib/components/Pager.svelte';
 	import Spinner from '$lib/components/Spinner.svelte';
+	import { mediaUrl } from '$lib/config.js';
 	import * as api from '$lib/api/client.js';
 	import { t } from '$lib/i18n/index.svelte.js';
+	import { feedbackDock } from '$lib/state/feedback.svelte.js';
 	import { session } from '$lib/state/session.svelte.js';
 	import { timeAgo } from '$lib/util/format.js';
 
-	const CATEGORIES = ['bug', 'idea', 'other'];
+	const STATUSES = ['new', 'accepted', 'done', 'declined'];
+	const PER_PAGE = 10;
 
 	let ready = $state(false);
 	let loading = $state(true);
 	let error = $state(/** @type {string | null} */ (null));
-	let items = $state(/** @type {any[]} */ ([]));
-
-	// The composer.
-	let body = $state('');
-	let category = $state('bug');
-	let sending = $state(false);
-	/** The report the composer's images belong to — created on first attach. */
-	let draft = $state(/** @type {any} */ (null));
-	let uploading = $state(false);
+	let data = $state(/** @type {any} */ (null));
 
 	/** Which existing report is open for editing. */
 	let editing = $state(/** @type {number | null} */ (null));
 	let editBody = $state('');
 	let confirming = $state(/** @type {number | null} */ (null));
 
+	let params = $derived(page.url.searchParams);
+	let tab = $derived(params.get('status') ?? '');
+	let pageNumber = $derived(Number(params.get('page') ?? 1) || 1);
+
+	let items = $derived(data?.items ?? []);
+	let counts = $derived(data?.counts ?? {});
+	let all = $derived(STATUSES.reduce((sum, s) => sum + (counts[s] ?? 0), 0));
+
+	/*
+	 * Re-runs on a tab or page change, and on `revision` — which the dock bumps
+	 * when something is sent from behind this page, so a new report appears in
+	 * the list rather than waiting for a reload nobody thinks to do.
+	 */
 	$effect(() => {
+		const search = page.url.search;
+		void feedbackDock.revision;
+
 		session.hydrate().then(() => {
 			ready = true;
 			if (!session.user) return goto('/login');
-			void load();
+			void load(search);
 		});
 	});
 
-	async function load() {
+	/** @param {string} search */
+	async function load(search) {
 		loading = true;
 		try {
-			const data = await api.listFeedback({ limit: 50 });
-			// The draft, if there is one, is already in this list — it is a real
-			// report the moment an image is attached to it.
-			items = data?.items ?? [];
+			const q = new URLSearchParams(search);
+			data = await api.listFeedback({
+				limit: PER_PAGE,
+				page: q.get('page') ?? '1',
+				...(q.get('status') ? { status: /** @type {string} */ (q.get('status')) } : {})
+			});
 			error = null;
-		} catch (e) {
+		} catch {
 			error = t('feedback.loadFailed');
 		} finally {
 			loading = false;
@@ -63,72 +82,39 @@
 	}
 
 	/**
-	 * A screenshot needs a report to hang on, so the first attach creates one.
-	 *
-	 * The alternative — holding files in the browser and posting them after the
-	 * text — means the upload only fails once the person thinks they are done,
-	 * which is the worst moment to be told an image was too big.
+	 * @param {Record<string, string | null>} changes
+	 * @param {{ resetPage?: boolean }} [options]
 	 */
-	async function attach(file) {
-		uploading = true;
-		try {
-			if (!draft) {
-				draft = await api.createFeedback(body.trim() || t('feedback.draftPlaceholder'), category);
-			}
-			draft = await api.addFeedbackImage(draft.id, file);
-			error = null;
-		} catch (e) {
-			error = t('feedback.imageFailed');
-		} finally {
-			uploading = false;
+	function apply(changes, { resetPage = true } = {}) {
+		const next = new URLSearchParams(params);
+		for (const [key, value] of Object.entries(changes)) {
+			if (value) next.set(key, value);
+			else next.delete(key);
 		}
+		// A tab change starts at its own first page; page 4 of "waiting" has
+		// nothing to do with page 4 of "done".
+		if (resetPage) next.delete('page');
+		const query = next.toString();
+		goto(query ? `/feedback?${query}` : '/feedback', { noScroll: true, keepFocus: true });
 	}
 
-	async function detach(imageId) {
-		if (!draft) return;
-		try {
-			draft = await api.removeFeedbackImage(draft.id, imageId);
-		} catch {
-			error = t('feedback.imageFailed');
-		}
-	}
-
-	async function send() {
-		if (!body.trim() || sending) return;
-		sending = true;
-		try {
-			if (draft) {
-				await api.updateFeedback(draft.id, { body: body.trim(), category });
-			} else {
-				await api.createFeedback(body.trim(), category);
-			}
-			body = '';
-			category = 'bug';
-			draft = null;
-			error = null;
-			await load();
-		} catch (e) {
-			error = t('feedback.sendFailed');
-		} finally {
-			sending = false;
-		}
-	}
-
+	/** @param {any} item */
 	async function saveEdit(item) {
 		try {
 			await api.updateFeedback(item.id, { body: editBody.trim() });
 			editing = null;
-			await load();
+			await load(page.url.search);
 		} catch {
 			error = t('feedback.sendFailed');
 		}
 	}
 
+	/** @param {any} item */
 	async function remove(item) {
 		try {
 			await api.deleteFeedback(item.id);
 			confirming = null;
-			await load();
+			await load(page.url.search);
 		} catch {
 			error = t('feedback.sendFailed');
 		}
@@ -142,58 +128,51 @@
 
 <svelte:head><title>{t('feedback.title')} — Feelm</title></svelte:head>
 
-{#if !ready || loading}
+<!--
+	The header and tabs wait for the session, so a signed-out visitor gets a
+	spinner and a redirect rather than a flash of somebody's archive. Past that
+	point `loading` only greys the list: switching tabs must not blank the tabs
+	you are switching with.
+-->
+{#if !ready}
 	<div class="frame page"><p class="faint"><Spinner size={15} /> {t('common.loading')}</p></div>
 {:else}
 	<div class="frame page">
 		<header class="masthead">
 			<span class="eyebrow"><Icon name="megaphone" size={14} />{t('feedback.eyebrow')}</span>
-			<h1 class="display">{t('feedback.title')}</h1>
+			<h1 class="display">{t('feedback.mine')}</h1>
 			<p class="muted">{t('feedback.intro')}</p>
+			<button type="button" class="btn btn-primary" onclick={() => feedbackDock.show()}>
+				<Icon name="plus" size={14} />{t('feedback.newReport')}
+			</button>
 		</header>
 
 		{#if error}<p class="error">{error}</p>{/if}
 
-		<section class="card composer">
-			<div class="kinds">
-				{#each CATEGORIES as key (key)}
-					<button
-						type="button"
-						class="chip"
-						class:on={category === key}
-						onclick={() => (category = key)}
-					>
-						{t(`feedback.category.${key}`)}
-					</button>
-				{/each}
-			</div>
-
-			<textarea
-				class="field"
-				rows="5"
-				bind:value={body}
-				placeholder={t('feedback.placeholder')}
-			></textarea>
-
-			<ImageDrop
-				images={draft?.images ?? []}
-				busy={uploading}
-				onadd={attach}
-				onremove={detach}
-			/>
-
-			<div class="send">
-				<button type="button" class="btn btn-primary" disabled={!body.trim() || sending} onclick={send}>
-					{#if sending}<Spinner size={14} />{/if}
-					{t('feedback.send')}
+		<!--
+			Tabs rather than a dropdown: there are exactly four states, each with a
+			number, and the number is half the reason to look. A select hides both.
+		-->
+		<nav class="tabs" aria-label={t('feedback.filterLabel')}>
+			<button type="button" class="tab" class:on={tab === ''} onclick={() => apply({ status: null })}>
+				{t('feedback.tabAll')}<span class="n">{all}</span>
+			</button>
+			{#each STATUSES as status (status)}
+				<button
+					type="button"
+					class="tab {tone(status)}"
+					class:on={tab === status}
+					onclick={() => apply({ status })}
+				>
+					{t(`feedback.status.${status}`)}<span class="n">{counts[status] ?? 0}</span>
 				</button>
-			</div>
-		</section>
+			{/each}
+		</nav>
 
-		<h2 class="eyebrow mine">{t('feedback.mine')}</h2>
-
-		{#if !items.length}
-			<p class="muted">{t('feedback.empty')}</p>
+		{#if loading}
+			<p class="faint"><Spinner size={15} /> {t('common.loading')}</p>
+		{:else if !items.length}
+			<p class="muted">{tab ? t('feedback.emptyTab') : t('feedback.empty')}</p>
 		{:else}
 			<ul class="reports">
 				{#each items as item (item.id)}
@@ -225,8 +204,8 @@
 										{#if image.purged}
 											<span class="gone" title={t('feedback.imagePurged')}><Icon name="image" size={15} /></span>
 										{:else}
-											<a href={image.url} target="_blank" rel="noreferrer">
-												<img src={image.url} alt="" loading="lazy" />
+											<a href={mediaUrl(image.url)} target="_blank" rel="noreferrer">
+												<img src={mediaUrl(image.url)} alt="" loading="lazy" />
 											</a>
 										{/if}
 									</li>
@@ -270,6 +249,13 @@
 					</li>
 				{/each}
 			</ul>
+
+			<Pager
+				page={pageNumber}
+				pages={data?.pages ?? 1}
+				busy={loading}
+				onpage={(n) => apply({ page: String(n) }, { resetPage: false })}
+			/>
 		{/if}
 	</div>
 {/if}
@@ -297,7 +283,7 @@
 	}
 
 	.masthead p {
-		margin: 0;
+		margin: 0 0 1rem;
 		max-width: 46ch;
 	}
 
@@ -305,39 +291,69 @@
 		color: var(--danger);
 	}
 
-	.composer {
+	.tabs {
 		display: flex;
-		flex-direction: column;
-		gap: 0.8rem;
-		padding: 1rem;
-	}
-
-	.kinds {
-		display: flex;
-		gap: 0.4rem;
+		gap: 0.3rem;
 		flex-wrap: wrap;
+		margin-bottom: 1rem;
+		padding-bottom: 0.6rem;
+		border-bottom: 1px solid var(--line);
 	}
 
-	.chip.on {
-		background: var(--brand);
-		border-color: var(--brand);
-		color: var(--on-accent);
-	}
-
-	textarea {
-		resize: vertical;
-		min-height: 6rem;
+	.tabs .tab {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		padding: 0.35rem 0.7rem;
+		border: 1px solid transparent;
+		border-radius: 99px;
+		background: none;
+		color: var(--muted);
 		font: inherit;
+		font-size: 0.85rem;
+		cursor: pointer;
+		transition:
+			background 0.15s ease,
+			color 0.15s ease;
 	}
 
-	.send {
-		display: flex;
-		justify-content: flex-end;
+	.tabs .tab:hover:not(.on) {
+		background: var(--tint);
+		color: var(--ink);
 	}
 
-	.mine {
-		display: block;
-		margin: 2rem 0 0.75rem;
+	.tabs .tab.on {
+		background: var(--surface-2);
+		border-color: var(--line-strong);
+		color: var(--ink);
+		font-weight: 600;
+	}
+
+	/* The count carries the tab's own colour, so the strip reads as four states
+	   at a glance and not as four grey words. */
+	.n {
+		min-width: 1.35rem;
+		padding: 0.05rem 0.35rem;
+		border-radius: 99px;
+		background: var(--tint);
+		font-size: 0.72rem;
+		font-variant-numeric: tabular-nums;
+		text-align: center;
+	}
+
+	.tab.on.go .n {
+		background: color-mix(in srgb, var(--brand) 20%, transparent);
+		color: var(--brand);
+	}
+
+	.tab.on.ok .n {
+		background: color-mix(in srgb, var(--game) 22%, transparent);
+		color: var(--game);
+	}
+
+	.tab.on.no .n {
+		background: color-mix(in srgb, var(--danger) 18%, transparent);
+		color: var(--danger);
 	}
 
 	.reports {
@@ -401,6 +417,11 @@
 		margin: 0;
 		white-space: pre-wrap;
 		line-height: 1.5;
+	}
+
+	textarea {
+		resize: vertical;
+		font: inherit;
 	}
 
 	.shots {

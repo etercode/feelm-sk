@@ -606,6 +606,16 @@ export const az = {
 	'feedback.imageFailed': 'Bu şəkil yüklənmədi.',
 	'feedback.sendFailed': 'Göndərilmədi. Yenidən cəhd edək?',
 	'feedback.confirmDelete': 'Doğrudan silinsin',
+	'feedback.newReport': 'Bizə bir şey deyin',
+	'feedback.tabAll': 'Hamısı',
+	'feedback.filterLabel': 'Statusa görə süz',
+	'feedback.emptyTab': 'Burada heç nə yoxdur.',
+	'feedback.dockTitle': 'Bizə bir şey deyin',
+	'feedback.dockOpen': 'Rəy göndər',
+	'feedback.dockAll': 'Hamısına bax',
+	'feedback.dockHint': 'Enter göndərir · Shift+Enter yeni sətir',
+	'feedback.dockThanks': 'Aldıq — təşəkkürlər.',
+	'feedback.dockAnother': 'Daha bir dənə göndər',
 	'browse.country': 'Ölkə',
 	'browse.anyCountry': 'Bütün ölkələr'
 };
