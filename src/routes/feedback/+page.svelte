@@ -40,12 +40,17 @@
 	let confirming = $state(/** @type {number | null} */ (null));
 
 	let params = $derived(page.url.searchParams);
-	let tab = $derived(params.get('status') ?? '');
+	/*
+	 * Always one of the four. There is no "everything" tab: a mixed list is
+	 * what the statuses exist to stop being, and it made the tab beside it —
+	 * "Waiting", the only one anybody opens this page to check — look like an
+	 * optional narrowing of the real view rather than the view itself.
+	 */
+	let tab = $derived(params.get('status') ?? STATUSES[0]);
 	let pageNumber = $derived(Number(params.get('page') ?? 1) || 1);
 
 	let items = $derived(data?.items ?? []);
 	let counts = $derived(data?.counts ?? {});
-	let all = $derived(STATUSES.reduce((sum, s) => sum + (counts[s] ?? 0), 0));
 
 	/*
 	 * Re-runs on a tab or page change, and on `revision` — which the dock bumps
@@ -71,7 +76,7 @@
 			data = await api.listFeedback({
 				limit: PER_PAGE,
 				page: q.get('page') ?? '1',
-				...(q.get('status') ? { status: /** @type {string} */ (q.get('status')) } : {})
+				status: q.get('status') ?? STATUSES[0]
 			});
 			error = null;
 		} catch {
@@ -139,7 +144,7 @@
 {:else}
 	<div class="frame page">
 		<header class="masthead">
-			<span class="eyebrow"><Icon name="megaphone" size={14} />{t('feedback.eyebrow')}</span>
+			<span class="eyebrow"><Icon name="chat" size={14} />{t('feedback.eyebrow')}</span>
 			<h1 class="display">{t('feedback.mine')}</h1>
 			<p class="muted">{t('feedback.intro')}</p>
 			<button type="button" class="btn btn-primary" onclick={() => feedbackDock.show()}>
@@ -154,9 +159,6 @@
 			number, and the number is half the reason to look. A select hides both.
 		-->
 		<nav class="tabs" aria-label={t('feedback.filterLabel')}>
-			<button type="button" class="tab" class:on={tab === ''} onclick={() => apply({ status: null })}>
-				{t('feedback.tabAll')}<span class="n">{all}</span>
-			</button>
 			{#each STATUSES as status (status)}
 				<button
 					type="button"
@@ -172,7 +174,7 @@
 		{#if loading}
 			<p class="faint"><Spinner size={15} /> {t('common.loading')}</p>
 		{:else if !items.length}
-			<p class="muted">{tab ? t('feedback.emptyTab') : t('feedback.empty')}</p>
+			<p class="muted">{t('feedback.emptyTab')}</p>
 		{:else}
 			<ul class="reports">
 				{#each items as item (item.id)}

@@ -46,8 +46,13 @@
 
 	let params = $derived(page.url.searchParams);
 	let pageNumber = $derived(Number(params.get('page') ?? 1));
-	let tab = $derived(params.get('status') ?? '');
-	let allCount = $derived(STATUSES.reduce((sum, s) => sum + (data?.counts?.[s] ?? 0), 0));
+	/*
+	 * Always one of the four, never "everything". A queue you are working is a
+	 * queue of one state; a mixed list is the thing the statuses exist to stop
+	 * being, and it put a tab beside "Waiting" that was always the bigger
+	 * number and never the one to open.
+	 */
+	let tab = $derived(params.get('status') ?? STATUSES[0]);
 
 	$effect(() => {
 		session.hydrate().then(() => {
@@ -61,7 +66,11 @@
 		loading = true;
 		try {
 			const q = new URLSearchParams(search);
-			data = await api.adminFeedback(Object.fromEntries(q));
+			const filters = Object.fromEntries(q);
+			// No status in the URL means the first tab, not every status —
+			// there is no tab that would be showing an unfiltered list.
+			filters.status ??= STATUSES[0];
+			data = await api.adminFeedback(filters);
 			error = null;
 		} catch (e) {
 			error = 'Could not load the queue.';
@@ -116,9 +125,6 @@
 {#if error}<p class="error">{error}</p>{/if}
 
 <nav class="tabs" aria-label="Status">
-	<button type="button" class="tab" class:on={tab === ''} onclick={() => apply({ status: null })}>
-		Everything<span class="n">{allCount}</span>
-	</button>
 	{#each STATUSES as status (status)}
 		<button
 			type="button"

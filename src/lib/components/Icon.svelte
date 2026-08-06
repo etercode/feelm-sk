@@ -6,7 +6,14 @@
 	const paths = {
 		search: 'M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14ZM20 20l-4.2-4.2',
 		image: 'M4 5h16v14H4zM4 15l4.5-4.5 4 4 3-3L20 15',
-		megaphone: 'M4 10v4h3l7 4V6l-7 4H4ZM17 9a4 4 0 0 1 0 6',
+		/*
+		 * A speech bubble, for feedback. What used to be here was called
+		 * `megaphone` and was drawn as a speaker cone with one arc beside it —
+		 * which is `sound` with a wave missing, so the "tell us something"
+		 * button read as a volume control. Saying something is the metaphor
+		 * anyway; announcing at people is not.
+		 */
+		chat: 'M4 4h16v11H8l-4 4V4Z',
 		star: 'M12 3.6l2.6 5.3 5.8.9-4.2 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.2-4.1 5.8-.9L12 3.6Z',
 		check: 'M4.8 12.4l4.8 4.8L19.2 6.8',
 		plus: 'M12 5v14M5 12h14',

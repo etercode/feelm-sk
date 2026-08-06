@@ -171,7 +171,7 @@
 							<a href="/feed" role="menuitem"><Icon name="activity" size={16} />{t('nav.yourFeed')}</a>
 							<a href="/settings" role="menuitem"><Icon name="edit" size={16} />{t('nav.settings')}</a>
 						<a href="/feedback" role="menuitem"
-							><Icon name="megaphone" size={16} />{t('feedback.eyebrow')}</a
+							><Icon name="chat" size={16} />{t('feedback.eyebrow')}</a
 						>
 							{#if session.isModerator}
 								<a href="/admin" role="menuitem" class="admin">

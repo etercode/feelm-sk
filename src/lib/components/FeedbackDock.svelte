@@ -142,7 +142,7 @@
 		<section class="dock" aria-label={t('feedback.dockTitle')}>
 			<header class="bar">
 				<span class="who">
-					<Icon name="megaphone" size={15} />
+					<Icon name="chat" size={15} />
 					<strong>{t('feedback.dockTitle')}</strong>
 				</span>
 				<a class="all" href="/feedback">{t('feedback.dockAll')}</a>
@@ -214,7 +214,7 @@
 		title={t('feedback.dockOpen')}
 		onclick={() => feedbackDock.toggle()}
 	>
-		<Icon name={feedbackDock.open ? 'close' : 'megaphone'} size={20} />
+		<Icon name={feedbackDock.open ? 'close' : 'chat'} size={20} />
 	</button>
 {/if}
 
