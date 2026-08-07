@@ -9,6 +9,7 @@
 	import CastRail from '$lib/components/CastRail.svelte';
 	import Gallery from '$lib/components/Gallery.svelte';
 	import Icon from '$lib/components/Icon.svelte';
+	import Modal from '$lib/components/Modal.svelte';
 	import PosterCard from '$lib/components/PosterCard.svelte';
 	import Rail from '$lib/components/Rail.svelte';
 	import ReviewCard from '$lib/components/ReviewCard.svelte';
@@ -31,6 +32,22 @@
 	let item = $derived(data.item);
 	let spec = $derived(typeOf(item));
 	let facets = $derived(facetsOf(item));
+
+	/*
+	 * The outbound link the viewer has asked to follow, held while they are
+	 * told where it goes. Null when nothing is being confirmed.
+	 *
+	 * The destination is a field a crawler filled from TMDB, not something we
+	 * wrote, so it is worth naming out loud before a click leaves the site.
+	 */
+	let leaving = $state(/** @type {{ label: string, href: string, value: string } | null} */ (null));
+
+	function leave() {
+		const href = leaving?.href;
+		leaving = null;
+		// noopener so the opened page cannot reach back through window.opener.
+		if (href) window.open(href, '_blank', 'noopener,noreferrer');
+	}
 	let parts = $derived(data.collection ?? []);
 	let unreleased = $derived(isUpcoming(item));
 	let outside = $derived(externalRatings(item));
@@ -77,13 +94,23 @@
 								{untilRelease(item.details.releaseDate)}
 							</span>
 						{/if}
-						{#if item.details.collection}
+						<!--
+							The position is only claimed when TMDB actually knows it.
+							It usually does not — part and total come back null for
+							most collections, and passing them to t() regardless
+							printed the template: "Ant-Man Collection · part {part}
+							of {total}".
+						-->
+						{#if item.details.collection?.name}
 							<span class="tag quiet">
-								{t('work.collectionPart', {
-									name: item.details.collection.name,
-									part: item.details.collection.part,
-									total: item.details.collection.total
-								})}
+								{Number.isFinite(item.details.collection.part) &&
+								Number.isFinite(item.details.collection.total)
+									? t('work.collectionPart', {
+											name: item.details.collection.name,
+											part: item.details.collection.part,
+											total: item.details.collection.total
+										})
+									: item.details.collection.name}
 							</span>
 						{/if}
 					</div>
@@ -261,6 +288,17 @@
 									<span class="chips">
 										{#each facet.chips as chip}<span class="chip">{chip}</span>{/each}
 									</span>
+								{:else if facet.href}
+									<!--
+										A button, not an anchor. The destination is a URL a
+										crawler put in our database, and the viewer is told
+										where it goes before they are sent there — so the
+										click opens the notice below rather than the site.
+									-->
+									<button type="button" class="away" onclick={() => (leaving = facet)}>
+										{t('work.officialSite')}
+										<Icon name="external" size={12} />
+									</button>
 								{:else}
 									{facet.value}
 								{/if}
@@ -311,6 +349,24 @@
 		</div>
 	{/if}
 </article>
+
+<!--
+	Where you are about to go, before you go there. The URL is shown in full
+	and unlinked — reading it is the point, and a link inside a warning about
+	links is a way to skip the warning by accident.
+-->
+<Modal open={!!leaving} title={t('work.leavingTitle')} onclose={() => (leaving = null)}>
+	<p class="leaving">{t('work.leavingBody')}</p>
+	<p class="leaving-url">{leaving?.href}</p>
+	<div class="leaving-actions">
+		<button type="button" class="btn btn-ghost" onclick={() => (leaving = null)}>
+			{t('common.cancel')}
+		</button>
+		<button type="button" class="btn btn-primary" onclick={leave}>
+			{t('work.leavingGo')}<Icon name="external" size={13} />
+		</button>
+	</div>
+</Modal>
 
 <style>
 	/* Banner ------------------------------------------------------------ */
@@ -731,5 +787,49 @@
 		.poster {
 			width: 6.5rem;
 		}
+	}
+
+	/* ---- leaving the site ------------------------------------------- */
+
+	.away {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
+		padding: 0;
+		border: none;
+		background: none;
+		color: var(--brand);
+		font: inherit;
+		font-weight: 600;
+		cursor: pointer;
+		text-align: left;
+	}
+
+	.away:hover,
+	.away:focus-visible {
+		text-decoration: underline;
+	}
+
+	.leaving {
+		margin: 0 0 0.6rem;
+		line-height: 1.55;
+	}
+
+	/* Wrapped anywhere rather than pushing the dialog wide: a URL has no
+	   spaces to break at and some of them are very long. */
+	.leaving-url {
+		margin: 0 0 1rem;
+		padding: 0.6rem 0.7rem;
+		border-radius: var(--radius-sm);
+		background: var(--tint);
+		color: var(--muted);
+		font-size: 0.85rem;
+		overflow-wrap: anywhere;
+	}
+
+	.leaving-actions {
+		display: flex;
+		justify-content: flex-end;
+		gap: 0.5rem;
 	}
 </style>

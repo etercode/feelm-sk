@@ -129,6 +129,11 @@ export const tr = {
 	'facet.budget': 'Bütçe',
 	'facet.revenue': 'Gişe',
 	'facet.homepage': 'Web sitesi',
+	'facet.collection': 'Seri',
+	'work.officialSite': 'Resmî web sitesi',
+	'work.leavingTitle': 'Feelm’den ayrılıyorsunuz',
+	'work.leavingBody': 'Bu bağlantı bizim yönetmediğimiz bir siteye gidiyor. Katalog verimizden geliyor.',
+	'work.leavingGo': 'Devam et',
 	'facet.collectionPart': '{total} yapıtın {part}. bölümü',
 
 	'progress.season': 'Sezon',

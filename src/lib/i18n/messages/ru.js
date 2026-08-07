@@ -126,6 +126,11 @@ export const ru = {
 	'facet.budget': 'Бюджет',
 	'facet.revenue': 'Кассовые сборы',
 	'facet.homepage': 'Сайт',
+	'facet.collection': 'Коллекция',
+	'work.officialSite': 'Официальный сайт',
+	'work.leavingTitle': 'Вы покидаете Feelm',
+	'work.leavingBody': 'Эта ссылка ведёт на сайт, который мы не поддерживаем. Она взята из данных каталога.',
+	'work.leavingGo': 'Продолжить',
 	'facet.collectionPart': 'Часть {part} из {total}',
 
 	'progress.season': 'Сезон',

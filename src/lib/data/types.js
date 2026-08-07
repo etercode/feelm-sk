@@ -38,6 +38,34 @@ function chips(label, values) {
 }
 
 /**
+ * A facet that leaves the site.
+ *
+ * The raw URL used to be printed as text, which on a Marvel page is fifty
+ * characters wrapping onto two lines to say "there is a website". The value
+ * shown is the host alone; the whole URL is what gets opened, and only after
+ * the viewer has been told where they are going — see the detail page.
+ *
+ * @param {string} label
+ * @param {string | null | undefined} href
+ */
+function link(label, href) {
+	if (!href) return null;
+
+	let host;
+	try {
+		const url = new URL(href);
+		// Only ever http(s). A `javascript:` or `data:` URL from a crawled field
+		// must not become something the page will open.
+		if (url.protocol !== 'http:' && url.protocol !== 'https:') return null;
+		host = url.host.replace(/^www\./, '');
+	} catch {
+		return null;
+	}
+
+	return { label, href, value: host };
+}
+
+/**
  * A sum of money, in the currency TMDB records everything in.
  *
  * Abbreviated rather than printed in full: "$250M" is the fact anybody wants
@@ -85,11 +113,24 @@ function languages(label, codes) {
 	);
 }
 
+/**
+ * The series a film belongs to, and where in it — when TMDB knows where.
+ *
+ * It often does not. `part` and `total` come back null for most collections,
+ * and the old code passed them to t() regardless, so the sheet printed the
+ * template: "Part {part} of {total}". Now the position is only claimed when
+ * both numbers are real, and otherwise the row simply names the collection,
+ * which is the fact we actually have.
+ */
 function collectionFacet(details) {
-	const part = details.collection;
-	if (!part) return null;
+	const collection = details.collection;
+	if (!collection?.name) return null;
 
-	return text(part.name, t('facet.collectionPart', { part: part.part, total: part.total }));
+	const placed = Number.isFinite(collection.part) && Number.isFinite(collection.total);
+
+	return placed
+		? text(collection.name, t('facet.collectionPart', { part: collection.part, total: collection.total }))
+		: text(t('facet.collection'), collection.name);
 }
 
 /** The four shelf states for one type, each resolved when it is read. */
@@ -132,7 +173,7 @@ export const types = {
 			languages(t('facet.spokenLanguages'), item.details.spokenLanguages),
 			money(t('facet.budget'), item.details.budget),
 			money(t('facet.revenue'), item.details.revenue),
-			text(t('facet.homepage'), item.details.homepage),
+			link(t('facet.homepage'), item.details.homepage),
 			collectionFacet(item.details)
 		]
 	},
@@ -163,7 +204,7 @@ export const types = {
 			text(t('facet.lastAired'), longDate(item.details.lastAired)),
 			text(t('facet.rated'), item.details.certification),
 			languages(t('facet.spokenLanguages'), item.details.spokenLanguages),
-			text(t('facet.homepage'), item.details.homepage)
+			link(t('facet.homepage'), item.details.homepage)
 		]
 	},
 

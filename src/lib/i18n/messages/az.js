@@ -126,6 +126,11 @@ export const az = {
 	'facet.budget': 'Büdcə',
 	'facet.revenue': 'Gişə',
 	'facet.homepage': 'Veb sayt',
+	'facet.collection': 'Seriya',
+	'work.officialSite': 'Rəsmi veb sayt',
+	'work.leavingTitle': 'Feelm-dən ayrılırsınız',
+	'work.leavingBody': 'Bu keçid bizim idarə etmədiyimiz sayta aparır. Kataloq məlumatlarımızdan gəlir.',
+	'work.leavingGo': 'Davam et',
 	'facet.collectionPart': '{total} əsərdən {part}-cisi',
 
 	'progress.season': 'Sezon',

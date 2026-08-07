@@ -151,6 +151,11 @@ export const en = {
 	'facet.budget': 'Budget',
 	'facet.revenue': 'Box office',
 	'facet.homepage': 'Website',
+	'facet.collection': 'Collection',
+	'work.officialSite': 'Official website',
+	'work.leavingTitle': 'Leaving Feelm',
+	'work.leavingBody': 'This link goes to a site we do not run. It came from our catalogue data.',
+	'work.leavingGo': 'Continue',
 	'facet.collectionPart': 'Part {part} of {total}',
 
 	/* ---- how far in somebody is --------------------------------------- */
