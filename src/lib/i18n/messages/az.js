@@ -122,6 +122,10 @@ export const az = {
 	'facet.firstPublished': 'İlk nəşr',
 	'facet.pages': 'Səhifə',
 	'facet.isbn': 'ISBN',
+	'facet.spokenLanguages': 'Dillər',
+	'facet.budget': 'Büdcə',
+	'facet.revenue': 'Gişə',
+	'facet.homepage': 'Veb sayt',
 	'facet.collectionPart': '{total} əsərdən {part}-cisi',
 
 	'progress.season': 'Sezon',

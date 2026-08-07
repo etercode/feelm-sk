@@ -122,6 +122,10 @@ export const ru = {
 	'facet.firstPublished': 'Первое издание',
 	'facet.pages': 'Страниц',
 	'facet.isbn': 'ISBN',
+	'facet.spokenLanguages': 'Языки',
+	'facet.budget': 'Бюджет',
+	'facet.revenue': 'Кассовые сборы',
+	'facet.homepage': 'Сайт',
 	'facet.collectionPart': 'Часть {part} из {total}',
 
 	'progress.season': 'Сезон',

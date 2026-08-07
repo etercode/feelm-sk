@@ -25,8 +25,8 @@
  * below and the `activity.*` keys in the dictionaries.
  */
 
-import { t } from '$lib/i18n/index.svelte.js';
-import { counted, duration, list, longDate } from '$lib/util/format.js';
+import { i18n, t } from '$lib/i18n/index.svelte.js';
+import { counted, duration, list, longDate, number } from '$lib/util/format.js';
 
 /** A facet is one row of the detail sheet: a label and either text or chips. */
 function text(label, value) {
@@ -35,6 +35,54 @@ function text(label, value) {
 
 function chips(label, values) {
 	return values?.length ? { label, chips: values } : null;
+}
+
+/**
+ * A sum of money, in the currency TMDB records everything in.
+ *
+ * Abbreviated rather than printed in full: "$250M" is the fact anybody wants
+ * from a budget, and $250,000,000 is nine digits to read to learn the same
+ * thing. Small enough amounts keep their digits, since "$0.4M" is worse than
+ * the number it replaces.
+ *
+ * @param {string} label
+ * @param {number | null | undefined} amount
+ */
+function money(label, amount) {
+	if (!amount || amount <= 0) return null;
+
+	const value =
+		amount >= 1_000_000
+			? `$${(amount / 1_000_000).toFixed(amount >= 10_000_000 ? 0 : 1)}M`
+			: `$${number(amount)}`;
+
+	return { label, value };
+}
+
+/**
+ * The languages actually spoken in it, which is not the same fact as the
+ * original language already shown above — a film can be in one and carry three.
+ *
+ * @param {string} label
+ * @param {string[] | undefined} codes
+ */
+function languages(label, codes) {
+	if (!codes?.length) return null;
+
+	// Intl gives the viewer their own word for each language; an unknown or
+	// made-up code falls back to itself rather than disappearing.
+	const names = new Intl.DisplayNames([i18n.locale], { type: 'language' });
+
+	return chips(
+		label,
+		codes.map((code) => {
+			try {
+				return names.of(code) ?? code;
+			} catch {
+				return code;
+			}
+		})
+	);
 }
 
 function collectionFacet(details) {
@@ -81,6 +129,10 @@ export const types = {
 			text(t('facet.runtime'), duration(item.details.runtime)),
 			text(t('facet.released'), longDate(item.details.releaseDate)),
 			text(t('facet.rated'), item.details.certification),
+			languages(t('facet.spokenLanguages'), item.details.spokenLanguages),
+			money(t('facet.budget'), item.details.budget),
+			money(t('facet.revenue'), item.details.revenue),
+			text(t('facet.homepage'), item.details.homepage),
 			collectionFacet(item.details)
 		]
 	},
@@ -109,7 +161,9 @@ export const types = {
 			text(t('facet.episodeLength'), duration(item.details.episodeRuntime)),
 			text(t('facet.firstAired'), longDate(item.details.firstAired)),
 			text(t('facet.lastAired'), longDate(item.details.lastAired)),
-			text(t('facet.rated'), item.details.certification)
+			text(t('facet.rated'), item.details.certification),
+			languages(t('facet.spokenLanguages'), item.details.spokenLanguages),
+			text(t('facet.homepage'), item.details.homepage)
 		]
 	},
 

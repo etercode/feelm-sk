@@ -125,6 +125,10 @@ export const tr = {
 	'facet.firstPublished': 'İlk baskı',
 	'facet.pages': 'Sayfa',
 	'facet.isbn': 'ISBN',
+	'facet.spokenLanguages': 'Diller',
+	'facet.budget': 'Bütçe',
+	'facet.revenue': 'Gişe',
+	'facet.homepage': 'Web sitesi',
 	'facet.collectionPart': '{total} yapıtın {part}. bölümü',
 
 	'progress.season': 'Sezon',

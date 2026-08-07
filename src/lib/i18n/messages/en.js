@@ -147,6 +147,10 @@ export const en = {
 	'facet.firstPublished': 'First published',
 	'facet.pages': 'Pages',
 	'facet.isbn': 'ISBN',
+	'facet.spokenLanguages': 'Languages',
+	'facet.budget': 'Budget',
+	'facet.revenue': 'Box office',
+	'facet.homepage': 'Website',
 	'facet.collectionPart': 'Part {part} of {total}',
 
 	/* ---- how far in somebody is --------------------------------------- */
