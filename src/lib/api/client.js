@@ -201,6 +201,14 @@ export function changePassword(data) {
 	return request('/api/me/password', { method: 'POST', body: JSON.stringify(data) }, true);
 }
 
+/**
+ * Close the signed-in account. Every token it holds dies with it, so nothing
+ * authenticated works after this returns.
+ */
+export function deleteAccount() {
+	return request('/api/me', { method: 'DELETE' }, true);
+}
+
 /** @param {Blob} blob a square image, already cropped by the browser */
 export function uploadAvatar(blob) {
 	const form = new FormData();
@@ -512,6 +520,20 @@ export function adminGenres() {
 /** @param {number} id */
 export function adminWork(id) {
 	return request(`/api/admin/works/${id}`, {}, true);
+}
+
+/**
+ * One action over a selection: flag as 18+, un-flag, hide, or bring back.
+ *
+ * Flagging as 18+ hides the title too — the flag records why it is hidden
+ * rather than being a second kind of hidden. See WorkAdmin on the API side.
+ *
+ * @param {number[]} ids
+ * @param {'adult' | 'not_adult' | 'delete' | 'restore'} action
+ * @returns {Promise<{ changed: number, skipped: number }>}
+ */
+export function adminBulkWorks(ids, action) {
+	return request('/api/admin/works/bulk', { method: 'POST', body: JSON.stringify({ ids, action }) }, true);
 }
 
 /**

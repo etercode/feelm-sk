@@ -66,6 +66,7 @@ export const en = {
 	'footer.browse': 'Browse',
 	'footer.catalog': 'Catalog',
 	'footer.crawlerNote': 'Filled in by the crawler.',
+	'footer.privacy': 'Privacy',
 	'footer.credit': 'Film and series data from TMDB.',
 
 	/* ---- the four types ----------------------------------------------- */
@@ -434,6 +435,14 @@ export const en = {
 	'stars.none': 'Not rated',
 	'stars.pick': 'Rate {value} out of 5',
 
+	'moderate.start': 'Moderate',
+	'moderate.selected': '{n} selected',
+	'moderate.all': 'Select all',
+	'moderate.none': 'Clear',
+	'moderate.markAdult': 'Mark 18+',
+	'moderate.delete': 'Hide',
+	'moderate.done': '{n} updated.',
+	'moderate.failed': 'That did not save.',
 	'person.eyebrow': 'Person',
 	'person.unknown': 'Unknown person',
 	'person.metaDescription': 'Everything {name} is credited on.',
@@ -627,6 +636,11 @@ export const en = {
 	'settings.changePassword': 'Change password',
 	'settings.changing': 'Changing…',
 	'settings.passwordChanged': 'Password changed.',
+	'settings.deleteAccount': 'Delete account',
+	'settings.deleteNote': 'This removes your profile, shelves, ratings and reviews from Feelm and signs you out everywhere. Write to us if you need it back.',
+	'settings.deleteConfirm': 'Yes, delete my account',
+	'settings.deleting': 'Deleting…',
+	'settings.deleteFailed': 'That did not work. Try again?',
 
 	'settings.fileTooLarge': 'That picture is too large.',
 	'settings.unsupportedType': 'Use a JPEG, PNG or WebP.',

@@ -17,6 +17,7 @@
 	import { page } from '$app/state';
 	import * as api from '$lib/api/client.js';
 	import Icon from '$lib/components/Icon.svelte';
+	import { SvelteSet } from 'svelte/reactivity';
 	import Pager from '$lib/components/Pager.svelte';
 	import Spinner from '$lib/components/Spinner.svelte';
 	import ConfirmAction from '$lib/components/admin/ConfirmAction.svelte';
@@ -26,6 +27,7 @@
 	import { session } from '$lib/state/session.svelte.js';
 
 	const columns = [
+		{ key: 'pick', label: '' },
 		{ key: 'work', label: 'Title', sort: 'title' },
 		{ key: 'year', label: 'Year', sort: 'year', align: 'end' },
 		{ key: 'score', label: 'Score', sort: 'score', align: 'end', hideNarrow: true },
@@ -42,6 +44,9 @@
 	const statusOptions = [
 		{ value: '', label: 'In the catalog' },
 		{ value: 'deleted', label: 'Hidden' },
+		// Hidden for being 18+ specifically, so the judgement can be reviewed
+		// without wading through the duplicates and phantoms.
+		{ value: 'adult', label: 'Marked 18+' },
 		{ value: 'all', label: 'Everything' }
 	];
 
@@ -67,6 +72,10 @@
 	let loading = $state(true);
 	let error = $state(null);
 	let busyId = $state(null);
+
+	/** Ticked rows, by work id. Survives paging — a selection is not a page. */
+	let chosen = $state(new SvelteSet());
+	let bulking = $state(false);
 	let genres = $state([]);
 
 	$effect(() => {
@@ -125,6 +134,30 @@
 			page: pageNumber,
 			limit: 25
 		});
+	}
+
+	/**
+	 * One action over the ticked rows.
+	 *
+	 * The selection is cleared afterwards rather than kept: what was acted on
+	 * has usually just left the filter it was found under, and ticks pointing
+	 * at rows no longer on screen are ticks nobody can audit.
+	 *
+	 * @param {'adult' | 'not_adult' | 'delete' | 'restore'} action
+	 */
+	async function bulk(action) {
+		if (!chosen.size || bulking) return;
+		bulking = true;
+		try {
+			await api.adminBulkWorks([...chosen], action);
+			chosen.clear();
+			await reload();
+			error = null;
+		} catch (e) {
+			error = e.body?.error ?? e.message;
+		} finally {
+			bulking = false;
+		}
 	}
 
 	async function hide(work) {
@@ -194,6 +227,34 @@
 
 {#if error}<p class="error">{error}</p>{/if}
 
+<!--
+	Only once something is picked. An always-present bar is a row of disabled
+	buttons above every table, which teaches people to stop looking at it.
+-->
+{#if chosen.size}
+	<div class="bulk">
+		<span class="count">{chosen.size} selected</span>
+
+		<button type="button" class="btn btn-sm btn-ghost" onclick={() => result.items.forEach((w) => chosen.add(w.id))}>
+			Select page
+		</button>
+		<button type="button" class="btn btn-sm btn-ghost" onclick={() => chosen.clear()}>Clear</button>
+
+		<span class="spacer"></span>
+
+		<button type="button" class="btn btn-sm" disabled={bulking} onclick={() => bulk('adult')}>
+			{#if bulking}<Spinner size={12} />{/if}Mark 18+
+		</button>
+		<button type="button" class="btn btn-sm btn-ghost" disabled={bulking} onclick={() => bulk('not_adult')}>
+			Not 18+
+		</button>
+		<button type="button" class="btn btn-sm danger" disabled={bulking} onclick={() => bulk('delete')}>Hide</button>
+		<button type="button" class="btn btn-sm btn-ghost" disabled={bulking} onclick={() => bulk('restore')}>
+			Restore
+		</button>
+	</div>
+{/if}
+
 <DataTable
 	{columns}
 	rows={result.items}
@@ -203,7 +264,14 @@
 	empty="No titles match that."
 >
 	{#snippet row(work, column)}
-		{#if column.key === 'work'}
+		{#if column.key === 'pick'}
+			<input
+				type="checkbox"
+				aria-label={work.title}
+				checked={chosen.has(work.id)}
+				onchange={() => (chosen.has(work.id) ? chosen.delete(work.id) : chosen.add(work.id))}
+			/>
+		{:else if column.key === 'work'}
 			<a class="work" href="/admin/works/{work.id}" data-type={work.type}>
 				{#if work.poster}
 					<img src={work.poster} alt="" loading="lazy" />
@@ -287,6 +355,34 @@
 	h1 {
 		font-size: clamp(1.8rem, 5vw, 2.6rem);
 		margin: 0.3rem 0 0;
+	}
+
+	.bulk {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		flex-wrap: wrap;
+		margin-bottom: 0.75rem;
+		padding: 0.5rem 0.7rem;
+		border: 1px solid var(--line-strong);
+		border-radius: var(--radius);
+		background: var(--tint);
+	}
+
+	.count {
+		font-size: 0.85rem;
+		font-weight: 600;
+		font-variant-numeric: tabular-nums;
+	}
+
+	.spacer {
+		flex: 1 1 auto;
+	}
+
+	.danger {
+		background: var(--danger);
+		border-color: var(--danger);
+		color: #fff;
 	}
 
 	.error {

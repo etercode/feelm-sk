@@ -25,6 +25,30 @@
 		});
 	});
 
+	/* ---- closing the account ---------------------------------------- */
+
+	let confirmingDelete = $state(false);
+	let deleting = $state(false);
+	let deleteError = $state(/** @type {string | null} */ (null));
+
+	async function deleteAccount() {
+		deleting = true;
+		try {
+			await api.deleteAccount();
+			/*
+			 * signOut() posts a logout the server will refuse — the token died
+			 * with the account — and its catch is what clears the local tokens
+			 * and the cached library. Reaching the same end by the failing path
+			 * is the point: there is no state left worth a second code path.
+			 */
+			await session.signOut();
+			goto('/');
+		} catch (e) {
+			deleteError = t('settings.deleteFailed');
+			deleting = false;
+		}
+	}
+
 	/* ---- picture ---------------------------------------------------- */
 
 	/** @type {File | null} */
@@ -473,6 +497,36 @@
 			</form>
 		</section>
 	{/if}
+
+	<!--
+		Last on the page and behind a confirmation, because it is the one control
+		here that cannot be undone by pressing it again.
+
+		Google Play requires an account to be closable from inside the app and
+		from a public page; this is the website half, and /privacy#delete is the
+		URL the Play Console points at.
+	-->
+	<section class="card panel danger-zone">
+		<h2>{t('settings.deleteAccount')}</h2>
+		<p class="muted note">{t('settings.deleteNote')}</p>
+
+		{#if deleteError}<p class="error">{deleteError}</p>{/if}
+
+		<div class="row-end">
+			{#if confirmingDelete}
+				<button type="button" class="btn danger" disabled={deleting} onclick={deleteAccount}>
+					{deleting ? t('settings.deleting') : t('settings.deleteConfirm')}
+				</button>
+				<button type="button" class="btn btn-ghost" onclick={() => (confirmingDelete = false)}>
+					{t('common.cancel')}
+				</button>
+			{:else}
+				<button type="button" class="btn danger" onclick={() => (confirmingDelete = true)}>
+					{t('settings.deleteAccount')}
+				</button>
+			{/if}
+		</div>
+	</section>
 </div>
 
 <style>
@@ -559,6 +613,22 @@
 		margin: 0;
 		color: var(--danger);
 		font-size: 0.88rem;
+	}
+
+	/* Set apart from the panels above it so it does not read as one more
+	   setting to work through on the way down the page. */
+	.danger-zone {
+		border-color: color-mix(in srgb, var(--danger) 35%, var(--line));
+	}
+
+	.danger-zone h2 {
+		color: var(--danger);
+	}
+
+	.btn.danger {
+		background: var(--danger);
+		border-color: var(--danger);
+		color: #fff;
 	}
 
 	.ok {

@@ -49,6 +49,9 @@
 
 	<div class="frame base muted">
 		<span>© {year} Feelm</span>
+		<!-- Google Play requires the policy to be reachable from the app and the
+		     site, not only from the store listing. -->
+		<a href="/privacy">{t('footer.privacy')}</a>
 		<span class="faint">{t('footer.credit')}</span>
 	</div>
 </footer>
