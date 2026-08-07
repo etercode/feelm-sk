@@ -11,29 +11,29 @@
 	`autoplay` is the switch and it defaults to off. An embed that plays on sight
 	should have to be opted into rather than remembered about.
 
-	## Why the controls are ours
+	## Whose controls
 
-	YouTube's own bar cannot be styled or removed: the player is a cross-origin
-	iframe, so its DOM is not reachable from here and never will be. What *can*
-	be done is stop it appearing and cover what is left.
+	The detail page uses YouTube's. It had ours — a scrub bar, a clock, a
+	play button and a fullscreen toggle, all driven over postMessage — and they
+	were worse at the job than the thing they covered. YouTube's bar has the
+	quality menu, captions, playback speed, chapters and the keyboard shortcuts
+	people already know, and it cannot drift out of sync with the player the way
+	a mirror of its state can. Hiding it also went against YouTube's own terms
+	about their branding staying visible.
 
-	  - `controls=0` drops the bar itself. A looping embed needs `playlist=<id>`
-	    to loop, which makes YouTube think it is a real playlist and draw next
-	    and previous arrows that go nowhere; those go with the bar.
-	  - The title, the share button and the channel avatar are shown on *hover*.
-	    The iframe is `pointer-events: none`, so it never sees a cursor and they
-	    never appear. Clicks land on our layer instead.
-	  - What remains is the big play button YouTube draws over a paused video.
-	    Our own paused scrim sits on top of it.
+	So `controls=1` there, and the iframe takes the cursor.
 
-	Everything below then has to be driven by hand. `enablejsapi=1` turns the
-	iframe into something that accepts commands as JSON over postMessage and
-	reports its state back the same way — which is all YouTube's own API library
-	does, so there is no reason to load it.
+	The plate and the hover card still hide it, because there the trailer is
+	wallpaper: it plays behind a title and a set of links, a scrub bar invites an
+	interaction there is no reason to want, and clicks belong to whatever is
+	underneath. Those keep one control of ours — a speaker — because a video that
+	makes noise with no way to stop it is the one thing worse than no controls.
 
-	Worth knowing: YouTube's terms expect their branding to stay visible, and
-	this hides it. That is a call for whoever ships the site, not a technical
-	limit.
+	`enablejsapi=1` is what makes that speaker possible: it turns the iframe into
+	something that accepts commands as JSON over postMessage and reports its
+	state back the same way, which is all YouTube's own API library does, so
+	there is no reason to load it. It is also how the plate knows a video ended
+	and can move to the next announcement.
 -->
 <script module>
 	/**
@@ -118,15 +118,8 @@
 	let ready = $state(false);
 	/** -1 unstarted, 1 playing, 2 paused, 3 buffering, 0 ended, 5 cued. */
 	let mode = $state(-1);
-	let at = $state(0);
-	let span = $state(0);
 	let level = $state(chosen);
 	let sound = $state(false);
-
-	/** While a thumb is held, incoming times are ignored — see `receive`. */
-	let scrubbing = $state(false);
-	let scrub = $state(0);
-	let expanded = $state(false);
 
 	/* ---- whether the volume slider is open --------------------------------
 	 *
@@ -159,8 +152,6 @@
 		sound = !silent;
 		ready = false;
 		mode = -1;
-		at = 0;
-		span = 0;
 		level = chosen;
 	});
 
@@ -170,7 +161,9 @@
 				new URLSearchParams({
 					autoplay: '1',
 					mute: silent ? '1' : '0',
-					controls: '0',
+					// Its own controls where the trailer is the thing you came
+					// for; hidden where it is wallpaper. See the note at the top.
+					controls: full ? '1' : '0',
 					loop: loop ? '1' : '0',
 					playlist: key, // a single-video loop needs itself as the playlist
 					playsinline: '1',
@@ -186,9 +179,6 @@
 
 	let still = $derived(item?.backdrop ?? item?.poster ?? null);
 
-	/** What the seek bar shows: the thumb while it is held, the player otherwise. */
-	let shown = $derived(scrubbing ? scrub : at);
-	let played = $derived(span ? Math.min(100, (shown / span) * 100) : 0);
 	/** A muted player draws an empty volume track, whatever its remembered level. */
 	let loudness = $derived(sound ? level : 0);
 
@@ -259,8 +249,6 @@
 				// that advances a queue must not be told twice.
 				if (0 === mode && 0 !== was) onended?.();
 			}
-			if (typeof info.duration === 'number' && info.duration > 0) span = info.duration;
-			if (typeof info.currentTime === 'number' && !scrubbing) at = info.currentTime;
 			if (typeof info.volume === 'number') level = info.volume;
 			if (typeof info.muted === 'boolean') sound = !info.muted;
 		};
@@ -269,11 +257,6 @@
 		return () => window.removeEventListener('message', receive);
 	});
 
-	$effect(() => {
-		const sync = () => (expanded = document.fullscreenElement === shell);
-		document.addEventListener('fullscreenchange', sync);
-		return () => document.removeEventListener('fullscreenchange', sync);
-	});
 
 	// A drag can end anywhere — off the slider, off the window — so the release
 	// is caught globally. Listening only while held keeps it to the one case.
@@ -290,12 +273,6 @@
 		};
 	});
 
-	function togglePlay() {
-		command(mode === 1 ? 'pauseVideo' : 'playVideo');
-		// Assume it worked. infoDelivery corrects this within ~250ms, and a
-		// button that waits a quarter of a second to change feels broken.
-		mode = mode === 1 ? 2 : 1;
-	}
 
 	function toggleSound() {
 		sound = !sound;
@@ -329,24 +306,8 @@
 		}
 	}
 
-	/**
-	 * @param {number} seconds
-	 * @param {boolean} settle whether to fetch — false while the thumb is moving
-	 */
-	function seek(seconds, settle) {
-		command('seekTo', [seconds, settle]);
-	}
 
-	function toggleFullscreen() {
-		if (document.fullscreenElement) return void document.exitFullscreen();
-		void shell?.requestFullscreen?.();
-	}
 
-	/** @param {number} seconds */
-	function clock(seconds) {
-		const whole = Number.isFinite(seconds) && seconds > 0 ? Math.floor(seconds) : 0;
-		return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, '0')}`;
-	}
 </script>
 
 {#if key}
@@ -374,50 +335,15 @@
 			{/key}
 
 			<!--
-				Our paused state, drawn over YouTube's. Only where the video is
-				content: the plate and the hover card cannot be paused, so they
-				can never reach this.
+				Everything below is for the decorative fits only. On a detail page
+				the trailer is the thing you came for and YouTube's own bar is
+				better than ours at being one — it has the quality menu, the
+				captions, the keyboard shortcuts people already know, and it does
+				not drift out of sync with a player we can only talk to by
+				postMessage.
 			-->
-			{#if full && (mode === 2 || mode === 0)}
-				<button type="button" class="scrim" onclick={togglePlay} aria-label={t('work.play')}>
-					<span class="glyph"><Icon name="play" size={26} filled /></span>
-				</button>
-			{/if}
-
-			<div class="bar" class:sparse={!full}>
-				{#if full}
-					<button
-						type="button"
-						class="ctl"
-						onclick={togglePlay}
-						aria-label={t(mode === 1 ? 'work.pause' : 'work.play')}
-					>
-						<Icon name={mode === 1 ? 'pause' : 'play'} size={16} filled={mode !== 1} />
-					</button>
-
-					<input
-						class="range seek"
-						type="range"
-						min="0"
-						max={span || 1}
-						step="0.1"
-						value={shown}
-						disabled={!span}
-						aria-label={t('work.seek')}
-						style="--filled: {played}%"
-						onpointerdown={() => (scrubbing = true)}
-						oninput={(event) => {
-							scrub = Number(event.currentTarget.value);
-							seek(scrub, false);
-						}}
-						onchange={(event) => {
-							seek(Number(event.currentTarget.value), true);
-							scrubbing = false;
-						}}
-					/>
-
-					<span class="clock">{clock(shown)} / {clock(span)}</span>
-				{/if}
+			{#if !full}
+			<div class="bar sparse">
 
 				<!--
 					Button and slider are one control. The slider is always in the
@@ -457,17 +383,8 @@
 					/>
 				</div>
 
-				{#if full}
-					<button
-						type="button"
-						class="ctl"
-						onclick={toggleFullscreen}
-						aria-label={t(expanded ? 'work.exitFullscreen' : 'work.fullscreen')}
-					>
-						<Icon name={expanded ? 'collapse' : 'expand'} size={17} />
-					</button>
-				{/if}
 			</div>
+			{/if}
 		{:else}
 			<!--
 				The poster frame with the play control on it. A real button rather
@@ -564,6 +481,12 @@
 		border: 0;
 		display: block;
 		pointer-events: none;
+	}
+
+	/* The one player meant to be used. YouTube's bar is under the cursor here,
+	   so the cursor has to be able to get to it. */
+	.inline iframe {
+		pointer-events: auto;
 	}
 
 	/* ---- our paused state, over YouTube's ------------------------------- */
