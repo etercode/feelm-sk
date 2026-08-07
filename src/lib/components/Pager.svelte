@@ -81,14 +81,29 @@
 		return [1, { gap: 'l' }, ...range(left, right), { gap: 'r' }, total];
 	});
 
+	/*
+	 * Starts as a string and does not stay one.
+	 *
+	 * `bind:value` on an <input type="number"> hands back a number, so this
+	 * holds '' until somebody types and a number afterwards — and the code here
+	 * used to call jump.trim() on it. That throws the moment a digit is
+	 * entered, which took the submit handler with it: the box accepted a page
+	 * number and the Go button did nothing at all.
+	 *
+	 * So nothing assumes a type. Number('') is 0 and Number(2) is 2, which is
+	 * all either of the two readers below actually needs.
+	 */
 	let jump = $state('');
+	let wanted = $derived(Number(jump));
+	let canJump = $derived(Number.isFinite(wanted) && wanted >= 1);
 
 	function go(event) {
 		event.preventDefault();
-		const wanted = Number(jump.trim());
-		if (!Number.isFinite(wanted) || wanted < 1) return;
+		if (!canJump) return;
+
+		const target = known ? Math.min(Math.round(wanted), total) : Math.round(wanted);
 		jump = '';
-		onpage(known ? Math.min(Math.round(wanted), total) : Math.round(wanted));
+		onpage(target);
 	}
 </script>
 
@@ -174,7 +189,7 @@
 						inputmode="numeric"
 					/>
 				</label>
-				<button type="submit" class="btn btn-sm" disabled={busy || jump.trim() === ''}>{t('common.go')}</button>
+				<button type="submit" class="btn btn-sm" disabled={busy || !canJump}>{t('common.go')}</button>
 				{#if known}<span class="of faint">{t('pager.of', { total })}</span>{/if}
 			</form>
 		{/if}
