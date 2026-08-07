@@ -55,9 +55,20 @@
 	let tab = $derived(params.get('status') ?? STATUSES[0]);
 
 	$effect(() => {
+		/*
+		 * Read up front, which is the whole fix.
+		 *
+		 * This used to say `load(page.url.search)` inside the then(), and a read
+		 * inside a promise callback happens after the effect has finished
+		 * tracking — so the effect depended on nothing, ran once, and never
+		 * again. Clicking a tab changed the URL and reloaded nothing, which is
+		 * exactly what "the tabs do not work" looked like.
+		 */
+		const search = page.url.search;
+
 		session.hydrate().then(() => {
 			ready = true;
-			void load(page.url.search);
+			void load(search);
 		});
 	});
 

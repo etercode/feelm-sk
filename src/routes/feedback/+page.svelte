@@ -16,6 +16,7 @@
 <script>
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
+	import ImageDrop from '$lib/components/ImageDrop.svelte';
 	import Icon from '$lib/components/Icon.svelte';
 	import Pager from '$lib/components/Pager.svelte';
 	import Spinner from '$lib/components/Spinner.svelte';
@@ -103,6 +104,38 @@
 		goto(query ? `/feedback?${query}` : '/feedback', { noScroll: true, keepFocus: true });
 	}
 
+	/** Which report is mid-upload, so its drop zone can show it. */
+	let busyImage = $state(/** @type {number | null} */ (null));
+
+	/**
+	 * @param {any} item
+	 * @param {File} file
+	 */
+	async function attachTo(item, file) {
+		busyImage = item.id;
+		try {
+			await api.addFeedbackImage(item.id, file);
+			await load(page.url.search);
+		} catch {
+			error = t('feedback.imageFailed');
+		} finally {
+			busyImage = null;
+		}
+	}
+
+	/**
+	 * @param {any} item
+	 * @param {number} imageId
+	 */
+	async function detachFrom(item, imageId) {
+		try {
+			await api.removeFeedbackImage(item.id, imageId);
+			await load(page.url.search);
+		} catch {
+			error = t('feedback.imageFailed');
+		}
+	}
+
 	/** @param {any} item */
 	async function saveEdit(item) {
 		try {
@@ -187,6 +220,19 @@
 
 						{#if editing === item.id}
 							<textarea class="field" rows="4" bind:value={editBody}></textarea>
+
+							<!--
+								Screenshots are editable here too. They were not, and a
+								report is most often missing one precisely when you go
+								back to change it — you wrote it, then took the picture.
+							-->
+							<ImageDrop
+								images={item.images ?? []}
+								busy={busyImage === item.id}
+								onadd={(file) => attachTo(item, file)}
+								onremove={(imageId) => detachFrom(item, imageId)}
+							/>
+
 							<div class="row">
 								<button type="button" class="btn btn-sm btn-primary" onclick={() => saveEdit(item)}>
 									{t('common.save')}
