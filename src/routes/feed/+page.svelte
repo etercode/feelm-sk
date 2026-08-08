@@ -41,6 +41,11 @@
 	let events = $state([]);
 	let hasMore = $state(false);
 	let page = $state(1);
+	// The feed and the follow list are this page's data. See library.loadSocial.
+	$effect(() => {
+		if (session.user) void library.loadSocial(session.user);
+	});
+
 	let loading = $state(false);
 	let failed = $state(false);
 

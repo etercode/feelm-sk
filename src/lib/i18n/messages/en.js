@@ -233,6 +233,8 @@ export const en = {
 	'home.crawledSince.one': 'The crawler added {count} title since you were last here.',
 	'home.crawledSince.other': 'The crawler added {count} titles since you were last here.',
 	'home.markSeen': 'Mark all as seen',
+	'home.suggestedKicker': 'From people you follow',
+	'home.suggestedTitle': 'Suggested for you',
 	'home.latestKicker': 'Just released',
 	'home.latestTitle': 'New this season',
 	'home.kicker.movie': 'Out now',

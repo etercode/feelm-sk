@@ -225,7 +225,10 @@ export function deleteAvatar() {
 
 /** @param {{ type?: string, q?: string, page?: number, limit?: number }} [params] */
 export function listItems(params = {}) {
-	return request(`/api/items${query(params)}`);
+	// With auth when there is any: the rows come back carrying the viewer's own
+	// shelf state and NEW flag, which is why the browser no longer preloads
+	// either. Anonymous callers simply get rows without them.
+	return request(`/api/items${query(params)}`, {}, true);
 }
 
 /**
@@ -233,12 +236,12 @@ export function listItems(params = {}) {
  * @param {{ q: string, type?: string, limit?: number, offset?: number }} params
  */
 export function search(params) {
-	return request(`/api/search${query(params)}`);
+	return request(`/api/search${query(params)}`, {}, true);
 }
 
 /** Type-ahead: a few titles, matching people, and the spelling correction. */
 export function searchSuggest(params) {
-	return request(`/api/search/suggest${query(params)}`);
+	return request(`/api/search/suggest${query(params)}`, {}, true);
 }
 
 /** Genres, certifications, languages and the year span, for the filter panel. */
@@ -267,6 +270,27 @@ export function getItemReviews(type, slug) {
 }
 
 // ---- Shelf / reviews / social --------------------------------------------
+
+/**
+ * What the people you follow are watching, minus anything you have already
+ * watched or abandoned. Shuffled server-side, so it is not the same row twice.
+ *
+ * @param {number} [limit]
+ */
+/**
+ * The viewer's own state for a set of titles, for pages the server rendered
+ * without knowing who is asking — browse and search fetch through `load`,
+ * which carries no token.
+ *
+ * @param {number[]} ids
+ */
+export function viewerStateFor(ids) {
+	return request('/api/me/state', { method: 'POST', body: JSON.stringify({ ids }) }, true);
+}
+
+export function suggestions(limit = 20) {
+	return request(`/api/me/suggestions?limit=${limit}`, {}, true);
+}
 
 export function getMyEntries() {
 	return request('/api/me/entries', {}, true);

@@ -216,6 +216,8 @@ export const ru = {
 	'home.crawledSince.many': 'С вашего прошлого визита краулер добавил {count} названий.',
 	'home.crawledSince.other': 'С вашего прошлого визита краулер добавил {count} названий.',
 	'home.markSeen': 'Отметить всё просмотренным',
+	'home.suggestedKicker': 'От тех, на кого вы подписаны',
+	'home.suggestedTitle': 'Рекомендуем вам',
 	'home.latestKicker': 'Только что вышло',
 	'home.latestTitle': 'Новое в этом сезоне',
 	'home.kicker.movie': 'В прокате',

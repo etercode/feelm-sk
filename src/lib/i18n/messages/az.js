@@ -180,6 +180,8 @@ export const az = {
 	'home.apiHint': 'API {url} ünvanında işləyir?',
 	'home.crawledSince.other': 'Sən son dəfə burada olandan bəri krawler {count} əsər əlavə etdi.',
 	'home.markSeen': 'Hamısını oxunmuş kimi işarələ',
+	'home.suggestedKicker': 'İzlədiklərindən',
+	'home.suggestedTitle': 'Sənə tövsiyə',
 	'home.latestKicker': 'Yeni çıxanlar',
 	'home.latestTitle': 'Bu mövsüm yeni',
 	'home.kicker.movie': 'Ekranlarda',

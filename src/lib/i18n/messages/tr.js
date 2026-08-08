@@ -184,6 +184,8 @@ export const tr = {
 	'home.crawledSince.other':
 		'Sen son geldiğinden beri tarayıcı {count} yapıt ekledi.',
 	'home.markSeen': 'Tümünü görüldü işaretle',
+	'home.suggestedKicker': 'Takip ettiklerinden',
+	'home.suggestedTitle': 'Sana önerilenler',
 	'home.latestKicker': 'Yeni çıkanlar',
 	'home.latestTitle': 'Bu sezon yeni',
 	'home.kicker.movie': 'Vizyonda',

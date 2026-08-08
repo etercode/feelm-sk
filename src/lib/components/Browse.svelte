@@ -18,6 +18,8 @@
 	import Pager from '$lib/components/Pager.svelte';
 	import PosterCard from '$lib/components/PosterCard.svelte';
 	import Spinner from '$lib/components/Spinner.svelte';
+	import { library } from '$lib/state/library.svelte.js';
+	import { session } from '$lib/state/session.svelte.js';
 	import { types } from '$lib/data/types.js';
 	import { i18n, t } from '$lib/i18n/index.svelte.js';
 
@@ -41,6 +43,18 @@
 	 */
 	let refreshing = $derived(navigating.to?.route.id === page.route.id);
 	let results = $derived(data.results);
+
+	/*
+	 * The rows arrive from `load`, which has no token, so they carry no shelf
+	 * state. Fill it in for the ids on screen — one request per page rather
+	 * than the whole shelf on every page.
+	 */
+	$effect(() => {
+		const ids = (results.items ?? []).map((item) => item.id).filter(Boolean);
+		const userId = session.user?.id;
+		if (userId) void library.fillViewerState(userId, ids);
+	});
+
 	let options = $derived(data.filters);
 	let params = $derived(page.url.searchParams);
 	let pageNumber = $derived(Number(params.get('page') ?? 1));

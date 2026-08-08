@@ -58,46 +58,44 @@ class Library {
 	async hydrateForUser(me) {
 		if (!browser || !me) return;
 
+		/*
+		 * Nothing. Deliberately.
+		 *
+		 * This used to fetch four things from the root layout, so every page —
+		 * /movies, /search, /settings — paid for all of them whether or not it
+		 * drew any:
+		 *
+		 *   entries   every shelf row, so a card could ask about one id
+		 *   seen      every id ever opened, to draw a dot
+		 *   following every follow, for a button most pages never render
+		 *   feed      forty activity rows, shown on two pages
+		 *
+		 * The first two now ride on the rows that need them. The last two are
+		 * fetched by the pages that draw them — see loadSocial(), called from
+		 * the home page and the feed.
+		 *
+		 * Kept as a method because the session calls it at three points and the
+		 * shape of "what to do when somebody signs in" is worth a place to
+		 * put the next thing.
+		 */
+		this.entries = [];
+		this.reviews = [];
+		this.follows = [];
+	}
+
+	/**
+	 * Follows and the activity feed, for the two pages that show them.
+	 *
+	 * @param {any} me
+	 */
+	async loadSocial(me) {
+		if (!browser || !me) return;
+
 		try {
-			/*
-			 * No catalog.hydrate() here. Every shelf row, review and activity
-			 * event below arrives with its own work attached and is handed to
-			 * catalog.remember(), so the lookups these feed resolve without
-			 * the front page's rails — which a signed-in visitor was pulling
-			 * on whatever page they happened to open.
-			 */
-			/*
-			 * No listSeen() any more.
-			 *
-			 * It fetched every id the viewer had ever opened — 462 for one
-			 * account already, and nothing bounding it but time — on every page
-			 * load, to decide whether a poster wears a NEW dot. The API answers
-			 * that per row now: `item.isNew`, computed against the thirty titles
-			 * actually on screen. See WorkPresenter::forViewer.
-			 */
-			/*
-			 * No getMyEntries() either, for the same reason.
-			 *
-			 * It returned every shelf row — 682 for one account — so that a
-			 * poster could ask about one id. Every consumer is a point lookup:
-			 * ShelfControls, QuickShelf, ReviewEditor, SeasonBrowser, the card
-			 * and the hero all ask entryFor(user, item) and nothing iterates.
-			 * So the answer rides on the row, as `item.viewerEntry`, and this
-			 * store now holds only what the viewer has changed this visit —
-			 * which is what makes an optimistic write still win over the
-			 * payload it was rendered from.
-			 *
-			 * The shelf page itself still asks for the whole thing; it is the
-			 * one screen that genuinely wants it.
-			 */
 			const [followingPayload, feedPayload] = await Promise.all([
 				api.getFollowing(me.username),
 				api.getFeed({ scope: 'following', limit: 40 })
 			]);
-
-			this.entries = [];
-			this.reviews = [];
-			this.follows = [];
 
 			for (const person of followingPayload?.users ?? []) {
 				this.rememberUser(person);
@@ -106,7 +104,7 @@ class Library {
 
 			this.#ingestActivity(feedPayload?.activity ?? []);
 		} catch (e) {
-			console.warn('library hydrate failed', e);
+			console.warn('library social load failed', e);
 		}
 	}
 
@@ -351,6 +349,44 @@ class Library {
 		 */
 		this.seenItemIds = new Set([...this.seenItemIds, item.id]);
 		void api.markSeen(path.type, path.slug).catch(() => {});
+	}
+
+	/**
+	 * Fills in the viewer's own state for titles the server rendered without
+	 * knowing who was asking.
+	 *
+	 * Browse and search fetch through SvelteKit's `load`, which has no access
+	 * to the token, so their rows arrive without `viewerEntry` — without this
+	 * a shelved film would show no badge on /movies until you opened it. One
+	 * request per page, for the ids on that page.
+	 *
+	 * @param {number} userId
+	 * @param {number[]} ids
+	 */
+	async fillViewerState(userId, ids) {
+		if (!browser || !userId || !ids?.length) return;
+
+		try {
+			const data = await api.viewerStateFor(ids);
+
+			for (const [itemId, entry] of Object.entries(data?.entries ?? {})) {
+				this.#ingestEntryRow({
+					id: `server-${itemId}`,
+					userId,
+					itemId: Number(itemId),
+					status: entry.status,
+					rating: entry.rating,
+					progress: entry.progress,
+					updatedAt: new Date().toISOString()
+				});
+			}
+
+			if ((data?.seen ?? []).length) {
+				this.seenItemIds = new Set([...this.seenItemIds, ...data.seen]);
+			}
+		} catch {
+			// A missing badge is not worth an error anybody sees.
+		}
 	}
 
 	/** Opened during this visit, so a card can drop its badge without a reload. */

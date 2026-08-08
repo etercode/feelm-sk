@@ -20,6 +20,18 @@
 
 	let params = $derived(page.url.searchParams);
 	let results = $derived(data.results);
+
+	/*
+	 * The rows arrive from `load`, which has no token, so they carry no shelf
+	 * state. Fill it in for the ids on screen — one request per page rather
+	 * than the whole shelf on every page.
+	 */
+	$effect(() => {
+		const ids = (results?.items ?? []).map((item) => item.id).filter(Boolean);
+		const userId = session.user?.id;
+		if (userId) void library.fillViewerState(userId, ids);
+	});
+
 	// Filters and paging navigate to /search itself, so the results are what
 	// changes while the form around them stays put.
 	let refreshing = $derived(navigating.to?.route.id === page.route.id);

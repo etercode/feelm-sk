@@ -6,6 +6,7 @@
 	import PosterCard from '$lib/components/PosterCard.svelte';
 	import Rail from '$lib/components/Rail.svelte';
 	import { types } from '$lib/data/types.js';
+	import * as api from '$lib/api/client.js';
 	import { catalog } from '$lib/state/catalog.svelte.js';
 	import { library } from '$lib/state/library.svelte.js';
 	import { session } from '$lib/state/session.svelte.js';
@@ -19,6 +20,9 @@
 	 */
 	$effect(() => {
 		void catalog.hydrate();
+		// Follows and activity are this page's data too — the "lately" strip
+		// below. They used to load from the root layout for every page.
+		if (session.user) void library.loadSocial(session.user);
 	});
 
 	let releases = $derived(catalog.upcomingItems());
@@ -48,6 +52,35 @@
 	);
 
 	let unseen = $derived(releases.filter((r) => r.isNew === true).length);
+
+	/*
+	 * What the people you follow have watched, that you have not settled.
+	 *
+	 * Fetched here rather than folded into /api/home, because it is the one
+	 * part of this page that depends on who is asking — and the rest of the
+	 * page should not wait for it, or be unshareable between viewers because
+	 * of it.
+	 */
+	let suggested = $state(/** @type {any[]} */ ([]));
+
+	$effect(() => {
+		if (!session.user) {
+			suggested = [];
+			return;
+		}
+
+		let live = true;
+		api
+			.suggestions(20)
+			.then((data) => {
+				if (live) suggested = data?.items ?? [];
+			})
+			.catch(() => {});
+
+		return () => {
+			live = false;
+		};
+	});
 </script>
 
 <svelte:head>
@@ -75,6 +108,21 @@
 					</button>
 				{/if}
 			</p>
+		{/if}
+
+		<!--
+			Above everything the catalogue picked, because this is the only row
+			on the page chosen by people rather than by popularity. One row, no
+			"see all": it is a nudge, not a section — and it is drawn only when
+			the people you follow have actually watched something you have not
+			settled, so it disappears rather than sitting there empty.
+		-->
+		{#if suggested.length}
+			<Rail kicker={t('home.suggestedKicker')} title={t('home.suggestedTitle')} rows={1}>
+				{#each suggested as item (item.id)}
+					<PosterCard {item} width="clamp(8.5rem, 13vw, 11rem)" showType />
+				{/each}
+			</Rail>
 		{/if}
 
 		<!--
