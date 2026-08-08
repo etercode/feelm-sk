@@ -13,6 +13,8 @@
 	import Spinner from '$lib/components/Spinner.svelte';
 	import PosterCard from '$lib/components/PosterCard.svelte';
 	import { types, typeKeys } from '$lib/data/types.js';
+	import { library } from '$lib/state/library.svelte.js';
+	import { session } from '$lib/state/session.svelte.js';
 	import { t } from '$lib/i18n/index.svelte.js';
 	import { compactNumber, counted, number } from '$lib/util/format.js';
 
