@@ -70,9 +70,10 @@ class Library {
 		 *   following every follow, for a button most pages never render
 		 *   feed      forty activity rows, shown on two pages
 		 *
-		 * The first two now ride on the rows that need them. The last two are
-		 * fetched by the pages that draw them — see loadSocial(), called from
-		 * the home page and the feed.
+		 * The first two now ride on the rows that need them. The feed is asked
+		 * for by the two pages that draw it, each for the number of rows it
+		 * actually shows. The follows are only needed by the feed page's
+		 * "who to follow" list — see loadFollowing().
 		 *
 		 * Kept as a method because the session calls it at three points and the
 		 * shape of "what to do when somebody signs in" is worth a place to
@@ -84,27 +85,30 @@ class Library {
 	}
 
 	/**
-	 * Follows and the activity feed, for the two pages that show them.
+	 * Who somebody follows — for the one list that needs it.
+	 *
+	 * The feed page's "who to follow" strip has to know who is already
+	 * followed, so it can leave them out. Nothing else does: a profile is told
+	 * by its own payload, and the feed rows themselves are resolved server-side
+	 * from the same follows.
+	 *
+	 * It used to fetch forty feed rows alongside this, which the feed page then
+	 * threw away and re-fetched paged through loadFeed().
 	 *
 	 * @param {any} me
 	 */
-	async loadSocial(me) {
+	async loadFollowing(me) {
 		if (!browser || !me) return;
 
 		try {
-			const [followingPayload, feedPayload] = await Promise.all([
-				api.getFollowing(me.username),
-				api.getFeed({ scope: 'following', limit: 40 })
-			]);
+			const payload = await api.getFollowing(me.username);
 
-			for (const person of followingPayload?.users ?? []) {
+			for (const person of payload?.users ?? []) {
 				this.rememberUser(person);
 				this.#setFollow(me.id, person.id, true);
 			}
-
-			this.#ingestActivity(feedPayload?.activity ?? []);
 		} catch (e) {
-			console.warn('library social load failed', e);
+			console.warn('library following load failed', e);
 		}
 	}
 

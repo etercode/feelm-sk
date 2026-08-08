@@ -20,9 +20,6 @@
 	 */
 	$effect(() => {
 		void catalog.hydrate();
-		// Follows and activity are this page's data too — the "lately" strip
-		// below. They used to load from the root layout for every page.
-		if (session.user) void library.loadSocial(session.user);
 	});
 
 	let releases = $derived(catalog.upcomingItems());
@@ -47,9 +44,16 @@
 		}))
 	);
 
-	let feed = $derived(
-		session.user ? library.feedFor(session.user.id, 4) : library.activity({ limit: 4 })
-	);
+	/*
+	 * Four activity rows, asked for as four activity rows.
+	 *
+	 * This used to fetch every follow and forty feed rows into a store, then
+	 * re-derive four by filtering that store against the follow ids — redoing
+	 * in the browser the join the server had already done. The endpoint
+	 * resolves who you follow itself and returns rows with the user, the item
+	 * and the review already on them, so there is nothing left to reconstruct.
+	 */
+	let feed = $state(/** @type {any[]} */ ([]));
 
 	let unseen = $derived(releases.filter((r) => r.isNew === true).length);
 
@@ -66,14 +70,23 @@
 	$effect(() => {
 		if (!session.user) {
 			suggested = [];
+			feed = [];
 			return;
 		}
 
 		let live = true;
+
 		api
 			.suggestions(20)
 			.then((data) => {
 				if (live) suggested = data?.items ?? [];
+			})
+			.catch(() => {});
+
+		api
+			.getFeed({ scope: 'following', limit: 4 })
+			.then((data) => {
+				if (live) feed = data?.activity ?? [];
 			})
 			.catch(() => {});
 
