@@ -13,7 +13,10 @@
 	let { item } = $props();
 
 	let seasons = $derived(item.details.seasons ?? []);
-	let entry = $derived(session.user ? library.entryFor(session.user.id, item.id) : null);
+	// The store first, so an optimistic write wins; the payload otherwise.
+	let entry = $derived(
+		session.user ? (library.entryFor(session.user.id, item.id) ?? item.viewerEntry ?? null) : null
+	);
 	let progress = $derived(entry?.progress ?? null);
 
 	let selected = $state(0);

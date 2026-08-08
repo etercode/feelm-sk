@@ -75,8 +75,22 @@ class Library {
 			 * that per row now: `item.isNew`, computed against the thirty titles
 			 * actually on screen. See WorkPresenter::forViewer.
 			 */
-			const [entriesPayload, followingPayload, feedPayload] = await Promise.all([
-				api.getMyEntries(),
+			/*
+			 * No getMyEntries() either, for the same reason.
+			 *
+			 * It returned every shelf row — 682 for one account — so that a
+			 * poster could ask about one id. Every consumer is a point lookup:
+			 * ShelfControls, QuickShelf, ReviewEditor, SeasonBrowser, the card
+			 * and the hero all ask entryFor(user, item) and nothing iterates.
+			 * So the answer rides on the row, as `item.viewerEntry`, and this
+			 * store now holds only what the viewer has changed this visit —
+			 * which is what makes an optimistic write still win over the
+			 * payload it was rendered from.
+			 *
+			 * The shelf page itself still asks for the whole thing; it is the
+			 * one screen that genuinely wants it.
+			 */
+			const [followingPayload, feedPayload] = await Promise.all([
 				api.getFollowing(me.username),
 				api.getFeed({ scope: 'following', limit: 40 })
 			]);
@@ -84,15 +98,6 @@ class Library {
 			this.entries = [];
 			this.reviews = [];
 			this.follows = [];
-
-			// Titles first, so the recent rows that have one resolve against it.
-			for (const item of entriesPayload?.items ?? []) {
-				catalog.remember(item);
-			}
-
-			for (const row of entriesPayload?.entries ?? []) {
-				this.#ingestEntryRow(row);
-			}
 
 			for (const person of followingPayload?.users ?? []) {
 				this.rememberUser(person);

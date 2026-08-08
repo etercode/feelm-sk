@@ -50,7 +50,10 @@
 		dropped: '#f87171'
 	};
 
-	let entry = $derived(session.user ? library.entryFor(session.user.id, item.id) : null);
+	// The store first, so an optimistic write wins; the payload otherwise.
+	let entry = $derived(
+		session.user ? (library.entryFor(session.user.id, item.id) ?? item.viewerEntry ?? null) : null
+	);
 
 	// Nothing can be finished before it is out; offering "Watched" on an
 	// unreleased title is offering a lie.

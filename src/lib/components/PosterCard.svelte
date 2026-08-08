@@ -23,7 +23,9 @@
 
 	let community = $derived(library.ratingOf(item.id));
 	let shelfOwner = $derived(ownerId ?? session.user?.id ?? null);
-	let entry = $derived(shelfOwner ? library.entryFor(shelfOwner, item.id) : null);
+	let entry = $derived(
+		shelfOwner ? (library.entryFor(shelfOwner, item.id) ?? item.viewerEntry ?? null) : null
+	);
 	let ratio = $derived(entry?.progress ? progressRatio(item, entry.progress) : null);
 	let meta = $derived(lineOf(item).slice(0, 2).join(' · '));
 

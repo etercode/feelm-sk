@@ -63,7 +63,9 @@
 	let isNew = $derived(current?.isNew === true);
 
 	let entry = $derived(
-		session.user && current ? library.entryFor(session.user.id, current.id) : null
+		session.user && current
+			? (library.entryFor(session.user.id, current.id) ?? current.viewerEntry ?? null)
+			: null
 	);
 	let saved = $derived(entry?.status === 'wishlist');
 

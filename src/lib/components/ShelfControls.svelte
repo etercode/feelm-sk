@@ -15,7 +15,10 @@
 
 	let { item } = $props();
 
-	let entry = $derived(session.user ? library.entryFor(session.user.id, item.id) : null);
+	// The store first, so an optimistic write wins; the payload otherwise.
+	let entry = $derived(
+		session.user ? (library.entryFor(session.user.id, item.id) ?? item.viewerEntry ?? null) : null
+	);
 	let shape = $derived(progressShapeOf(item));
 
 	// You cannot have finished something that is not out yet.

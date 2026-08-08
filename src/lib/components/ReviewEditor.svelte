@@ -22,7 +22,11 @@
 
 	function start() {
 		body = mine?.body ?? '';
-		rating = mine?.rating ?? library.entryFor(session.user.id, item.id)?.rating ?? null;
+		rating =
+			mine?.rating ??
+			library.entryFor(session.user.id, item.id)?.rating ??
+			item.viewerEntry?.rating ??
+			null;
 		editing = true;
 	}
 
