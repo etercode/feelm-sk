@@ -130,6 +130,38 @@
 		return params.getAll(key).includes(value);
 	}
 
+	/*
+	 * Language chips describe the result you are looking at, not the catalogue.
+	 *
+	 * The counts used to come from /api/search/filters, which is global and
+	 * cached — so narrowing to 1990s horror left "EN 412,336" sitting there,
+	 * describing a set the page was no longer showing. They now come from the
+	 * facet, which is counted over the current filters like the genre and
+	 * decade counts beside them. The static list stays as the fallback for a
+	 * response with facets turned off.
+	 *
+	 * A selected language is appended if the top ten does not already hold it.
+	 * The facet drops its own filter, so picking Icelandic does not shrink the
+	 * list to Icelandic — but Icelandic itself can sit well outside the top ten,
+	 * and a selected chip that is not on screen cannot be unselected. Such a
+	 * chip carries a null count and prints no number: the facet never measured
+	 * it, and "IS 0" beside a page full of Icelandic films is worse than no
+	 * number at all.
+	 */
+	let languageChips = $derived.by(() => {
+		const source = facets?.languages ?? data.filters.languages ?? [];
+		const shown = source.slice(0, 10);
+		const have = new Set(shown.map((row) => row.code));
+
+		for (const code of params.getAll('language')) {
+			if (have.has(code)) continue;
+			have.add(code);
+			shown.push(source.find((row) => row.code === code) ?? { code, count: null });
+		}
+
+		return shown;
+	});
+
 	let runtimeValue = $derived(
 		params.has('runtimeMin') || params.has('runtimeMax')
 			? `${params.get('runtimeMin') ?? '0'}-${params.get('runtimeMax') ?? ''}`
@@ -394,18 +426,21 @@
 					</section>
 				{/if}
 
-				{#if data.filters.languages.length}
+				{#if languageChips.length}
 					<section>
 						<h2>{t('search.language')}</h2>
 						<div class="chips">
-							{#each data.filters.languages.slice(0, 10) as lang (lang.code)}
+							{#each languageChips as lang (lang.code)}
 								<button
 									type="button"
 									class="chip"
 									class:on={selected('language', lang.code)}
 									onclick={() => toggle('language', lang.code)}
 								>
-									{lang.code.toUpperCase()} <span class="faint">{number(lang.count)}</span>
+									{lang.code.toUpperCase()}
+									{#if lang.count !== null && lang.count !== undefined}
+										<span class="faint">{number(lang.count)}</span>
+									{/if}
 								</button>
 							{/each}
 						</div>
