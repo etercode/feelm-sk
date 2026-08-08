@@ -16,7 +16,7 @@
 	import { library } from '$lib/state/library.svelte.js';
 	import { session } from '$lib/state/session.svelte.js';
 	import { t } from '$lib/i18n/index.svelte.js';
-	import { compactNumber, counted, number } from '$lib/util/format.js';
+	import { compactNumber, counted, number, rating } from '$lib/util/format.js';
 
 	let { data } = $props();
 
@@ -63,9 +63,31 @@
 	]);
 
 	// IMDb publishes out of 10, so the filter speaks in those units.
-	let imdbSteps = $derived([
-		{ value: '', label: t('imdb.any') },
-		...[6, 7, 8, 9].map((n) => ({ value: String(n), label: t('imdb.min', { n }) }))
+	/*
+	 * Two open-ended bounds rather than one floor.
+	 *
+	 * "Worse than 5" is as real a question as "better than 8" — the
+	 * notoriously bad is a way people browse — and a single minimum could not
+	 * express it. Either can be set alone, or both to bracket a band.
+	 *
+	 * Half steps below 7, because that is where the interesting distinctions
+	 * are: the gap between 7.5 and 8 is a different kind of film, the gap
+	 * between 2 and 3 is not.
+	 */
+	let imdbMinSteps = $derived([
+		{ value: '', label: t('imdb.anyMin') },
+		...[4, 5, 6, 6.5, 7, 7.5, 8, 8.5, 9].map((n) => ({
+			value: String(n),
+			label: t('imdb.min', { n: rating(n) })
+		}))
+	]);
+
+	let imdbMaxSteps = $derived([
+		{ value: '', label: t('imdb.anyMax') },
+		...[3, 4, 5, 6, 6.5, 7, 7.5, 8].map((n) => ({
+			value: String(n),
+			label: t('imdb.max', { n: rating(n) })
+		}))
 	]);
 
 	let votesSteps = $derived([
@@ -299,10 +321,21 @@
 					<h2>IMDb</h2>
 					<select
 						class="field"
+						aria-label={t('imdb.anyMin')}
 						value={params.get('imdbMin') ?? ''}
 						onchange={(event) => apply({ imdbMin: event.currentTarget.value || null })}
 					>
-						{#each imdbSteps as step (step.value)}
+						{#each imdbMinSteps as step (step.value)}
+							<option value={step.value}>{step.label}</option>
+						{/each}
+					</select>
+					<select
+						class="field"
+						aria-label={t('imdb.anyMax')}
+						value={params.get('imdbMax') ?? ''}
+						onchange={(event) => apply({ imdbMax: event.currentTarget.value || null })}
+					>
+						{#each imdbMaxSteps as step (step.value)}
 							<option value={step.value}>{step.label}</option>
 						{/each}
 					</select>

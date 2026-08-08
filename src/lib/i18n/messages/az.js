@@ -231,8 +231,10 @@ export const az = {
 
 	'score.any': 'Bütün ballar',
 	'score.min': '{n} və yuxarı',
-	'imdb.any': 'Bütün IMDb balları',
-	'imdb.min': '{n}.0 və yuxarı',
+	'imdb.anyMin': 'Hər qiymət',
+	'imdb.anyMax': 'Yuxarı hədd yoxdur',
+	'imdb.max': '{n} və aşağı',
+	'imdb.min': '{n} və yuxarı',
 	'votes.any': 'Bütün səs sayları',
 	'votes.min': '{n}+ səs',
 	'length.any': 'Bütün müddətlər',

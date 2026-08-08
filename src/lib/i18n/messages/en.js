@@ -290,8 +290,10 @@ export const en = {
 
 	'score.any': 'Any score',
 	'score.min': '{n} and up',
-	'imdb.any': 'Any IMDb rating',
-	'imdb.min': '{n}.0 and up',
+	'imdb.anyMin': 'Any rating',
+	'imdb.anyMax': 'No upper limit',
+	'imdb.max': '{n} or lower',
+	'imdb.min': '{n} and up',
 	'votes.any': 'Any number of votes',
 	'votes.min': '{n}+ votes',
 	'length.any': 'Any length',

@@ -148,6 +148,20 @@ export function compactNumber(value) {
 }
 
 /**
+ * A rating on IMDb's scale, always to one decimal — 7.0, not 7.
+ *
+ * The decimal is not decoration: it is how IMDb prints its own scores, and in a
+ * column of choices it keeps 7.0 and 6.5 the same width. The separator comes
+ * from the language, so Turkish and Russian get a comma.
+ */
+export function rating(value) {
+	return new Intl.NumberFormat(i18n.tag, {
+		minimumFractionDigits: 1,
+		maximumFractionDigits: 1
+	}).format(value ?? 0);
+}
+
+/**
  * A plain number with the language's own grouping — 1,234 or 1 234.
  *
  * Replaces the `.toLocaleString()` calls scattered through the templates, which

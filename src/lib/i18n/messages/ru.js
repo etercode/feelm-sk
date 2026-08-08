@@ -267,8 +267,10 @@ export const ru = {
 
 	'score.any': 'Любая оценка',
 	'score.min': 'от {n}',
-	'imdb.any': 'Любой рейтинг IMDb',
-	'imdb.min': 'от {n}.0',
+	'imdb.anyMin': 'Любой рейтинг',
+	'imdb.anyMax': 'Без верхней границы',
+	'imdb.max': '{n} и ниже',
+	'imdb.min': '{n} и выше',
 	'votes.any': 'Любое число голосов',
 	'votes.min': 'от {n} голосов',
 	'length.any': 'Любая длина',

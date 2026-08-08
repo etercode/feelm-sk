@@ -235,8 +235,10 @@ export const tr = {
 
 	'score.any': 'Tüm puanlar',
 	'score.min': '{n} ve üzeri',
-	'imdb.any': 'Tüm IMDb puanları',
-	'imdb.min': '{n}.0 ve üzeri',
+	'imdb.anyMin': 'Her puan',
+	'imdb.anyMax': 'Üst sınır yok',
+	'imdb.max': '{n} ve altı',
+	'imdb.min': '{n} ve üzeri',
 	'votes.any': 'Tüm oy sayıları',
 	'votes.min': '{n}+ oy',
 	'length.any': 'Tüm süreler',
