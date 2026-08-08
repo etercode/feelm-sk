@@ -287,6 +287,8 @@ export const ru = {
 	'search.quickPlaceholder': 'Фильмы, сериалы, игры, книги…',
 	'search.dialogLabel': 'Поиск по каталогу',
 	'search.searching': 'Идёт поиск…',
+	'search.members': 'Люди на Feelm',
+	'search.followingAlready': 'Вы подписаны',
 	'search.failed': 'Поиск не удался. API работает?',
 	'search.didYouMean': 'Возможно, вы имели в виду',
 	'search.nothingMatches': 'Ничего не найдено по «{query}».',

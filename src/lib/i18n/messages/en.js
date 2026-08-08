@@ -312,6 +312,8 @@ export const en = {
 	'search.quickPlaceholder': 'Films, series, games, books…',
 	'search.dialogLabel': 'Search the catalog',
 	'search.searching': 'Searching…',
+	'search.members': 'People on Feelm',
+	'search.followingAlready': 'Following',
 	'search.failed': 'Search failed. Is the API up?',
 	'search.didYouMean': 'Did you mean',
 	'search.nothingMatches': 'Nothing matches “{query}”.',

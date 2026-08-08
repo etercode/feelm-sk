@@ -7,6 +7,7 @@
 -->
 <script>
 	import { goto } from '$app/navigation';
+	import Avatar from '$lib/components/Avatar.svelte';
 	import Icon from '$lib/components/Icon.svelte';
 	import * as api from '$lib/api/client.js';
 	import { itemPath } from '$lib/data/items.js';
@@ -23,6 +24,12 @@
 	let suggestion = $state(null);
 	/** @type {any[]} */
 	let people = $state([]);
+	/*
+	 * People with accounts here, as opposed to `people` above, who are cast and
+	 * crew. There was no way to find somebody to follow at all — a profile was
+	 * reachable only if you already knew the URL.
+	 */
+	let members = $state([]);
 	let total = $state(0);
 	// False when the server stopped counting at its ceiling — see WorkSearch.
 	let exactTotal = $state(true);
@@ -60,6 +67,7 @@
 			results = [];
 			suggestion = null;
 			people = [];
+			members = [];
 			total = 0;
 			loading = false;
 			error = null;
@@ -72,11 +80,20 @@
 
 		debounceTimer = setTimeout(async () => {
 			try {
-				const data = await api.searchSuggest({ q, limit: 8, facets: 0 });
+				/*
+				 * Both at once. The member search is a different table and a
+				 * different endpoint, and waiting for the catalogue before asking
+				 * would put a second round trip between typing and an answer.
+				 */
+				const [data, memberData] = await Promise.all([
+					api.searchSuggest({ q, limit: 8, facets: 0 }),
+					api.searchUsers(q, 5).catch(() => null)
+				]);
 				if (id !== requestId) return;
 				results = data?.items ?? [];
 				suggestion = data?.suggestion ?? null;
 				people = data?.people ?? [];
+				members = memberData?.users ?? [];
 				total = data?.total ?? 0;
 				exactTotal = data?.totalIsExact !== false;
 				error = null;
@@ -85,6 +102,7 @@
 				results = [];
 				suggestion = null;
 				people = [];
+				members = [];
 				total = 0;
 				error = t('search.failed');
 				console.warn('search failed', e);
@@ -155,6 +173,29 @@
 							<span class="faint">{counted('count.result', suggestion.total)}</span>
 						</button>
 					{/if}
+					<!--
+						Members before cast: somebody typing a name into a social
+						app is more often looking for a person to follow than for
+						the filmography of an actor who shares the name.
+					-->
+					{#if members.length}
+						<div class="members">
+							<span class="eyebrow">{t('search.members')}</span>
+							{#each members as member (member.id)}
+								<a class="member" href="/u/{member.username}" onclick={() => onclose?.()}>
+									<Avatar user={member} size={26} />
+									<span class="who">
+										<strong>{member.name || member.username}</strong>
+										<span class="faint">@{member.username}</span>
+									</span>
+									{#if member.following}
+										<span class="badge">{t('search.followingAlready')}</span>
+									{/if}
+								</a>
+							{/each}
+						</div>
+					{/if}
+
 					{#if people.length}
 						<div class="people">
 							<span class="eyebrow">{t('common.people')}</span>
@@ -415,5 +456,54 @@
 			opacity: 0;
 			transform: translateY(-8px);
 		}
+	}
+
+	/* ---- members ---------------------------------------------------- */
+
+	.members {
+		display: flex;
+		flex-direction: column;
+		gap: 0.15rem;
+		padding: 0.5rem 0.9rem 0.6rem;
+		border-bottom: 1px solid var(--line);
+	}
+
+	.member {
+		display: flex;
+		align-items: center;
+		gap: 0.55rem;
+		padding: 0.35rem 0.4rem;
+		border-radius: var(--radius-sm);
+		color: var(--ink);
+	}
+
+	.member:hover {
+		background: var(--tint);
+	}
+
+	.who {
+		display: flex;
+		flex-direction: column;
+		line-height: 1.2;
+		min-width: 0;
+	}
+
+	.who strong {
+		font-size: 0.9rem;
+	}
+
+	.who .faint {
+		font-size: 0.76rem;
+	}
+
+	/* Already followed, so the row says so instead of inviting it again. */
+	.badge {
+		margin-left: auto;
+		padding: 0.1rem 0.45rem;
+		border-radius: 99px;
+		background: var(--tint);
+		color: var(--muted);
+		font-size: 0.7rem;
+		white-space: nowrap;
 	}
 </style>

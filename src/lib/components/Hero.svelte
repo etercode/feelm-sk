@@ -60,7 +60,7 @@
 	}
 
 	let current = $derived(releases[index] ?? null);
-	let isNew = $derived(current ? library.isNewFor(session.user?.id, current) : false);
+	let isNew = $derived(current?.isNew === true);
 
 	let entry = $derived(
 		session.user && current ? library.entryFor(session.user.id, current.id) : null
@@ -185,7 +185,7 @@
 									<span class="name">{release.title}</span>
 									<span class="date faint">{longDate(release.details.releaseDate)}</span>
 								</span>
-								{#if library.isNewFor(session.user?.id, release)}
+								{#if release.isNew}
 									<span class="dot" aria-label={t('common.new')}></span>
 								{/if}
 							</button>

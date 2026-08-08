@@ -251,6 +251,8 @@ export const az = {
 	'search.quickPlaceholder': 'Film, serial, oyun, kitab…',
 	'search.dialogLabel': 'Kataloqda axtar',
 	'search.searching': 'Axtarılır…',
+	'search.members': 'Feelm-dəki istifadəçilər',
+	'search.followingAlready': 'İzlənilir',
 	'search.failed': 'Axtarış alınmadı. API işləyir?',
 	'search.didYouMean': 'Bunu nəzərdə tuturdun:',
 	'search.nothingMatches': '“{query}” ilə uyğun heç nə yoxdur.',

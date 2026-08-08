@@ -66,9 +66,17 @@ class Library {
 			 * the front page's rails — which a signed-in visitor was pulling
 			 * on whatever page they happened to open.
 			 */
-			const [entriesPayload, seenPayload, followingPayload, feedPayload] = await Promise.all([
+			/*
+			 * No listSeen() any more.
+			 *
+			 * It fetched every id the viewer had ever opened — 462 for one
+			 * account already, and nothing bounding it but time — on every page
+			 * load, to decide whether a poster wears a NEW dot. The API answers
+			 * that per row now: `item.isNew`, computed against the thirty titles
+			 * actually on screen. See WorkPresenter::forViewer.
+			 */
+			const [entriesPayload, followingPayload, feedPayload] = await Promise.all([
 				api.getMyEntries(),
-				api.listSeen(),
 				api.getFollowing(me.username),
 				api.getFeed({ scope: 'following', limit: 40 })
 			]);
@@ -85,9 +93,6 @@ class Library {
 			for (const row of entriesPayload?.entries ?? []) {
 				this.#ingestEntryRow(row);
 			}
-
-			this.seenItemIds = new Set(seenPayload?.itemIds ?? []);
-			this.seenUpTo = seenPayload?.seenUpTo ?? null;
 
 			for (const person of followingPayload?.users ?? []) {
 				this.rememberUser(person);
@@ -330,23 +335,22 @@ class Library {
 	 * opened it since. Without the timestamp every title you had not clicked
 	 * would wear a NEW badge forever.
 	 */
-	isNewFor(userId, item) {
-		if (!item?.id || !item.addedAt) return false;
-		if (!userId) return false;
-		if (this.seenItemIds.has(item.id)) return false;
-		if (!this.seenUpTo) return true;
-		return item.addedAt > this.seenUpTo;
-	}
-
-	newForUser(userId, list) {
-		return list.filter((item) => this.isNewFor(userId, item));
-	}
-
 	markSeen(userId, item) {
 		const path = this.#pathOf(item);
 		if (!path) return;
+		/*
+		 * Still tracked locally, but only for what this visit has opened —
+		 * it starts empty every load rather than being seeded with the whole
+		 * history. Its one job is to drop the badge on the card you just
+		 * clicked, before any payload says so.
+		 */
 		this.seenItemIds = new Set([...this.seenItemIds, item.id]);
 		void api.markSeen(path.type, path.slug).catch(() => {});
+	}
+
+	/** Opened during this visit, so a card can drop its badge without a reload. */
+	seenThisVisit(itemId) {
+		return this.seenItemIds.has(itemId);
 	}
 
 	catchUp(userId) {

@@ -47,7 +47,7 @@
 		session.user ? library.feedFor(session.user.id, 4) : library.activity({ limit: 4 })
 	);
 
-	let unseen = $derived(library.newForUser(session.user?.id, [...releases]).length);
+	let unseen = $derived(releases.filter((r) => r.isNew === true).length);
 </script>
 
 <svelte:head>

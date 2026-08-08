@@ -29,7 +29,12 @@
 
 	let unreleased = $derived(isUpcoming(item));
 	let outside = $derived(externalRatings(item));
-	let fresh = $derived(library.isNewFor(session.user?.id, item));
+	/*
+	 * Decided by the API, not here. The browser used to answer this from a Set
+	 * of every id the viewer had ever opened — fetched on every page load, for
+	 * a dot. The server knows, per row, and says so.
+	 */
+	let fresh = $derived(item.isNew === true && !library.seenThisVisit(item.id));
 
 	/*
 	 * The quick-shelf panel, opened by the corner button. Hover opens it too,

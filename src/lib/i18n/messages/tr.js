@@ -255,6 +255,8 @@ export const tr = {
 	'search.quickPlaceholder': 'Film, dizi, oyun, kitap…',
 	'search.dialogLabel': 'Katalogda ara',
 	'search.searching': 'Aranıyor…',
+	'search.members': 'Feelm’deki kişiler',
+	'search.followingAlready': 'Takip ediliyor',
 	'search.failed': 'Arama başarısız. API çalışıyor mu?',
 	'search.didYouMean': 'Bunu mu demek istedin:',
 	'search.nothingMatches': '“{query}” ile eşleşen bir şey yok.',

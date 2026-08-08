@@ -317,6 +317,20 @@ export function getFeed(params = {}) {
 }
 
 /** @param {string} username */
+/**
+ * People to follow, by handle or display name.
+ *
+ * Sent with auth when there is any, so each row knows whether you already
+ * follow them and the button can be right on first paint.
+ *
+ * @param {string} q
+ * @param {number} [limit]
+ */
+export function searchUsers(q, limit = 8) {
+	return request(`/api/users/search?q=${encodeURIComponent(q)}&limit=${limit}`, {}, true);
+}
+
+/** @param {string} username */
 export function getProfile(username) {
 	return request(`/api/users/${username}`);
 }
