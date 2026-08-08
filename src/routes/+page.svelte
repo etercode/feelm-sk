@@ -1,5 +1,4 @@
 <script>
-	import ActivityCard from '$lib/components/ActivityCard.svelte';
 	import Hero from '$lib/components/Hero.svelte';
 	import HomeSkeleton from '$lib/components/HomeSkeleton.svelte';
 	import Icon from '$lib/components/Icon.svelte';
@@ -44,17 +43,6 @@
 		}))
 	);
 
-	/*
-	 * Four activity rows, asked for as four activity rows.
-	 *
-	 * This used to fetch every follow and forty feed rows into a store, then
-	 * re-derive four by filtering that store against the follow ids — redoing
-	 * in the browser the join the server had already done. The endpoint
-	 * resolves who you follow itself and returns rows with the user, the item
-	 * and the review already on them, so there is nothing left to reconstruct.
-	 */
-	let feed = $state(/** @type {any[]} */ ([]));
-
 	let unseen = $derived(releases.filter((r) => r.isNew === true).length);
 
 	/*
@@ -70,7 +58,6 @@
 	$effect(() => {
 		if (!session.user) {
 			suggested = [];
-			feed = [];
 			return;
 		}
 
@@ -80,13 +67,6 @@
 			.suggestions(20)
 			.then((data) => {
 				if (live) suggested = data?.items ?? [];
-			})
-			.catch(() => {});
-
-		api
-			.getFeed({ scope: 'following', limit: 4 })
-			.then((data) => {
-				if (live) feed = data?.activity ?? [];
 			})
 			.catch(() => {});
 
@@ -166,27 +146,6 @@
 			</Rail>
 		{/each}
 
-		<section class="lately">
-			<header>
-				<div>
-					<span class="eyebrow">
-						{session.user ? t('home.latelyFollowing') : t('home.latelyEveryone')}
-					</span>
-					<h2 class="display">{t('home.lately')}</h2>
-				</div>
-				<a class="btn btn-ghost btn-sm" href="/feed">{t('home.openFeed')}<Icon name="right" size={14} /></a>
-			</header>
-
-			<div class="feed-grid">
-				{#each feed as event (event.entry.id)}
-					<ActivityCard {event} compact />
-				{:else}
-					<p class="muted">
-						{t('home.noFollowing')} <a href="/u/ada">{t('home.findSomeone')}</a>
-					</p>
-				{/each}
-			</div>
-		</section>
 	</div>
 {/if}
 
@@ -232,26 +191,4 @@
 		text-underline-offset: 2px;
 	}
 
-	.lately {
-		margin: 3rem 0 4rem;
-	}
-
-	.lately header {
-		display: flex;
-		align-items: flex-end;
-		justify-content: space-between;
-		gap: 1rem;
-		margin-bottom: 1.25rem;
-	}
-
-	.lately h2 {
-		margin: 0.15rem 0 0;
-		font-size: clamp(1.6rem, 3vw, 2.2rem);
-	}
-
-	.feed-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
-		gap: 1rem;
-	}
 </style>

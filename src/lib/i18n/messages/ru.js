@@ -224,12 +224,6 @@ export const ru = {
 	'home.kicker.series': 'Сезон за сезоном',
 	'home.kicker.game': 'В очереди',
 	'home.kicker.book': 'На тумбочке',
-	'home.latelyFollowing': 'Ваши подписки',
-	'home.latelyEveryone': 'Здесь вокруг',
-	'home.lately': 'В последнее время',
-	'home.openFeed': 'Открыть ленту',
-	'home.noFollowing': 'Никто из ваших подписок пока ничего не отметил.',
-	'home.findSomeone': 'Найдите, на кого подписаться.',
 
 	'hero.comingUp': 'Скоро',
 	'hero.details': 'Подробнее',

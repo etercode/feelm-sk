@@ -188,12 +188,6 @@ export const az = {
 	'home.kicker.series': 'Sezon-sezon',
 	'home.kicker.game': 'Növbədə gözləyənlər',
 	'home.kicker.book': 'Başucunda',
-	'home.latelyFollowing': 'İzlədiyin insanlar',
-	'home.latelyEveryone': 'Buralarda',
-	'home.lately': 'Son vaxtlar',
-	'home.openFeed': 'Lenti aç',
-	'home.noFollowing': 'İzlədiyin heç kim hələ bir şey qeyd etməyib.',
-	'home.findSomeone': 'İzləmək üçün kimsə tap.',
 
 	'hero.comingUp': 'Tezliklə',
 	'hero.details': 'Ətraflı',

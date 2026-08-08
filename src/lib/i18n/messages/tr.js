@@ -192,12 +192,6 @@ export const tr = {
 	'home.kicker.series': 'Sezon sezon',
 	'home.kicker.game': 'Sırada bekleyenler',
 	'home.kicker.book': 'Başucunda',
-	'home.latelyFollowing': 'Takip ettiklerin',
-	'home.latelyEveryone': 'Buralarda',
-	'home.lately': 'Son zamanlarda',
-	'home.openFeed': 'Akışı aç',
-	'home.noFollowing': 'Takip ettiklerin henüz bir şey kaydetmemiş.',
-	'home.findSomeone': 'Takip edecek birini bul.',
 
 	'hero.comingUp': 'Yakında',
 	'hero.details': 'Ayrıntılar',

@@ -241,12 +241,6 @@ export const en = {
 	'home.kicker.series': 'Season by season',
 	'home.kicker.game': 'On the backlog',
 	'home.kicker.book': 'On the nightstand',
-	'home.latelyFollowing': 'People you follow',
-	'home.latelyEveryone': 'Around here',
-	'home.lately': 'Lately',
-	'home.openFeed': 'Open the feed',
-	'home.noFollowing': 'Nobody you follow has logged anything yet.',
-	'home.findSomeone': 'Find someone to follow.',
 
 	/* ---- the hero ------------------------------------------------------ */
 
