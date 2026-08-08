@@ -299,6 +299,12 @@ export const az = {
 	'feed.peopleToFollow': 'İzləmək üçün insanlar',
 	'feed.followEveryone': 'Burada hamını artıq izləyirsən.',
 
+	'mod.title': 'Moderasiya',
+	'mod.hide': 'Gizlət',
+	'mod.confirmHide': 'Doğrudan gizlət',
+	'mod.hiding': 'Gizlədilir…',
+	'mod.hideNote': 'Gizlətmək onu axtarışdan, kəşfdən və hər kəsin rəfindən silir. İdarəetmədən geri qaytarıla bilər.',
+	'mod.failed': 'Alınmadı.',
 	'work.details': 'Ətraflı',
 	'work.collectionPart': '{name} · {total} əsərdən {part}-cisi',
 	'work.noRatings': 'Hələ qiymət yoxdur — birinci sən ol.',

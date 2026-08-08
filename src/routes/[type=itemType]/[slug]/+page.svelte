@@ -5,6 +5,8 @@
 	$lib/data/types.js.
 -->
 <script>
+	import { goto } from '$app/navigation';
+	import * as api from '$lib/api/client.js';
 	import Avatar from '$lib/components/Avatar.svelte';
 	import CastRail from '$lib/components/CastRail.svelte';
 	import Gallery from '$lib/components/Gallery.svelte';
@@ -41,6 +43,29 @@
 	 * wrote, so it is worth naming out loud before a click leaves the site.
 	 */
 	let leaving = $state(/** @type {{ label: string, href: string, value: string } | null} */ (null));
+
+	/* ---- moderation ------------------------------------------------- */
+
+	let confirmingHide = $state(false);
+	let hiding = $state(false);
+	let modError = $state(/** @type {string | null} */ (null));
+
+	async function hide() {
+		hiding = true;
+		try {
+			await api.adminHideWork(item.id);
+			/*
+			 * Away, not back. The page we are on now 404s — it is the hidden
+			 * title — so staying here would show an error for a thing that just
+			 * worked. The browse page for its type is the nearest place that
+			 * still makes sense.
+			 */
+			goto(spec.browse);
+		} catch (e) {
+			modError = t('mod.failed');
+			hiding = false;
+		}
+	}
 
 	function leave() {
 		const href = leaving?.href;
@@ -277,6 +302,44 @@
 		</div>
 
 		<aside>
+			<!--
+				Moderation, where the thing being moderated is on screen.
+				Judging a title from a table of 232,000 rows means opening it
+				anyway, so the two actions belong next to it — and set apart from
+				everything above, which is what a visitor came here to do.
+
+				Moderators only, and it renders nothing for anyone else: the
+				session is browser-only, so this never reaches the server render.
+			-->
+			{#if session.isModerator}
+				<section class="mod card">
+					<h2 class="eyebrow">{t('mod.title')}</h2>
+
+					{#if modError}<p class="error">{modError}</p>{/if}
+
+					<div class="row">
+						<a class="btn btn-sm" href="/admin/works/{item.id}">
+							<Icon name="edit" size={12} />{t('common.edit')}
+						</a>
+
+						{#if confirmingHide}
+							<button type="button" class="btn btn-sm danger" disabled={hiding} onclick={hide}>
+								{hiding ? t('mod.hiding') : t('mod.confirmHide')}
+							</button>
+							<button type="button" class="btn btn-sm btn-ghost" onclick={() => (confirmingHide = false)}>
+								{t('common.cancel')}
+							</button>
+						{:else}
+							<button type="button" class="btn btn-sm btn-ghost" onclick={() => (confirmingHide = true)}>
+								<Icon name="trash" size={12} />{t('mod.hide')}
+							</button>
+						{/if}
+					</div>
+
+					<p class="faint note">{t('mod.hideNote')}</p>
+				</section>
+			{/if}
+
 			<section class="facts-card card">
 				<h2 class="eyebrow">{t('work.details')}</h2>
 				<dl>
@@ -831,5 +894,48 @@
 		display: flex;
 		justify-content: flex-end;
 		gap: 0.5rem;
+	}
+
+	/* ---- moderation panel ------------------------------------------- */
+
+	/*
+	 * Marked out from the cards around it. These two buttons change the
+	 * catalogue for everybody, and they sit beside controls that only change
+	 * one person's shelf — the border is the only thing saying so.
+	 */
+	.mod {
+		padding: 0.85rem 1rem;
+		margin-bottom: 1rem;
+		border-color: color-mix(in srgb, var(--danger) 30%, var(--line));
+	}
+
+	.mod .eyebrow {
+		display: block;
+		margin-bottom: 0.6rem;
+		color: var(--danger);
+	}
+
+	.mod .row {
+		display: flex;
+		gap: 0.4rem;
+		flex-wrap: wrap;
+	}
+
+	.mod .note {
+		margin: 0.6rem 0 0;
+		font-size: 0.76rem;
+		line-height: 1.4;
+	}
+
+	.mod .error {
+		margin: 0 0 0.5rem;
+		color: var(--danger);
+		font-size: 0.82rem;
+	}
+
+	.mod .danger {
+		background: var(--danger);
+		border-color: var(--danger);
+		color: #fff;
 	}
 </style>

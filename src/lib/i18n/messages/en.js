@@ -366,6 +366,12 @@ export const en = {
 
 	/* ---- a work -------------------------------------------------------- */
 
+	'mod.title': 'Moderation',
+	'mod.hide': 'Hide',
+	'mod.confirmHide': 'Really hide it',
+	'mod.hiding': 'Hiding…',
+	'mod.hideNote': 'Hiding removes it from search, browse and everyone’s shelves. It can be restored from the admin.',
+	'mod.failed': 'That did not work.',
 	'work.details': 'Details',
 	'work.collectionPart': '{name} · part {part} of {total}',
 	'work.noRatings': 'No ratings here yet — be the first.',

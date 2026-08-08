@@ -303,6 +303,12 @@ export const tr = {
 	'feed.peopleToFollow': 'Takip edilecek kişiler',
 	'feed.followEveryone': 'Buradaki herkesi zaten takip ediyorsun.',
 
+	'mod.title': 'Moderasyon',
+	'mod.hide': 'Gizle',
+	'mod.confirmHide': 'Gerçekten gizle',
+	'mod.hiding': 'Gizleniyor…',
+	'mod.hideNote': 'Gizlemek onu aramadan, keşfetten ve herkesin rafından kaldırır. Yönetimden geri alınabilir.',
+	'mod.failed': 'Bu işe yaramadı.',
 	'work.details': 'Ayrıntılar',
 	'work.collectionPart': '{name} · {total} yapıtın {part}. bölümü',
 	'work.noRatings': 'Henüz puan yok — ilk sen ol.',

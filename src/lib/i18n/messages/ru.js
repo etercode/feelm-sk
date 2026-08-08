@@ -335,6 +335,12 @@ export const ru = {
 	'feed.peopleToFollow': 'На кого подписаться',
 	'feed.followEveryone': 'Вы уже подписаны на всех, кто здесь есть.',
 
+	'mod.title': 'Модерация',
+	'mod.hide': 'Скрыть',
+	'mod.confirmHide': 'Точно скрыть',
+	'mod.hiding': 'Скрытие…',
+	'mod.hideNote': 'Скрытие убирает его из поиска, каталога и полок всех пользователей. Можно вернуть из админки.',
+	'mod.failed': 'Не получилось.',
 	'work.details': 'Подробности',
 	'work.collectionPart': '{name} · часть {part} из {total}',
 	'work.noRatings': 'Оценок пока нет — будьте первым.',
